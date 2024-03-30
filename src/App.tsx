@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import './App.css'
 import {
   NewPatientCreateForm 
@@ -34,8 +33,6 @@ function ParagraphWithNewlines() {
 
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
       <Heading />
