@@ -10,6 +10,17 @@
       "StackName": "amplify-pacrheumatologynewpa-staging-31054",
       "StackId": "arn:aws:cloudformation:us-east-1:674787720650:stack/amplify-pacrheumatologynewpa-staging-31054/f4caa110-ed79-11ee-923c-0ea1e3b64659",
       "AmplifyAppId": "da58jqbqint7z"
+    },
+    "categories": {
+      "function": {
+        "forwardNewPatientToEmail": {
+          "deploymentBucketName": "amplify-pacrheumatologynewpa-staging-31054-deployment",
+          "s3Key": "amplify-builds/forwardNewPatientToEmail-6b637377743359714469-build.zip"
+        }
+      },
+      "api": {
+        "pacrheumatologynewpatientform": {}
+      }
     }
   }
 }

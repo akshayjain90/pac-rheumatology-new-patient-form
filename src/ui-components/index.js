@@ -5,5 +5,5 @@
  **************************************************************************/
 
 export { default as NewPatientCreateForm } from "./NewPatientCreateForm";
-export { default as NewPatientUpdateForm } from "./NewPatientUpdateForm";
+export { default as Page2PatientHistory } from "./Page2PatientHistory";
 export { default as studioTheme } from "./studioTheme";

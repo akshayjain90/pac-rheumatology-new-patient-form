@@ -21,5 +21,30 @@
       "providerPlugin": "awscloudformation",
       "service": "AppSync"
     }
+  },
+  "function": {
+    "forwardNewPatientToEmail": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_forwardNewPatientToEmail_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "forwardNewPatientToEmail"
+        }
+      ]
+    },
+    "AMPLIFY_function_forwardNewPatientToEmail_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "forwardNewPatientToEmail"
+        }
+      ]
+    }
   }
 }

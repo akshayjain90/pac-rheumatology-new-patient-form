@@ -1,7 +1,9 @@
 import './App.css'
 import {
-  NewPatientCreateForm 
+  NewPatientCreateForm,
+  Page2PatientHistory
  } from './ui-components';
+ import { NewPatient } from './API';
 
 
 function Heading() {
@@ -32,12 +34,19 @@ function ParagraphWithNewlines() {
 }
 
 
+
+const patient: NewPatient = {__typename:"NewPatient", id: "dfsfds", createdAt : "dsvsf", updatedAt: "sdfkl"};
+
 function App() {
   return (
     <>
       <Heading />
       <ParagraphWithNewlines />
-      <NewPatientCreateForm />
+      <NewPatientCreateForm 
+      />
+      <Page2PatientHistory
+        newPatient={patient}
+      />
     </>
   )
 }

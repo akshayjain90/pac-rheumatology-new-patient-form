@@ -45,4 +45,63 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   emergency_contact_relationship: String
   signature_page_1: String
   signature_page_1_date: AWSDate
-} 
+  ph_briefly_describe_present_symptoms: String
+  ph_previous_treatment_for_problem: String
+  ph_current_medicine_1: String
+  ph_current_medicine_2: String
+  ph_current_medicine_3: String
+  ph_current_medicine_4: String
+  ph_current_medicine_5: String
+  ph_current_medicine_6: String
+  ph_current_medicine_7: String
+  ph_current_medicine_8: String
+  ph_current_medicine_9: String
+  ph_current_medicine_10: String
+  ph_current_medicine_11: String
+  ph_current_medicine_12: String
+  ph_current_medicine_13: String
+  ph_current_medicine_14: String
+  ph_current_medicine_15: String
+  ph_allergy_to_med: Boolean
+  ph_allergy_to_med_list: String
+  ph_rh_history_osteoarthritis: String
+  ph_rh_history_gout: String
+  ph_rh_history_juvenile_arthritis: String
+  ph_rh_history_vasculitis: String
+  ph_rh_history_lupus: String
+  ph_rh_history_rheumatoid: String
+  ph_rh_history_spondyloarthropathy: String
+  ph_rh_history_osteoporosis: String
+  ph_past_medical_history: String
+  ph_past_surgery_history: String
+  ph_smoke: String
+  ph_alcohol: String
+  ph_drugs: String
+  ph_sleep: String
+  ph_exercise: String
+  ph_travel: String
+  ph_pregnant: String
+  ph_live_births: String
+  ph_complications: String
+  ph_symptoms: AWSJSON
+  ad_people_in_household: String
+  ad_who_shopping: String
+  ad_housework: String
+  ad_hardest_thing: String
+  ad_ability_stand_up_chair: String
+  ad_ability_walk_outdoors_flat: String
+  ad_ability_get_on_toilet: String
+  ad_ability_reach_5_pound: String
+  ad_ability_car_doors: String
+  ad_ability_outside_work: String
+  ad_ability_wait_in_line: String
+  ad_ability_lift_heavy: String
+  ad_ability_lift_heavier: String
+  ad_ability_climb_2_flights: String
+  ad_aids_devices_activities: [String]
+  ad_categories_help: [String]
+  ad_daily_pain_scale: Int
+  ad_how_well_doing_scale: Int
+  ph_alcohol_weekly: String
+}
+ 
