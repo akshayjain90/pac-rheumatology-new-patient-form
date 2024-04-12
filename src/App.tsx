@@ -1,10 +1,7 @@
 import './App.css'
 import {
-  NewPatientCreateForm,
-  Page2PatientHistory
- } from './ui-components';
- import { NewPatient } from './API';
-
+  NewPatientCreateForm
+} from './ui-components';
 
 function Heading() {
   return <h1>PACIFIC RHEUMATOLOGY ASSOCIATES MEDICAL GROUP</h1>;
@@ -34,19 +31,13 @@ function ParagraphWithNewlines() {
 }
 
 
-
-const patient: NewPatient = {__typename:"NewPatient", id: "dfsfds", createdAt : "dsvsf", updatedAt: "sdfkl"};
-
 function App() {
+
   return (
     <>
       <Heading />
       <ParagraphWithNewlines />
-      <NewPatientCreateForm 
-      />
-      <Page2PatientHistory
-        newPatient={patient}
-      />
+      <NewPatientCreateForm />
     </>
   )
 }

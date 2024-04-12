@@ -12,12 +12,6 @@
       "AmplifyAppId": "da58jqbqint7z"
     },
     "categories": {
-      "function": {
-        "forwardNewPatientToEmail": {
-          "deploymentBucketName": "amplify-pacrheumatologynewpa-staging-31054-deployment",
-          "s3Key": "amplify-builds/forwardNewPatientToEmail-6b637377743359714469-build.zip"
-        }
-      },
       "api": {
         "pacrheumatologynewpatientform": {}
       }
