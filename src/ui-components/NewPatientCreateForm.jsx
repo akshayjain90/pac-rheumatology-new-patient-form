@@ -4269,7 +4269,7 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
       </Grid>
       <TextField
-        label="If other than self, Nmae of Insured Person"
+        label="If other than self, Name of Insured Person"
         isRequired={false}
         isReadOnly={false}
         value={insurance_primary_insured_person}
@@ -7421,7 +7421,7 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "ph_rh_history_lupus")}
         ></TextField>
         <TextField
-          label="Rheumatoid Arthiritis"
+          label="Rheumatoid Arthritis"
           isRequired={false}
           isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
@@ -9211,7 +9211,7 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "ph_complications")}
       ></TextField>
       <TextAreaField
-        label="Review of Symptoms (Please write if you are currently or recently experiencing any of these symptoms): Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urine, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
+        label="Review of Symptoms (Please write if you are currently or recently experiencing any of these symptoms): Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urinating, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
         isRequired={false}
         isReadOnly={false}
         onChange={(e) => {
@@ -9679,7 +9679,7 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
       </Grid>
       <TextField
-        label="What is the hardest thing for your to do?"
+        label="What is the hardest thing for you to do?"
         isRequired={false}
         isReadOnly={false}
         value={ad_hardest_thing}
@@ -10866,7 +10866,7 @@ export default function NewPatientCreateForm(props) {
         ></option>
       </SelectField>
       <SelectField
-        label="Lift more heavier objects"
+        label="Lift heavier objects"
         placeholder="Please select an option"
         isDisabled={false}
         value={ad_ability_lift_heavier}
