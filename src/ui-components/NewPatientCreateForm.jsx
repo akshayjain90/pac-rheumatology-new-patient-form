@@ -725,9 +725,9 @@ export default function NewPatientCreateForm(props) {
   return (
     <Grid
       as="form"
-      rowGap="15px"
-      columnGap={tokens.space.xxxs.value}
-      padding="20px"
+      rowGap={tokens.space.large.value}
+      columnGap={tokens.space.medium.value}
+      padding={tokens.space.large.value}
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
@@ -5114,7 +5114,7 @@ export default function NewPatientCreateForm(props) {
       ></Divider>
       <Heading
         level={4}
-        children="Doctors's Information"
+        children="Doctor's Information"
         {...getOverrideProps(overrides, "SectionalElement6")}
       ></Heading>
       <Grid
@@ -11711,7 +11711,7 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "ClearButton")}
         ></Button>
         <Flex
-          gap={tokens.space.xxxs.value}
+          gap={tokens.space.medium.value}
           {...getOverrideProps(overrides, "RightAlignCTASubFlex")}
         >
           <Button
