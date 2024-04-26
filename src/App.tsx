@@ -4,7 +4,7 @@ import {
 } from './ui-components';
 
 function Heading() {
-  return <h1>PACIFIC RHEUMATOLOGY ASSOCIATES MEDICAL GROUP</h1>;
+  return <h1>PACIFIC RHEUMATOLOGY ASSOCIATES</h1>;
 }
 
 
@@ -14,7 +14,7 @@ function ParagraphWithNewlines() {
     'Neal S. Birnbaum, M.D., FACP, MACR',
     'Pedro J. Ruiz, M.D., PhD',
     'Molly D. Magnano, M.D.',
-    'Ishita Aggarwal, M.D. ',
+    'Ishita Aggarwal, M.D. RhMSUS',
     'PHONE:(415)923-3060 FAX:(415)749-0841'
   ];
 

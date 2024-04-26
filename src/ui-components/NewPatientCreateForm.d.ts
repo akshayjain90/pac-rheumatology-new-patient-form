@@ -92,8 +92,8 @@ export declare type NewPatientCreateFormInputValues = {
     ph_pregnant?: string;
     ph_live_births?: string;
     ph_complications?: string;
-    ph_symptoms?: string;
     ad_people_in_household?: string;
+    ph_symptoms?: string;
     ad_dress_yourself?: string;
     ad_get_in_out_bed?: string;
     ad_lift_full_cup_mouth?: string;
@@ -181,8 +181,8 @@ export declare type NewPatientCreateFormValidationValues = {
     ph_pregnant?: ValidationFunction<string>;
     ph_live_births?: ValidationFunction<string>;
     ph_complications?: ValidationFunction<string>;
-    ph_symptoms?: ValidationFunction<string>;
     ad_people_in_household?: ValidationFunction<string>;
+    ph_symptoms?: ValidationFunction<string>;
     ad_dress_yourself?: ValidationFunction<string>;
     ad_get_in_out_bed?: ValidationFunction<string>;
     ad_lift_full_cup_mouth?: ValidationFunction<string>;
@@ -310,8 +310,8 @@ export declare type NewPatientCreateFormOverridesProps = {
     ph_pregnant?: PrimitiveOverrideProps<SelectFieldProps>;
     ph_live_births?: PrimitiveOverrideProps<TextFieldProps>;
     ph_complications?: PrimitiveOverrideProps<TextFieldProps>;
-    ph_symptoms?: PrimitiveOverrideProps<TextAreaFieldProps>;
     ad_people_in_household?: PrimitiveOverrideProps<TextAreaFieldProps>;
+    ph_symptoms?: PrimitiveOverrideProps<TextAreaFieldProps>;
     SectionalElement18?: PrimitiveOverrideProps<DividerProps>;
     SectionalElement19?: PrimitiveOverrideProps<DividerProps>;
     SectionalElement20?: PrimitiveOverrideProps<DividerProps>;
