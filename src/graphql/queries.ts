@@ -32,8 +32,7 @@ export const getNewPatient = /* GraphQL */ `query GetNewPatient($id: ID!) {
     employer
     education
     veteran
-    occupatin
-    full_time
+    occupation
     preferred_pharmacy
     insurance_primary_name
     insurance_primary_id
@@ -52,10 +51,53 @@ export const getNewPatient = /* GraphQL */ `query GetNewPatient($id: ID!) {
     primary_care_physician_phone
     referring_physician_phone
     emergency_contact_name
-    emergency_contact_phone
+    full_time
     emergency_contact_relationship
     signature_page_1
     signature_page_1_date
+    ph_briefly_describe_present_symptoms
+    ph_previous_treatment_for_problem
+    ph_current_medicines
+    emergency_contact_phone
+    ph_allergy_to_med
+    ph_allergy_to_med_list
+    ph_rh_history_osteoarthritis
+    ph_rh_history_gout
+    ph_rh_history_vasculitis
+    ph_rh_history_lupus
+    ph_rh_history_rheumatoid
+    ph_rh_history_spondyloarthropathy
+    ph_rh_history_osteoporosis
+    ph_past_medical_history
+    ph_past_surgery_history
+    ph_smoke
+    ph_alcohol
+    ph_rh_history_juvenile_arthritis
+    ph_sleep
+    ph_exercise
+    ph_travel
+    ph_pregnant
+    ph_live_births
+    ph_complications
+    ph_drugs
+    ad_people_in_household
+    ad_dress_yourself
+    ad_get_in_out_bed
+    ad_lift_full_cup_mouth
+    ad_walk_outdoor_flat
+    ad_wash_dry_body
+    ad_pick_clothing_floor
+    ad_turn_faucets_on_off
+    ad_get_in_out_car_bus_train_plane
+    ad_walk_two_miles
+    ad_recreational_activities_sports
+    ad_good_night_sleep
+    ad_daily_pain_scale
+    ad_how_well_doing_scale
+    ph_alcohol_weekly
+    ph_symptoms
+    ad_deal_anxiety_nervous
+    ad_deal_depression_blue
     createdAt
     updatedAt
     __typename
@@ -94,8 +136,7 @@ export const listNewPatients = /* GraphQL */ `query ListNewPatients(
       employer
       education
       veteran
-      occupatin
-      full_time
+      occupation
       preferred_pharmacy
       insurance_primary_name
       insurance_primary_id
@@ -114,10 +155,53 @@ export const listNewPatients = /* GraphQL */ `query ListNewPatients(
       primary_care_physician_phone
       referring_physician_phone
       emergency_contact_name
-      emergency_contact_phone
+      full_time
       emergency_contact_relationship
       signature_page_1
       signature_page_1_date
+      ph_briefly_describe_present_symptoms
+      ph_previous_treatment_for_problem
+      ph_current_medicines
+      emergency_contact_phone
+      ph_allergy_to_med
+      ph_allergy_to_med_list
+      ph_rh_history_osteoarthritis
+      ph_rh_history_gout
+      ph_rh_history_vasculitis
+      ph_rh_history_lupus
+      ph_rh_history_rheumatoid
+      ph_rh_history_spondyloarthropathy
+      ph_rh_history_osteoporosis
+      ph_past_medical_history
+      ph_past_surgery_history
+      ph_smoke
+      ph_alcohol
+      ph_rh_history_juvenile_arthritis
+      ph_sleep
+      ph_exercise
+      ph_travel
+      ph_pregnant
+      ph_live_births
+      ph_complications
+      ph_drugs
+      ad_people_in_household
+      ad_dress_yourself
+      ad_get_in_out_bed
+      ad_lift_full_cup_mouth
+      ad_walk_outdoor_flat
+      ad_wash_dry_body
+      ad_pick_clothing_floor
+      ad_turn_faucets_on_off
+      ad_get_in_out_car_bus_train_plane
+      ad_walk_two_miles
+      ad_recreational_activities_sports
+      ad_good_night_sleep
+      ad_daily_pain_scale
+      ad_how_well_doing_scale
+      ph_alcohol_weekly
+      ph_symptoms
+      ad_deal_anxiety_nervous
+      ad_deal_depression_blue
       createdAt
       updatedAt
       __typename

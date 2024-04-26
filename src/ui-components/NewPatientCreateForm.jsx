@@ -7,15 +7,11 @@
 /* eslint-disable */
 import * as React from "react";
 import {
-  Autocomplete,
-  Badge,
   Button,
   Divider,
   Flex,
   Grid,
   Heading,
-  Icon,
-  ScrollView,
   SelectField,
   SliderField,
   SwitchField,
@@ -28,161 +24,6 @@ import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createNewPatient } from "../graphql/mutations";
 const client = generateClient();
-function ArrayField({
-  items = [],
-  onChange,
-  label,
-  inputFieldRef,
-  children,
-  hasError,
-  setFieldValue,
-  currentFieldValue,
-  defaultFieldValue,
-  lengthLimit,
-  getBadgeText,
-  runValidationTasks,
-  errorMessage,
-}) {
-  const labelElement = <Text>{label}</Text>;
-  const {
-    tokens: {
-      components: {
-        fieldmessages: { error: errorStyles },
-      },
-    },
-  } = useTheme();
-  const [selectedBadgeIndex, setSelectedBadgeIndex] = React.useState();
-  const [isEditing, setIsEditing] = React.useState();
-  React.useEffect(() => {
-    if (isEditing) {
-      inputFieldRef?.current?.focus();
-    }
-  }, [isEditing]);
-  const removeItem = async (removeIndex) => {
-    const newItems = items.filter((value, index) => index !== removeIndex);
-    await onChange(newItems);
-    setSelectedBadgeIndex(undefined);
-  };
-  const addItem = async () => {
-    const { hasError } = runValidationTasks();
-    if (
-      currentFieldValue !== undefined &&
-      currentFieldValue !== null &&
-      currentFieldValue !== "" &&
-      !hasError
-    ) {
-      const newItems = [...items];
-      if (selectedBadgeIndex !== undefined) {
-        newItems[selectedBadgeIndex] = currentFieldValue;
-        setSelectedBadgeIndex(undefined);
-      } else {
-        newItems.push(currentFieldValue);
-      }
-      await onChange(newItems);
-      setIsEditing(false);
-    }
-  };
-  const arraySection = (
-    <React.Fragment>
-      {!!items?.length && (
-        <ScrollView height="inherit" width="inherit" maxHeight={"7rem"}>
-          {items.map((value, index) => {
-            return (
-              <Badge
-                key={index}
-                style={{
-                  cursor: "pointer",
-                  alignItems: "center",
-                  marginRight: 3,
-                  marginTop: 3,
-                  backgroundColor:
-                    index === selectedBadgeIndex ? "#B8CEF9" : "",
-                }}
-                onClick={() => {
-                  setSelectedBadgeIndex(index);
-                  setFieldValue(items[index]);
-                  setIsEditing(true);
-                }}
-              >
-                {getBadgeText ? getBadgeText(value) : value.toString()}
-                <Icon
-                  style={{
-                    cursor: "pointer",
-                    paddingLeft: 3,
-                    width: 20,
-                    height: 20,
-                  }}
-                  viewBox={{ width: 20, height: 20 }}
-                  paths={[
-                    {
-                      d: "M10 10l5.09-5.09L10 10l5.09 5.09L10 10zm0 0L4.91 4.91 10 10l-5.09 5.09L10 10z",
-                      stroke: "black",
-                    },
-                  ]}
-                  ariaLabel="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    removeItem(index);
-                  }}
-                />
-              </Badge>
-            );
-          })}
-        </ScrollView>
-      )}
-      <Divider orientation="horizontal" marginTop={5} />
-    </React.Fragment>
-  );
-  if (lengthLimit !== undefined && items.length >= lengthLimit && !isEditing) {
-    return (
-      <React.Fragment>
-        {labelElement}
-        {arraySection}
-      </React.Fragment>
-    );
-  }
-  return (
-    <React.Fragment>
-      {labelElement}
-      {isEditing && children}
-      {!isEditing ? (
-        <>
-          <Button
-            onClick={() => {
-              setIsEditing(true);
-            }}
-          >
-            Add item
-          </Button>
-          {errorMessage && hasError && (
-            <Text color={errorStyles.color} fontSize={errorStyles.fontSize}>
-              {errorMessage}
-            </Text>
-          )}
-        </>
-      ) : (
-        <Flex justifyContent="flex-end">
-          {(currentFieldValue || isEditing) && (
-            <Button
-              children="Cancel"
-              type="button"
-              size="small"
-              onClick={() => {
-                setFieldValue(defaultFieldValue);
-                setIsEditing(false);
-                setSelectedBadgeIndex(undefined);
-              }}
-            ></Button>
-          )}
-          <Button size="small" variation="link" onClick={addItem}>
-            {selectedBadgeIndex !== undefined ? "Save" : "Add"}
-          </Button>
-        </Flex>
-      )}
-      {arraySection}
-    </React.Fragment>
-  );
-}
 export default function NewPatientCreateForm(props) {
   const {
     clearOnSuccess = true,
@@ -217,7 +58,7 @@ export default function NewPatientCreateForm(props) {
     employer: "",
     education: "",
     veteran: false,
-    occupatin: "",
+    occupation: "",
     full_time: false,
     preferred_pharmacy: "",
     insurance_primary_name: "",
@@ -243,7 +84,7 @@ export default function NewPatientCreateForm(props) {
     signature_page_1_date: "",
     ph_briefly_describe_present_symptoms: "",
     ph_previous_treatment_for_problem: "",
-    ph_current_medicine_1: "",
+    ph_current_medicines: "",
     ph_allergy_to_med: false,
     ph_allergy_to_med_list: "",
     ph_rh_history_osteoarthritis: "",
@@ -268,21 +109,19 @@ export default function NewPatientCreateForm(props) {
     ph_complications: "",
     ph_symptoms: "",
     ad_people_in_household: "",
-    ad_who_shopping: "",
-    ad_housework: "",
-    ad_hardest_thing: "",
-    ad_ability_stand_up_chair: "",
-    ad_ability_walk_outdoors_flat: "",
-    ad_ability_get_on_toilet: "",
-    ad_ability_reach_5_pound: "",
-    ad_ability_car_doors: "",
-    ad_ability_outside_work: "",
-    ad_ability_wait_in_line: "",
-    ad_ability_lift_heavy: "",
-    ad_ability_lift_heavier: "",
-    ad_ability_climb_2_flights: "",
-    ad_aids_devices_activities: [],
-    ad_categories_help: [],
+    ad_dress_yourself: "",
+    ad_get_in_out_bed: "",
+    ad_lift_full_cup_mouth: "",
+    ad_walk_outdoor_flat: "",
+    ad_wash_dry_body: "",
+    ad_pick_clothing_floor: "",
+    ad_turn_faucets_on_off: "",
+    ad_get_in_out_car_bus_train_plane: "",
+    ad_walk_two_miles: "",
+    ad_recreational_activities_sports: "",
+    ad_good_night_sleep: "",
+    ad_deal_anxiety_nervous: "",
+    ad_deal_depression_blue: "",
     ad_daily_pain_scale: 0,
     ad_how_well_doing_scale: 0,
   };
@@ -317,7 +156,7 @@ export default function NewPatientCreateForm(props) {
   const [employer, setEmployer] = React.useState(initialValues.employer);
   const [education, setEducation] = React.useState(initialValues.education);
   const [veteran, setVeteran] = React.useState(initialValues.veteran);
-  const [occupatin, setOccupatin] = React.useState(initialValues.occupatin);
+  const [occupation, setOccupation] = React.useState(initialValues.occupation);
   const [full_time, setFull_time] = React.useState(initialValues.full_time);
   const [preferred_pharmacy, setPreferred_pharmacy] = React.useState(
     initialValues.preferred_pharmacy
@@ -386,8 +225,8 @@ export default function NewPatientCreateForm(props) {
     ph_previous_treatment_for_problem,
     setPh_previous_treatment_for_problem,
   ] = React.useState(initialValues.ph_previous_treatment_for_problem);
-  const [ph_current_medicine_1, setPh_current_medicine_1] = React.useState(
-    initialValues.ph_current_medicine_1
+  const [ph_current_medicines, setPh_current_medicines] = React.useState(
+    initialValues.ph_current_medicines
   );
   const [ph_allergy_to_med, setPh_allergy_to_med] = React.useState(
     initialValues.ph_allergy_to_med
@@ -449,44 +288,46 @@ export default function NewPatientCreateForm(props) {
   const [ad_people_in_household, setAd_people_in_household] = React.useState(
     initialValues.ad_people_in_household
   );
-  const [ad_who_shopping, setAd_who_shopping] = React.useState(
-    initialValues.ad_who_shopping
+  const [ad_dress_yourself, setAd_dress_yourself] = React.useState(
+    initialValues.ad_dress_yourself
   );
-  const [ad_housework, setAd_housework] = React.useState(
-    initialValues.ad_housework
+  const [ad_get_in_out_bed, setAd_get_in_out_bed] = React.useState(
+    initialValues.ad_get_in_out_bed
   );
-  const [ad_hardest_thing, setAd_hardest_thing] = React.useState(
-    initialValues.ad_hardest_thing
+  const [ad_lift_full_cup_mouth, setAd_lift_full_cup_mouth] = React.useState(
+    initialValues.ad_lift_full_cup_mouth
   );
-  const [ad_ability_stand_up_chair, setAd_ability_stand_up_chair] =
-    React.useState(initialValues.ad_ability_stand_up_chair);
-  const [ad_ability_walk_outdoors_flat, setAd_ability_walk_outdoors_flat] =
-    React.useState(initialValues.ad_ability_walk_outdoors_flat);
-  const [ad_ability_get_on_toilet, setAd_ability_get_on_toilet] =
-    React.useState(initialValues.ad_ability_get_on_toilet);
-  const [ad_ability_reach_5_pound, setAd_ability_reach_5_pound] =
-    React.useState(initialValues.ad_ability_reach_5_pound);
-  const [ad_ability_car_doors, setAd_ability_car_doors] = React.useState(
-    initialValues.ad_ability_car_doors
+  const [ad_walk_outdoor_flat, setAd_walk_outdoor_flat] = React.useState(
+    initialValues.ad_walk_outdoor_flat
   );
-  const [ad_ability_outside_work, setAd_ability_outside_work] = React.useState(
-    initialValues.ad_ability_outside_work
+  const [ad_wash_dry_body, setAd_wash_dry_body] = React.useState(
+    initialValues.ad_wash_dry_body
   );
-  const [ad_ability_wait_in_line, setAd_ability_wait_in_line] = React.useState(
-    initialValues.ad_ability_wait_in_line
+  const [ad_pick_clothing_floor, setAd_pick_clothing_floor] = React.useState(
+    initialValues.ad_pick_clothing_floor
   );
-  const [ad_ability_lift_heavy, setAd_ability_lift_heavy] = React.useState(
-    initialValues.ad_ability_lift_heavy
+  const [ad_turn_faucets_on_off, setAd_turn_faucets_on_off] = React.useState(
+    initialValues.ad_turn_faucets_on_off
   );
-  const [ad_ability_lift_heavier, setAd_ability_lift_heavier] = React.useState(
-    initialValues.ad_ability_lift_heavier
+  const [
+    ad_get_in_out_car_bus_train_plane,
+    setAd_get_in_out_car_bus_train_plane,
+  ] = React.useState(initialValues.ad_get_in_out_car_bus_train_plane);
+  const [ad_walk_two_miles, setAd_walk_two_miles] = React.useState(
+    initialValues.ad_walk_two_miles
   );
-  const [ad_ability_climb_2_flights, setAd_ability_climb_2_flights] =
-    React.useState(initialValues.ad_ability_climb_2_flights);
-  const [ad_aids_devices_activities, setAd_aids_devices_activities] =
-    React.useState(initialValues.ad_aids_devices_activities);
-  const [ad_categories_help, setAd_categories_help] = React.useState(
-    initialValues.ad_categories_help
+  const [
+    ad_recreational_activities_sports,
+    setAd_recreational_activities_sports,
+  ] = React.useState(initialValues.ad_recreational_activities_sports);
+  const [ad_good_night_sleep, setAd_good_night_sleep] = React.useState(
+    initialValues.ad_good_night_sleep
+  );
+  const [ad_deal_anxiety_nervous, setAd_deal_anxiety_nervous] = React.useState(
+    initialValues.ad_deal_anxiety_nervous
+  );
+  const [ad_deal_depression_blue, setAd_deal_depression_blue] = React.useState(
+    initialValues.ad_deal_depression_blue
   );
   const [ad_daily_pain_scale, setAd_daily_pain_scale] = React.useState(
     initialValues.ad_daily_pain_scale
@@ -517,7 +358,7 @@ export default function NewPatientCreateForm(props) {
     setEmployer(initialValues.employer);
     setEducation(initialValues.education);
     setVeteran(initialValues.veteran);
-    setOccupatin(initialValues.occupatin);
+    setOccupation(initialValues.occupation);
     setFull_time(initialValues.full_time);
     setPreferred_pharmacy(initialValues.preferred_pharmacy);
     setInsurance_primary_name(initialValues.insurance_primary_name);
@@ -553,7 +394,7 @@ export default function NewPatientCreateForm(props) {
     setPh_previous_treatment_for_problem(
       initialValues.ph_previous_treatment_for_problem
     );
-    setPh_current_medicine_1(initialValues.ph_current_medicine_1);
+    setPh_current_medicines(initialValues.ph_current_medicines);
     setPh_allergy_to_med(initialValues.ph_allergy_to_med);
     setPh_allergy_to_med_list(initialValues.ph_allergy_to_med_list);
     setPh_rh_history_osteoarthritis(initialValues.ph_rh_history_osteoarthritis);
@@ -582,64 +423,54 @@ export default function NewPatientCreateForm(props) {
     setPh_complications(initialValues.ph_complications);
     setPh_symptoms(initialValues.ph_symptoms);
     setAd_people_in_household(initialValues.ad_people_in_household);
-    setAd_who_shopping(initialValues.ad_who_shopping);
-    setAd_housework(initialValues.ad_housework);
-    setAd_hardest_thing(initialValues.ad_hardest_thing);
-    setAd_ability_stand_up_chair(initialValues.ad_ability_stand_up_chair);
-    setAd_ability_walk_outdoors_flat(
-      initialValues.ad_ability_walk_outdoors_flat
+    setAd_dress_yourself(initialValues.ad_dress_yourself);
+    setAd_get_in_out_bed(initialValues.ad_get_in_out_bed);
+    setAd_lift_full_cup_mouth(initialValues.ad_lift_full_cup_mouth);
+    setAd_walk_outdoor_flat(initialValues.ad_walk_outdoor_flat);
+    setAd_wash_dry_body(initialValues.ad_wash_dry_body);
+    setAd_pick_clothing_floor(initialValues.ad_pick_clothing_floor);
+    setAd_turn_faucets_on_off(initialValues.ad_turn_faucets_on_off);
+    setAd_get_in_out_car_bus_train_plane(
+      initialValues.ad_get_in_out_car_bus_train_plane
     );
-    setAd_ability_get_on_toilet(initialValues.ad_ability_get_on_toilet);
-    setAd_ability_reach_5_pound(initialValues.ad_ability_reach_5_pound);
-    setAd_ability_car_doors(initialValues.ad_ability_car_doors);
-    setAd_ability_outside_work(initialValues.ad_ability_outside_work);
-    setAd_ability_wait_in_line(initialValues.ad_ability_wait_in_line);
-    setAd_ability_lift_heavy(initialValues.ad_ability_lift_heavy);
-    setAd_ability_lift_heavier(initialValues.ad_ability_lift_heavier);
-    setAd_ability_climb_2_flights(initialValues.ad_ability_climb_2_flights);
-    setAd_aids_devices_activities(initialValues.ad_aids_devices_activities);
-    setCurrentAd_aids_devices_activitiesValue(undefined);
-    setAd_categories_help(initialValues.ad_categories_help);
-    setCurrentAd_categories_helpValue(undefined);
+    setAd_walk_two_miles(initialValues.ad_walk_two_miles);
+    setAd_recreational_activities_sports(
+      initialValues.ad_recreational_activities_sports
+    );
+    setAd_good_night_sleep(initialValues.ad_good_night_sleep);
+    setAd_deal_anxiety_nervous(initialValues.ad_deal_anxiety_nervous);
+    setAd_deal_depression_blue(initialValues.ad_deal_depression_blue);
     setAd_daily_pain_scale(initialValues.ad_daily_pain_scale);
     setAd_how_well_doing_scale(initialValues.ad_how_well_doing_scale);
     setErrors({});
   };
-  const [
-    currentAd_aids_devices_activitiesValue,
-    setCurrentAd_aids_devices_activitiesValue,
-  ] = React.useState(undefined);
-  const ad_aids_devices_activitiesRef = React.createRef();
-  const [currentAd_categories_helpValue, setCurrentAd_categories_helpValue] =
-    React.useState(undefined);
-  const ad_categories_helpRef = React.createRef();
   const validations = {
     date: [{ type: "Required" }],
-    last_name: [],
-    first_name: [],
-    date_of_birth: [],
-    gender: [],
-    marital_status: [],
+    last_name: [{ type: "Required" }],
+    first_name: [{ type: "Required" }],
+    date_of_birth: [{ type: "Required" }],
+    gender: [{ type: "Required" }],
+    marital_status: [{ type: "Required" }],
     ethnicity: [],
     race: [],
     primary_language: [],
-    address: [],
+    address: [{ type: "Required" }],
     city: [],
     state: [],
     zip: [],
-    home_phone: [{ type: "Phone" }],
+    home_phone: [{ type: "Required" }, { type: "Phone" }],
     work_phone: [{ type: "Phone" }],
     mobile_phone: [{ type: "Phone" }],
-    email: [],
+    email: [{ type: "Required" }],
     social_security: [],
     employer: [],
-    education: [],
-    veteran: [],
-    occupatin: [],
+    education: [{ type: "Required" }],
+    veteran: [{ type: "Required" }],
+    occupation: [{ type: "Required" }],
     full_time: [],
     preferred_pharmacy: [],
-    insurance_primary_name: [],
-    insurance_primary_id: [],
+    insurance_primary_name: [{ type: "Required" }],
+    insurance_primary_id: [{ type: "Required" }],
     insurance_primary_group: [],
     insurance_primary_address: [],
     insurance_primary_phone: [{ type: "Phone" }],
@@ -652,17 +483,17 @@ export default function NewPatientCreateForm(props) {
     insurance_secondary_phone: [{ type: "Phone" }],
     primary_care_physician_name: [],
     primary_care_physician_phone: [{ type: "Phone" }],
-    referring_physician_name: [],
+    referring_physician_name: [{ type: "Required" }],
     referring_physician_phone: [{ type: "Phone" }],
-    emergency_contact_name: [],
-    emergency_contact_phone: [{ type: "Phone" }],
-    emergency_contact_relationship: [],
-    signature_page_1: [],
-    signature_page_1_date: [],
-    ph_briefly_describe_present_symptoms: [],
+    emergency_contact_name: [{ type: "Required" }],
+    emergency_contact_phone: [{ type: "Required" }, { type: "Phone" }],
+    emergency_contact_relationship: [{ type: "Required" }],
+    signature_page_1: [{ type: "Required" }],
+    signature_page_1_date: [{ type: "Required" }],
+    ph_briefly_describe_present_symptoms: [{ type: "Required" }],
     ph_previous_treatment_for_problem: [],
-    ph_current_medicine_1: [],
-    ph_allergy_to_med: [],
+    ph_current_medicines: [],
+    ph_allergy_to_med: [{ type: "Required" }],
     ph_allergy_to_med_list: [],
     ph_rh_history_osteoarthritis: [],
     ph_rh_history_gout: [],
@@ -674,9 +505,9 @@ export default function NewPatientCreateForm(props) {
     ph_rh_history_osteoporosis: [],
     ph_past_medical_history: [],
     ph_past_surgery_history: [],
-    ph_smoke: [],
-    ph_drugs: [],
-    ph_alcohol: [],
+    ph_smoke: [{ type: "Required" }],
+    ph_drugs: [{ type: "Required" }],
+    ph_alcohol: [{ type: "Required" }],
     ph_alcohol_weekly: [],
     ph_sleep: [],
     ph_exercise: [],
@@ -686,23 +517,21 @@ export default function NewPatientCreateForm(props) {
     ph_complications: [],
     ph_symptoms: [{ type: "JSON" }],
     ad_people_in_household: [],
-    ad_who_shopping: [],
-    ad_housework: [],
-    ad_hardest_thing: [],
-    ad_ability_stand_up_chair: [],
-    ad_ability_walk_outdoors_flat: [],
-    ad_ability_get_on_toilet: [],
-    ad_ability_reach_5_pound: [],
-    ad_ability_car_doors: [],
-    ad_ability_outside_work: [],
-    ad_ability_wait_in_line: [],
-    ad_ability_lift_heavy: [],
-    ad_ability_lift_heavier: [],
-    ad_ability_climb_2_flights: [],
-    ad_aids_devices_activities: [],
-    ad_categories_help: [],
-    ad_daily_pain_scale: [],
-    ad_how_well_doing_scale: [],
+    ad_dress_yourself: [{ type: "Required" }],
+    ad_get_in_out_bed: [{ type: "Required" }],
+    ad_lift_full_cup_mouth: [{ type: "Required" }],
+    ad_walk_outdoor_flat: [{ type: "Required" }],
+    ad_wash_dry_body: [{ type: "Required" }],
+    ad_pick_clothing_floor: [{ type: "Required" }],
+    ad_turn_faucets_on_off: [{ type: "Required" }],
+    ad_get_in_out_car_bus_train_plane: [{ type: "Required" }],
+    ad_walk_two_miles: [{ type: "Required" }],
+    ad_recreational_activities_sports: [{ type: "Required" }],
+    ad_good_night_sleep: [{ type: "Required" }],
+    ad_deal_anxiety_nervous: [{ type: "Required" }],
+    ad_deal_depression_blue: [{ type: "Required" }],
+    ad_daily_pain_scale: [{ type: "Required" }],
+    ad_how_well_doing_scale: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -721,7 +550,6 @@ export default function NewPatientCreateForm(props) {
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
   };
-  React.useEffect(() => {}, []);
   return (
     <Grid
       as="form"
@@ -752,7 +580,7 @@ export default function NewPatientCreateForm(props) {
           employer,
           education,
           veteran,
-          occupatin,
+          occupation,
           full_time,
           preferred_pharmacy,
           insurance_primary_name,
@@ -778,7 +606,7 @@ export default function NewPatientCreateForm(props) {
           signature_page_1_date,
           ph_briefly_describe_present_symptoms,
           ph_previous_treatment_for_problem,
-          ph_current_medicine_1,
+          ph_current_medicines,
           ph_allergy_to_med,
           ph_allergy_to_med_list,
           ph_rh_history_osteoarthritis,
@@ -803,21 +631,19 @@ export default function NewPatientCreateForm(props) {
           ph_complications,
           ph_symptoms,
           ad_people_in_household,
-          ad_who_shopping,
-          ad_housework,
-          ad_hardest_thing,
-          ad_ability_stand_up_chair,
-          ad_ability_walk_outdoors_flat,
-          ad_ability_get_on_toilet,
-          ad_ability_reach_5_pound,
-          ad_ability_car_doors,
-          ad_ability_outside_work,
-          ad_ability_wait_in_line,
-          ad_ability_lift_heavy,
-          ad_ability_lift_heavier,
-          ad_ability_climb_2_flights,
-          ad_aids_devices_activities,
-          ad_categories_help,
+          ad_dress_yourself,
+          ad_get_in_out_bed,
+          ad_lift_full_cup_mouth,
+          ad_walk_outdoor_flat,
+          ad_wash_dry_body,
+          ad_pick_clothing_floor,
+          ad_turn_faucets_on_off,
+          ad_get_in_out_car_bus_train_plane,
+          ad_walk_two_miles,
+          ad_recreational_activities_sports,
+          ad_good_night_sleep,
+          ad_deal_anxiety_nervous,
+          ad_deal_depression_blue,
           ad_daily_pain_scale,
           ad_how_well_doing_scale,
         };
@@ -909,7 +735,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -935,7 +761,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -960,21 +786,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -998,8 +822,8 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid2")}
       >
         <TextField
-          label="Last name"
-          isRequired={false}
+          label="Last name *"
+          isRequired={true}
           isReadOnly={false}
           value={last_name}
           onChange={(e) => {
@@ -1027,7 +851,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1053,7 +877,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1078,21 +902,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -1110,8 +932,8 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "last_name")}
         ></TextField>
         <TextField
-          label="First name"
-          isRequired={false}
+          label="First name *"
+          isRequired={true}
           isReadOnly={false}
           value={first_name}
           onChange={(e) => {
@@ -1139,7 +961,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1165,7 +987,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1190,21 +1012,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -1222,8 +1042,8 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "first_name")}
         ></TextField>
         <TextField
-          label="Date of birth"
-          isRequired={false}
+          label="Date of birth *"
+          isRequired={true}
           isReadOnly={false}
           type="date"
           value={date_of_birth}
@@ -1252,7 +1072,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1278,7 +1098,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1303,21 +1123,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -1342,8 +1160,8 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid3")}
       >
         <TextField
-          label="Gender"
-          isRequired={false}
+          label="Gender *"
+          isRequired={true}
           isReadOnly={false}
           value={gender}
           onChange={(e) => {
@@ -1371,7 +1189,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1397,7 +1215,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1422,21 +1240,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -1454,7 +1270,7 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "gender")}
         ></TextField>
         <SelectField
-          label="Marital status"
+          label="Marital status *"
           placeholder="Please select an option"
           isDisabled={false}
           value={marital_status}
@@ -1483,7 +1299,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1509,7 +1325,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1534,21 +1350,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -1623,7 +1437,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1649,7 +1463,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1674,21 +1488,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -1735,7 +1547,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1761,7 +1573,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1786,21 +1598,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -1847,7 +1657,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1873,7 +1683,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1898,21 +1708,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -1939,8 +1747,8 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid5")}
       >
         <TextField
-          label="Address"
-          isRequired={false}
+          label="Address *"
+          isRequired={true}
           isReadOnly={false}
           value={address}
           onChange={(e) => {
@@ -1968,7 +1776,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1994,7 +1802,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -2019,21 +1827,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -2080,7 +1886,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -2106,7 +1912,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -2131,21 +1937,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -2199,7 +2003,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -2225,7 +2029,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -2250,21 +2054,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -2311,7 +2113,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -2337,7 +2139,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -2362,21 +2164,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -2401,8 +2201,8 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid7")}
       >
         <TextField
-          label="Home phone"
-          isRequired={false}
+          label="Home phone *"
+          isRequired={true}
           isReadOnly={false}
           type="tel"
           value={home_phone}
@@ -2431,7 +2231,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -2457,7 +2257,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -2482,21 +2282,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -2544,7 +2342,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -2570,7 +2368,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -2595,21 +2393,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -2657,7 +2453,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -2683,7 +2479,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -2708,21 +2504,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -2741,8 +2535,8 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
       </Grid>
       <TextField
-        label="Email"
-        isRequired={false}
+        label="Email *"
+        isRequired={true}
         isReadOnly={false}
         value={email}
         onChange={(e) => {
@@ -2770,7 +2564,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -2796,7 +2590,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -2821,21 +2615,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -2888,7 +2680,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -2914,7 +2706,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -2939,21 +2731,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -3000,7 +2790,7 @@ export default function NewPatientCreateForm(props) {
                 employer: value,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -3026,7 +2816,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -3051,21 +2841,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -3084,7 +2872,7 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
       </Grid>
       <SelectField
-        label="Education"
+        label="Education *"
         placeholder="Please select an option"
         isDisabled={false}
         value={education}
@@ -3113,7 +2901,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education: value,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -3139,7 +2927,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3164,21 +2952,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -3212,7 +2998,7 @@ export default function NewPatientCreateForm(props) {
         ></option>
       </SelectField>
       <SwitchField
-        label="Are you a veteran?"
+        label="Are you a veteran? * "
         defaultChecked={false}
         isDisabled={false}
         isChecked={veteran}
@@ -3241,7 +3027,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran: value,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -3267,7 +3053,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3292,21 +3078,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -3324,10 +3108,10 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "veteran")}
       ></SwitchField>
       <TextField
-        label="Occupation"
-        isRequired={false}
+        label="Occupation *"
+        isRequired={true}
         isReadOnly={false}
-        value={occupatin}
+        value={occupation}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -3353,7 +3137,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin: value,
+              occupation: value,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -3379,7 +3163,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3404,36 +3188,34 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
             const result = onChange(modelFields);
-            value = result?.occupatin ?? value;
+            value = result?.occupation ?? value;
           }
-          if (errors.occupatin?.hasError) {
-            runValidationTasks("occupatin", value);
+          if (errors.occupation?.hasError) {
+            runValidationTasks("occupation", value);
           }
-          setOccupatin(value);
+          setOccupation(value);
         }}
-        onBlur={() => runValidationTasks("occupatin", occupatin)}
-        errorMessage={errors.occupatin?.errorMessage}
-        hasError={errors.occupatin?.hasError}
-        {...getOverrideProps(overrides, "occupatin")}
+        onBlur={() => runValidationTasks("occupation", occupation)}
+        errorMessage={errors.occupation?.errorMessage}
+        hasError={errors.occupation?.hasError}
+        {...getOverrideProps(overrides, "occupation")}
       ></TextField>
       <SwitchField
         label="Full time"
@@ -3465,7 +3247,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time: value,
               preferred_pharmacy,
               insurance_primary_name,
@@ -3491,7 +3273,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3516,21 +3298,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -3577,7 +3357,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy: value,
               insurance_primary_name,
@@ -3603,7 +3383,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3628,21 +3408,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -3663,10 +3441,6 @@ export default function NewPatientCreateForm(props) {
       ></TextField>
       <Divider
         orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement2")}
-      ></Divider>
-      <Divider
-        orientation="horizontal"
         {...getOverrideProps(overrides, "SectionalElement3")}
       ></Divider>
       <Heading
@@ -3675,8 +3449,8 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "SectionalElement1")}
       ></Heading>
       <TextField
-        label="Name of Primary Insurance"
-        isRequired={false}
+        label="Name of Primary Insurance *"
+        isRequired={true}
         isReadOnly={false}
         value={insurance_primary_name}
         onChange={(e) => {
@@ -3704,7 +3478,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name: value,
@@ -3730,7 +3504,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3755,21 +3529,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -3792,11 +3564,11 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid19")}
+        {...getOverrideProps(overrides, "RowGrid18")}
       >
         <TextField
-          label="ID #"
-          isRequired={false}
+          label="ID # *"
+          isRequired={true}
           isReadOnly={false}
           value={insurance_primary_id}
           onChange={(e) => {
@@ -3824,7 +3596,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -3850,7 +3622,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -3875,21 +3647,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -3938,7 +3708,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -3964,7 +3734,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -3989,21 +3759,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -4030,7 +3798,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid20")}
+        {...getOverrideProps(overrides, "RowGrid19")}
       >
         <TextField
           label="Address"
@@ -4062,7 +3830,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4088,7 +3856,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4113,21 +3881,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -4180,7 +3946,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4206,7 +3972,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4231,21 +3997,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -4298,7 +4062,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -4324,7 +4088,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -4349,21 +4113,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -4415,7 +4177,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -4441,7 +4203,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -4466,21 +4228,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -4540,7 +4300,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -4566,7 +4326,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -4591,21 +4351,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -4628,7 +4386,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid24")}
+        {...getOverrideProps(overrides, "RowGrid23")}
       >
         <TextField
           label="ID #"
@@ -4660,7 +4418,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4686,7 +4444,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4711,21 +4469,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -4774,7 +4530,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4800,7 +4556,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4825,21 +4581,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -4866,7 +4620,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid25")}
+        {...getOverrideProps(overrides, "RowGrid24")}
       >
         <TextField
           label="Address"
@@ -4898,7 +4652,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4924,7 +4678,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4949,21 +4703,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -5016,7 +4768,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5042,7 +4794,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5067,21 +4819,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -5108,10 +4858,6 @@ export default function NewPatientCreateForm(props) {
         orientation="horizontal"
         {...getOverrideProps(overrides, "SectionalElement4")}
       ></Divider>
-      <Divider
-        orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement5")}
-      ></Divider>
       <Heading
         level={4}
         children="Doctor's Information"
@@ -5121,7 +4867,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid29")}
+        {...getOverrideProps(overrides, "RowGrid27")}
       >
         <TextField
           label="Name of Primary Care Physician"
@@ -5153,7 +4899,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5179,7 +4925,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5204,21 +4950,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -5271,7 +5015,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5297,7 +5041,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5322,21 +5066,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -5363,11 +5105,11 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid30")}
+        {...getOverrideProps(overrides, "RowGrid28")}
       >
         <TextField
-          label="Name of Referring Physician"
-          isRequired={false}
+          label="Name of Referring Physician *"
+          isRequired={true}
           isReadOnly={false}
           value={referring_physician_name}
           onChange={(e) => {
@@ -5395,7 +5137,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5421,7 +5163,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5446,21 +5188,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -5513,7 +5253,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5539,7 +5279,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5564,21 +5304,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -5605,10 +5343,6 @@ export default function NewPatientCreateForm(props) {
         orientation="horizontal"
         {...getOverrideProps(overrides, "SectionalElement8")}
       ></Divider>
-      <Divider
-        orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement7")}
-      ></Divider>
       <Heading
         level={4}
         children="Emergency Contact Information"
@@ -5618,11 +5352,11 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid34")}
+        {...getOverrideProps(overrides, "RowGrid31")}
       >
         <TextField
-          label="Name"
-          isRequired={false}
+          label="Name *"
+          isRequired={true}
           isReadOnly={false}
           value={emergency_contact_name}
           onChange={(e) => {
@@ -5650,7 +5384,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5676,7 +5410,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5701,21 +5435,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -5735,8 +5467,8 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "emergency_contact_name")}
         ></TextField>
         <TextField
-          label="Phone #"
-          isRequired={false}
+          label="Phone # *"
+          isRequired={true}
           isReadOnly={false}
           type="tel"
           value={emergency_contact_phone}
@@ -5765,7 +5497,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5791,7 +5523,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5816,21 +5548,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -5854,8 +5584,8 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
       </Grid>
       <TextField
-        label="Relationship"
-        isRequired={false}
+        label="Relationship *"
+        isRequired={true}
         isReadOnly={false}
         value={emergency_contact_relationship}
         onChange={(e) => {
@@ -5883,7 +5613,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -5909,7 +5639,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -5934,21 +5664,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -5974,10 +5702,6 @@ export default function NewPatientCreateForm(props) {
         orientation="horizontal"
         {...getOverrideProps(overrides, "SectionalElement10")}
       ></Divider>
-      <Divider
-        orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement11")}
-      ></Divider>
       <Heading
         children="PLEASE READ AND TYPE NAME BELOW TO SIGN:"
         {...getOverrideProps(overrides, "SectionalElement12")}
@@ -5990,11 +5714,11 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid40")}
+        {...getOverrideProps(overrides, "RowGrid36")}
       >
         <TextField
-          label="Signature"
-          isRequired={false}
+          label="Signature *"
+          isRequired={true}
           isReadOnly={false}
           value={signature_page_1}
           onChange={(e) => {
@@ -6022,7 +5746,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -6048,7 +5772,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -6073,21 +5797,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -6107,8 +5829,8 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "signature_page_1")}
         ></TextField>
         <TextField
-          label="Date"
-          isRequired={false}
+          label="Date *"
+          isRequired={true}
           isReadOnly={false}
           type="date"
           value={signature_page_1_date}
@@ -6137,7 +5859,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -6163,7 +5885,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date: value,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -6188,21 +5910,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -6230,14 +5950,18 @@ export default function NewPatientCreateForm(props) {
         orientation="horizontal"
         {...getOverrideProps(overrides, "SectionalElement14")}
       ></Divider>
+      <Divider
+        orientation="horizontal"
+        {...getOverrideProps(overrides, "SectionalElement21")}
+      ></Divider>
       <Heading
         level={4}
         children="PATIENT HISTORY"
         {...getOverrideProps(overrides, "SectionalElement90")}
       ></Heading>
       <TextAreaField
-        label="Briefly describe your presenting symptoms"
-        isRequired={false}
+        label="Briefly describe your presenting symptoms *"
+        isRequired={true}
         isReadOnly={false}
         onChange={(e) => {
           let { value } = e.target;
@@ -6264,7 +5988,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -6290,7 +6014,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms: value,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -6315,21 +6039,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -6380,7 +6102,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -6406,7 +6128,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem: value,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -6431,21 +6153,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -6496,7 +6216,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -6522,7 +6242,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1: value,
+              ph_current_medicines: value,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -6547,41 +6267,39 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
             const result = onChange(modelFields);
-            value = result?.ph_current_medicine_1 ?? value;
+            value = result?.ph_current_medicines ?? value;
           }
-          if (errors.ph_current_medicine_1?.hasError) {
-            runValidationTasks("ph_current_medicine_1", value);
+          if (errors.ph_current_medicines?.hasError) {
+            runValidationTasks("ph_current_medicines", value);
           }
-          setPh_current_medicine_1(value);
+          setPh_current_medicines(value);
         }}
         onBlur={() =>
-          runValidationTasks("ph_current_medicine_1", ph_current_medicine_1)
+          runValidationTasks("ph_current_medicines", ph_current_medicines)
         }
-        errorMessage={errors.ph_current_medicine_1?.errorMessage}
-        hasError={errors.ph_current_medicine_1?.hasError}
-        {...getOverrideProps(overrides, "ph_current_medicine_1")}
+        errorMessage={errors.ph_current_medicines?.errorMessage}
+        hasError={errors.ph_current_medicines?.hasError}
+        {...getOverrideProps(overrides, "ph_current_medicines")}
       ></TextAreaField>
       <SwitchField
-        label="ALLERGY to any medication?"
+        label="ALLERGY to any medication? *"
         defaultChecked={false}
         isDisabled={false}
         isChecked={ph_allergy_to_med}
@@ -6610,7 +6328,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -6636,7 +6354,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med: value,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -6661,21 +6379,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -6724,7 +6440,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -6750,7 +6466,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list: value,
               ph_rh_history_osteoarthritis,
@@ -6775,21 +6491,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -6820,7 +6534,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid51")}
+        {...getOverrideProps(overrides, "RowGrid48")}
       >
         <TextField
           label="Osteoarthritis"
@@ -6853,7 +6567,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -6879,7 +6593,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis: value,
@@ -6904,21 +6618,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -6971,7 +6683,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -6997,7 +6709,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7022,21 +6734,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -7060,7 +6770,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid52")}
+        {...getOverrideProps(overrides, "RowGrid49")}
       >
         <TextField
           label="Juvenile Arthritis"
@@ -7093,7 +6803,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7119,7 +6829,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7144,21 +6854,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -7211,7 +6919,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7237,7 +6945,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7262,21 +6970,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -7303,7 +7009,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid53")}
+        {...getOverrideProps(overrides, "RowGrid50")}
       >
         <TextField
           label="Lupus / SLE"
@@ -7336,7 +7042,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7362,7 +7068,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7387,21 +7093,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -7451,7 +7155,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7477,7 +7181,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7502,21 +7206,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -7543,7 +7245,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid54")}
+        {...getOverrideProps(overrides, "RowGrid51")}
       >
         <TextField
           label="Spondyloarthropathy (i.e., A.S., Psoriatic Arthritis, etc.)"
@@ -7576,7 +7278,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7602,7 +7304,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7627,21 +7329,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -7694,7 +7394,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7720,7 +7420,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7745,21 +7445,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -7811,7 +7509,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -7837,7 +7535,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -7862,21 +7560,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -7924,7 +7620,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -7950,7 +7646,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -7975,21 +7671,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -8012,10 +7706,10 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid57")}
+        {...getOverrideProps(overrides, "RowGrid54")}
       >
         <SelectField
-          label="Do you smoke?"
+          label="Do you smoke? *"
           placeholder="Please select an option"
           isDisabled={false}
           value={ph_smoke}
@@ -8044,7 +7738,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8070,7 +7764,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -8095,21 +7789,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -8143,7 +7835,7 @@ export default function NewPatientCreateForm(props) {
           ></option>
         </SelectField>
         <SelectField
-          label="Do you use drugs (not prescribed)?"
+          label="Do you use drugs (not prescribed)? *"
           placeholder="Please select an option"
           isDisabled={false}
           value={ph_drugs}
@@ -8172,7 +7864,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8198,7 +7890,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -8223,21 +7915,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -8275,10 +7965,10 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid58")}
+        {...getOverrideProps(overrides, "RowGrid55")}
       >
         <SelectField
-          label="Do you drink alcohol?"
+          label="Do you drink alcohol? *"
           placeholder="Please select an option"
           isDisabled={false}
           value={ph_alcohol}
@@ -8307,7 +7997,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8333,7 +8023,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -8358,21 +8048,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -8435,7 +8123,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8461,7 +8149,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -8486,21 +8174,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -8550,7 +8236,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -8576,7 +8262,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -8601,21 +8287,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -8662,7 +8346,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -8688,7 +8372,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -8713,21 +8397,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -8774,7 +8456,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -8800,7 +8482,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -8825,21 +8507,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -8860,7 +8540,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid62")}
+        {...getOverrideProps(overrides, "RowGrid59")}
       >
         <SelectField
           label="Have you ever been pregnant?"
@@ -8892,7 +8572,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8918,7 +8598,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -8943,21 +8623,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -9015,7 +8693,7 @@ export default function NewPatientCreateForm(props) {
                 employer,
                 education,
                 veteran,
-                occupatin,
+                occupation,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -9041,7 +8719,7 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
+                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -9066,21 +8744,19 @@ export default function NewPatientCreateForm(props) {
                 ph_complications,
                 ph_symptoms,
                 ad_people_in_household,
-                ad_who_shopping,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
               };
@@ -9128,7 +8804,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -9154,7 +8830,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -9179,21 +8855,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications: value,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -9239,7 +8913,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -9265,7 +8939,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -9290,21 +8964,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms: value,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -9321,19 +8993,6 @@ export default function NewPatientCreateForm(props) {
         hasError={errors.ph_symptoms?.hasError}
         {...getOverrideProps(overrides, "ph_symptoms")}
       ></TextAreaField>
-      <Divider
-        orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement18")}
-      ></Divider>
-      <Divider
-        orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement19")}
-      ></Divider>
-      <Heading
-        level={4}
-        children="ACTIVITIES OF DAILY LIVING"
-        {...getOverrideProps(overrides, "SectionalElement900")}
-      ></Heading>
       <TextAreaField
         label="How many people in household? (List age & relationship):"
         isRequired={false}
@@ -9363,7 +9022,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -9389,7 +9048,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -9414,21 +9073,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household: value,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
@@ -9447,358 +9104,36 @@ export default function NewPatientCreateForm(props) {
         hasError={errors.ad_people_in_household?.hasError}
         {...getOverrideProps(overrides, "ad_people_in_household")}
       ></TextAreaField>
-      <Grid
-        columnGap="inherit"
-        rowGap="inherit"
-        templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid69")}
-      >
-        <TextField
-          label="Who does most of the shopping?"
-          isRequired={false}
-          isReadOnly={false}
-          value={ad_who_shopping}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language,
-                address,
-                city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupatin,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ph_symptoms,
-                ad_people_in_household,
-                ad_who_shopping: value,
-                ad_housework,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.ad_who_shopping ?? value;
-            }
-            if (errors.ad_who_shopping?.hasError) {
-              runValidationTasks("ad_who_shopping", value);
-            }
-            setAd_who_shopping(value);
-          }}
-          onBlur={() => runValidationTasks("ad_who_shopping", ad_who_shopping)}
-          errorMessage={errors.ad_who_shopping?.errorMessage}
-          hasError={errors.ad_who_shopping?.hasError}
-          {...getOverrideProps(overrides, "ad_who_shopping")}
-        ></TextField>
-        <TextField
-          label="Most housework/yardwork?"
-          isRequired={false}
-          isReadOnly={false}
-          value={ad_housework}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language,
-                address,
-                city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupatin,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicine_1,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ph_symptoms,
-                ad_people_in_household,
-                ad_who_shopping,
-                ad_housework: value,
-                ad_hardest_thing,
-                ad_ability_stand_up_chair,
-                ad_ability_walk_outdoors_flat,
-                ad_ability_get_on_toilet,
-                ad_ability_reach_5_pound,
-                ad_ability_car_doors,
-                ad_ability_outside_work,
-                ad_ability_wait_in_line,
-                ad_ability_lift_heavy,
-                ad_ability_lift_heavier,
-                ad_ability_climb_2_flights,
-                ad_aids_devices_activities,
-                ad_categories_help,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.ad_housework ?? value;
-            }
-            if (errors.ad_housework?.hasError) {
-              runValidationTasks("ad_housework", value);
-            }
-            setAd_housework(value);
-          }}
-          onBlur={() => runValidationTasks("ad_housework", ad_housework)}
-          errorMessage={errors.ad_housework?.errorMessage}
-          hasError={errors.ad_housework?.hasError}
-          {...getOverrideProps(overrides, "ad_housework")}
-        ></TextField>
-      </Grid>
-      <TextField
-        label="What is the hardest thing for you to do?"
-        isRequired={false}
-        isReadOnly={false}
-        value={ad_hardest_thing}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupatin,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing: value,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_hardest_thing ?? value;
-          }
-          if (errors.ad_hardest_thing?.hasError) {
-            runValidationTasks("ad_hardest_thing", value);
-          }
-          setAd_hardest_thing(value);
-        }}
-        onBlur={() => runValidationTasks("ad_hardest_thing", ad_hardest_thing)}
-        errorMessage={errors.ad_hardest_thing?.errorMessage}
-        hasError={errors.ad_hardest_thing?.hasError}
-        {...getOverrideProps(overrides, "ad_hardest_thing")}
-      ></TextField>
+      <Divider
+        orientation="horizontal"
+        {...getOverrideProps(overrides, "SectionalElement18")}
+      ></Divider>
+      <Divider
+        orientation="horizontal"
+        {...getOverrideProps(overrides, "SectionalElement19")}
+      ></Divider>
+      <Divider
+        orientation="horizontal"
+        {...getOverrideProps(overrides, "SectionalElement20")}
+      ></Divider>
       <Heading
-        children="Please choose the response which best describes your usual abilities OVER THE PAST WEEK:"
+        level={4}
+        children="RAPID3 Survey"
+        {...getOverrideProps(overrides, "SectionalElement900")}
+      ></Heading>
+      <Heading
+        children="1. Please check the ONE best answer for your abilities at this time:"
         {...getOverrideProps(overrides, "SectionalElement120")}
       ></Heading>
+      <Text
+        children="OVER THE LAST WEEK, were you able to:"
+        {...getOverrideProps(overrides, "SectionalElement2")}
+      ></Text>
       <SelectField
-        label="Stand up from a straight chair"
+        label="Dress yourself, including tying shoelaces and doing buttons? *"
         placeholder="Please select an option"
         isDisabled={false}
-        value={ad_ability_stand_up_chair}
+        value={ad_dress_yourself}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -9824,7 +9159,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -9850,7 +9185,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -9875,63 +9210,63 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair: value,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself: value,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
             const result = onChange(modelFields);
-            value = result?.ad_ability_stand_up_chair ?? value;
+            value = result?.ad_dress_yourself ?? value;
           }
-          if (errors.ad_ability_stand_up_chair?.hasError) {
-            runValidationTasks("ad_ability_stand_up_chair", value);
+          if (errors.ad_dress_yourself?.hasError) {
+            runValidationTasks("ad_dress_yourself", value);
           }
-          setAd_ability_stand_up_chair(value);
+          setAd_dress_yourself(value);
         }}
         onBlur={() =>
-          runValidationTasks(
-            "ad_ability_stand_up_chair",
-            ad_ability_stand_up_chair
-          )
+          runValidationTasks("ad_dress_yourself", ad_dress_yourself)
         }
-        errorMessage={errors.ad_ability_stand_up_chair?.errorMessage}
-        hasError={errors.ad_ability_stand_up_chair?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_stand_up_chair")}
+        errorMessage={errors.ad_dress_yourself?.errorMessage}
+        hasError={errors.ad_dress_yourself?.hasError}
+        {...getOverrideProps(overrides, "ad_dress_yourself")}
       >
         <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_stand_up_chairoption0")}
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_dress_yourselfoption0")}
         ></option>
         <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_stand_up_chairoption1")}
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_dress_yourselfoption1")}
         ></option>
         <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_stand_up_chairoption2")}
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_dress_yourselfoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_dress_yourselfoption3")}
         ></option>
       </SelectField>
       <SelectField
-        label="Walk outdoors on flat ground"
+        label="Get in and out of bed? *"
         placeholder="Please select an option"
         isDisabled={false}
-        value={ad_ability_walk_outdoors_flat}
+        value={ad_get_in_out_bed}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -9957,7 +9292,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -9983,7 +9318,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10008,72 +9343,874 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat: value,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed: value,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
             const result = onChange(modelFields);
-            value = result?.ad_ability_walk_outdoors_flat ?? value;
+            value = result?.ad_get_in_out_bed ?? value;
           }
-          if (errors.ad_ability_walk_outdoors_flat?.hasError) {
-            runValidationTasks("ad_ability_walk_outdoors_flat", value);
+          if (errors.ad_get_in_out_bed?.hasError) {
+            runValidationTasks("ad_get_in_out_bed", value);
           }
-          setAd_ability_walk_outdoors_flat(value);
+          setAd_get_in_out_bed(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("ad_get_in_out_bed", ad_get_in_out_bed)
+        }
+        errorMessage={errors.ad_get_in_out_bed?.errorMessage}
+        hasError={errors.ad_get_in_out_bed?.hasError}
+        {...getOverrideProps(overrides, "ad_get_in_out_bed")}
+      >
+        <option
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_get_in_out_bedoption0")}
+        ></option>
+        <option
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_get_in_out_bedoption1")}
+        ></option>
+        <option
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_get_in_out_bedoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_get_in_out_bedoption3")}
+        ></option>
+      </SelectField>
+      <SelectField
+        label="Lift a full cup or glass to your mouth? *"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={ad_lift_full_cup_mouth}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              primary_language,
+              address,
+              city,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+              social_security,
+              employer,
+              education,
+              veteran,
+              occupation,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicines,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ph_symptoms,
+              ad_people_in_household,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth: value,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+            };
+            const result = onChange(modelFields);
+            value = result?.ad_lift_full_cup_mouth ?? value;
+          }
+          if (errors.ad_lift_full_cup_mouth?.hasError) {
+            runValidationTasks("ad_lift_full_cup_mouth", value);
+          }
+          setAd_lift_full_cup_mouth(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("ad_lift_full_cup_mouth", ad_lift_full_cup_mouth)
+        }
+        errorMessage={errors.ad_lift_full_cup_mouth?.errorMessage}
+        hasError={errors.ad_lift_full_cup_mouth?.hasError}
+        {...getOverrideProps(overrides, "ad_lift_full_cup_mouth")}
+      >
+        <option
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_lift_full_cup_mouthoption0")}
+        ></option>
+        <option
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_lift_full_cup_mouthoption1")}
+        ></option>
+        <option
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_lift_full_cup_mouthoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_lift_full_cup_mouthoption3")}
+        ></option>
+      </SelectField>
+      <SelectField
+        label="Walk outdoors on flat ground? *"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={ad_walk_outdoor_flat}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              primary_language,
+              address,
+              city,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+              social_security,
+              employer,
+              education,
+              veteran,
+              occupation,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicines,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ph_symptoms,
+              ad_people_in_household,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat: value,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+            };
+            const result = onChange(modelFields);
+            value = result?.ad_walk_outdoor_flat ?? value;
+          }
+          if (errors.ad_walk_outdoor_flat?.hasError) {
+            runValidationTasks("ad_walk_outdoor_flat", value);
+          }
+          setAd_walk_outdoor_flat(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("ad_walk_outdoor_flat", ad_walk_outdoor_flat)
+        }
+        errorMessage={errors.ad_walk_outdoor_flat?.errorMessage}
+        hasError={errors.ad_walk_outdoor_flat?.hasError}
+        {...getOverrideProps(overrides, "ad_walk_outdoor_flat")}
+      >
+        <option
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_walk_outdoor_flatoption0")}
+        ></option>
+        <option
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_walk_outdoor_flatoption1")}
+        ></option>
+        <option
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_walk_outdoor_flatoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_walk_outdoor_flatoption3")}
+        ></option>
+      </SelectField>
+      <SelectField
+        label="Wash and dry your entire body? *"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={ad_wash_dry_body}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              primary_language,
+              address,
+              city,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+              social_security,
+              employer,
+              education,
+              veteran,
+              occupation,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicines,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ph_symptoms,
+              ad_people_in_household,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body: value,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+            };
+            const result = onChange(modelFields);
+            value = result?.ad_wash_dry_body ?? value;
+          }
+          if (errors.ad_wash_dry_body?.hasError) {
+            runValidationTasks("ad_wash_dry_body", value);
+          }
+          setAd_wash_dry_body(value);
+        }}
+        onBlur={() => runValidationTasks("ad_wash_dry_body", ad_wash_dry_body)}
+        errorMessage={errors.ad_wash_dry_body?.errorMessage}
+        hasError={errors.ad_wash_dry_body?.hasError}
+        {...getOverrideProps(overrides, "ad_wash_dry_body")}
+      >
+        <option
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_wash_dry_bodyoption0")}
+        ></option>
+        <option
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_wash_dry_bodyoption1")}
+        ></option>
+        <option
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_wash_dry_bodyoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_wash_dry_bodyoption3")}
+        ></option>
+      </SelectField>
+      <SelectField
+        label="Bend down to pick up clothing from the floor? *"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={ad_pick_clothing_floor}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              primary_language,
+              address,
+              city,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+              social_security,
+              employer,
+              education,
+              veteran,
+              occupation,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicines,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ph_symptoms,
+              ad_people_in_household,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor: value,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+            };
+            const result = onChange(modelFields);
+            value = result?.ad_pick_clothing_floor ?? value;
+          }
+          if (errors.ad_pick_clothing_floor?.hasError) {
+            runValidationTasks("ad_pick_clothing_floor", value);
+          }
+          setAd_pick_clothing_floor(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("ad_pick_clothing_floor", ad_pick_clothing_floor)
+        }
+        errorMessage={errors.ad_pick_clothing_floor?.errorMessage}
+        hasError={errors.ad_pick_clothing_floor?.hasError}
+        {...getOverrideProps(overrides, "ad_pick_clothing_floor")}
+      >
+        <option
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_pick_clothing_flooroption0")}
+        ></option>
+        <option
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_pick_clothing_flooroption1")}
+        ></option>
+        <option
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_pick_clothing_flooroption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_pick_clothing_flooroption3")}
+        ></option>
+      </SelectField>
+      <SelectField
+        label="Turn regular faucets on and off? *"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={ad_turn_faucets_on_off}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              primary_language,
+              address,
+              city,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+              social_security,
+              employer,
+              education,
+              veteran,
+              occupation,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicines,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ph_symptoms,
+              ad_people_in_household,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off: value,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+            };
+            const result = onChange(modelFields);
+            value = result?.ad_turn_faucets_on_off ?? value;
+          }
+          if (errors.ad_turn_faucets_on_off?.hasError) {
+            runValidationTasks("ad_turn_faucets_on_off", value);
+          }
+          setAd_turn_faucets_on_off(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("ad_turn_faucets_on_off", ad_turn_faucets_on_off)
+        }
+        errorMessage={errors.ad_turn_faucets_on_off?.errorMessage}
+        hasError={errors.ad_turn_faucets_on_off?.hasError}
+        {...getOverrideProps(overrides, "ad_turn_faucets_on_off")}
+      >
+        <option
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_turn_faucets_on_offoption0")}
+        ></option>
+        <option
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_turn_faucets_on_offoption1")}
+        ></option>
+        <option
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_turn_faucets_on_offoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_turn_faucets_on_offoption3")}
+        ></option>
+      </SelectField>
+      <SelectField
+        label="Get in and out of a car, bus, train, or airplane? *"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={ad_get_in_out_car_bus_train_plane}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              primary_language,
+              address,
+              city,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+              social_security,
+              employer,
+              education,
+              veteran,
+              occupation,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicines,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ph_symptoms,
+              ad_people_in_household,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane: value,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+            };
+            const result = onChange(modelFields);
+            value = result?.ad_get_in_out_car_bus_train_plane ?? value;
+          }
+          if (errors.ad_get_in_out_car_bus_train_plane?.hasError) {
+            runValidationTasks("ad_get_in_out_car_bus_train_plane", value);
+          }
+          setAd_get_in_out_car_bus_train_plane(value);
         }}
         onBlur={() =>
           runValidationTasks(
-            "ad_ability_walk_outdoors_flat",
-            ad_ability_walk_outdoors_flat
+            "ad_get_in_out_car_bus_train_plane",
+            ad_get_in_out_car_bus_train_plane
           )
         }
-        errorMessage={errors.ad_ability_walk_outdoors_flat?.errorMessage}
-        hasError={errors.ad_ability_walk_outdoors_flat?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_walk_outdoors_flat")}
+        errorMessage={errors.ad_get_in_out_car_bus_train_plane?.errorMessage}
+        hasError={errors.ad_get_in_out_car_bus_train_plane?.hasError}
+        {...getOverrideProps(overrides, "ad_get_in_out_car_bus_train_plane")}
       >
         <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
           {...getOverrideProps(
             overrides,
-            "ad_ability_walk_outdoors_flatoption0"
+            "ad_get_in_out_car_bus_train_planeoption0"
           )}
         ></option>
         <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
           {...getOverrideProps(
             overrides,
-            "ad_ability_walk_outdoors_flatoption1"
+            "ad_get_in_out_car_bus_train_planeoption1"
           )}
         ></option>
         <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
           {...getOverrideProps(
             overrides,
-            "ad_ability_walk_outdoors_flatoption2"
+            "ad_get_in_out_car_bus_train_planeoption2"
+          )}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(
+            overrides,
+            "ad_get_in_out_car_bus_train_planeoption3"
           )}
         ></option>
       </SelectField>
       <SelectField
-        label="Get on/off toilet"
+        label="Walk two miles or three kilometers, if you wish? *"
         placeholder="Please select an option"
         isDisabled={false}
-        value={ad_ability_get_on_toilet}
+        value={ad_walk_two_miles}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -10099,7 +10236,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10125,7 +10262,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10150,68 +10287,211 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet: value,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles: value,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
             const result = onChange(modelFields);
-            value = result?.ad_ability_get_on_toilet ?? value;
+            value = result?.ad_walk_two_miles ?? value;
           }
-          if (errors.ad_ability_get_on_toilet?.hasError) {
-            runValidationTasks("ad_ability_get_on_toilet", value);
+          if (errors.ad_walk_two_miles?.hasError) {
+            runValidationTasks("ad_walk_two_miles", value);
           }
-          setAd_ability_get_on_toilet(value);
+          setAd_walk_two_miles(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("ad_walk_two_miles", ad_walk_two_miles)
+        }
+        errorMessage={errors.ad_walk_two_miles?.errorMessage}
+        hasError={errors.ad_walk_two_miles?.hasError}
+        {...getOverrideProps(overrides, "ad_walk_two_miles")}
+      >
+        <option
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_walk_two_milesoption0")}
+        ></option>
+        <option
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_walk_two_milesoption1")}
+        ></option>
+        <option
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_walk_two_milesoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_walk_two_milesoption3")}
+        ></option>
+      </SelectField>
+      <SelectField
+        label="Participate in recreational activities and sports as you would like, if you wish? *"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={ad_recreational_activities_sports}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              primary_language,
+              address,
+              city,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+              social_security,
+              employer,
+              education,
+              veteran,
+              occupation,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicines,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ph_symptoms,
+              ad_people_in_household,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports: value,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+            };
+            const result = onChange(modelFields);
+            value = result?.ad_recreational_activities_sports ?? value;
+          }
+          if (errors.ad_recreational_activities_sports?.hasError) {
+            runValidationTasks("ad_recreational_activities_sports", value);
+          }
+          setAd_recreational_activities_sports(value);
         }}
         onBlur={() =>
           runValidationTasks(
-            "ad_ability_get_on_toilet",
-            ad_ability_get_on_toilet
+            "ad_recreational_activities_sports",
+            ad_recreational_activities_sports
           )
         }
-        errorMessage={errors.ad_ability_get_on_toilet?.errorMessage}
-        hasError={errors.ad_ability_get_on_toilet?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_get_on_toilet")}
+        errorMessage={errors.ad_recreational_activities_sports?.errorMessage}
+        hasError={errors.ad_recreational_activities_sports?.hasError}
+        {...getOverrideProps(overrides, "ad_recreational_activities_sports")}
       >
         <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_get_on_toiletoption0")}
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(
+            overrides,
+            "ad_recreational_activities_sportsoption0"
+          )}
         ></option>
         <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_get_on_toiletoption1")}
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(
+            overrides,
+            "ad_recreational_activities_sportsoption1"
+          )}
         ></option>
         <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_get_on_toiletoption2")}
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(
+            overrides,
+            "ad_recreational_activities_sportsoption2"
+          )}
         ></option>
         <option
-          children="UNABLE to do"
-          value="UNABLE to do"
-          {...getOverrideProps(overrides, "ad_ability_get_on_toiletoption3")}
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(
+            overrides,
+            "ad_recreational_activities_sportsoption3"
+          )}
         ></option>
       </SelectField>
       <SelectField
-        label="Reach and get down a 5 pound object (such as a bag of sugar) from just above your head?"
+        label="Get a good night's sleep? *"
         placeholder="Please select an option"
         isDisabled={false}
-        value={ad_ability_reach_5_pound}
+        value={ad_good_night_sleep}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -10237,7 +10517,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10263,7 +10543,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10288,63 +10568,63 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound: value,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep: value,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
             const result = onChange(modelFields);
-            value = result?.ad_ability_reach_5_pound ?? value;
+            value = result?.ad_good_night_sleep ?? value;
           }
-          if (errors.ad_ability_reach_5_pound?.hasError) {
-            runValidationTasks("ad_ability_reach_5_pound", value);
+          if (errors.ad_good_night_sleep?.hasError) {
+            runValidationTasks("ad_good_night_sleep", value);
           }
-          setAd_ability_reach_5_pound(value);
+          setAd_good_night_sleep(value);
         }}
         onBlur={() =>
-          runValidationTasks(
-            "ad_ability_reach_5_pound",
-            ad_ability_reach_5_pound
-          )
+          runValidationTasks("ad_good_night_sleep", ad_good_night_sleep)
         }
-        errorMessage={errors.ad_ability_reach_5_pound?.errorMessage}
-        hasError={errors.ad_ability_reach_5_pound?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_reach_5_pound")}
+        errorMessage={errors.ad_good_night_sleep?.errorMessage}
+        hasError={errors.ad_good_night_sleep?.hasError}
+        {...getOverrideProps(overrides, "ad_good_night_sleep")}
       >
         <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_reach_5_poundoption0")}
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_good_night_sleepoption0")}
         ></option>
         <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_reach_5_poundoption1")}
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_good_night_sleepoption1")}
         ></option>
         <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_reach_5_poundoption2")}
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_good_night_sleepoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_good_night_sleepoption3")}
         ></option>
       </SelectField>
       <SelectField
-        label="Open car doors"
+        label="Deal with feelings of anxiety or being nervous? *"
         placeholder="Please select an option"
         isDisabled={false}
-        value={ad_ability_car_doors}
+        value={ad_deal_anxiety_nervous}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -10370,7 +10650,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10396,7 +10676,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10421,60 +10701,63 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors: value,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous: value,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
             const result = onChange(modelFields);
-            value = result?.ad_ability_car_doors ?? value;
+            value = result?.ad_deal_anxiety_nervous ?? value;
           }
-          if (errors.ad_ability_car_doors?.hasError) {
-            runValidationTasks("ad_ability_car_doors", value);
+          if (errors.ad_deal_anxiety_nervous?.hasError) {
+            runValidationTasks("ad_deal_anxiety_nervous", value);
           }
-          setAd_ability_car_doors(value);
+          setAd_deal_anxiety_nervous(value);
         }}
         onBlur={() =>
-          runValidationTasks("ad_ability_car_doors", ad_ability_car_doors)
+          runValidationTasks("ad_deal_anxiety_nervous", ad_deal_anxiety_nervous)
         }
-        errorMessage={errors.ad_ability_car_doors?.errorMessage}
-        hasError={errors.ad_ability_car_doors?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_car_doors")}
+        errorMessage={errors.ad_deal_anxiety_nervous?.errorMessage}
+        hasError={errors.ad_deal_anxiety_nervous?.hasError}
+        {...getOverrideProps(overrides, "ad_deal_anxiety_nervous")}
       >
         <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_car_doorsoption0")}
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_deal_anxiety_nervousoption0")}
         ></option>
         <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_car_doorsoption1")}
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_deal_anxiety_nervousoption1")}
         ></option>
         <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_car_doorsoption2")}
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_deal_anxiety_nervousoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_deal_anxiety_nervousoption3")}
         ></option>
       </SelectField>
       <SelectField
-        label="Do outside work (such as yard work)"
+        label="Deal with feelings of depression or feeling blue? *"
         placeholder="Please select an option"
         isDisabled={false}
-        value={ad_ability_outside_work}
+        value={ad_deal_depression_blue}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -10500,7 +10783,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10526,7 +10809,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10551,928 +10834,66 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work: value,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue: value,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
             };
             const result = onChange(modelFields);
-            value = result?.ad_ability_outside_work ?? value;
+            value = result?.ad_deal_depression_blue ?? value;
           }
-          if (errors.ad_ability_outside_work?.hasError) {
-            runValidationTasks("ad_ability_outside_work", value);
+          if (errors.ad_deal_depression_blue?.hasError) {
+            runValidationTasks("ad_deal_depression_blue", value);
           }
-          setAd_ability_outside_work(value);
+          setAd_deal_depression_blue(value);
         }}
         onBlur={() =>
-          runValidationTasks("ad_ability_outside_work", ad_ability_outside_work)
+          runValidationTasks("ad_deal_depression_blue", ad_deal_depression_blue)
         }
-        errorMessage={errors.ad_ability_outside_work?.errorMessage}
-        hasError={errors.ad_ability_outside_work?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_outside_work")}
+        errorMessage={errors.ad_deal_depression_blue?.errorMessage}
+        hasError={errors.ad_deal_depression_blue?.hasError}
+        {...getOverrideProps(overrides, "ad_deal_depression_blue")}
       >
         <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_outside_workoption0")}
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_deal_depression_blueoption0")}
         ></option>
         <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_outside_workoption1")}
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_deal_depression_blueoption1")}
         ></option>
         <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_outside_workoption2")}
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_deal_depression_blueoption2")}
         ></option>
         <option
-          children="UNABLE to do"
-          value="UNABLE to do"
-          {...getOverrideProps(overrides, "ad_ability_outside_workoption3")}
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_deal_depression_blueoption3")}
         ></option>
       </SelectField>
-      <SelectField
-        label="Wait in line for 15 minutes"
-        placeholder="Please select an option"
-        isDisabled={false}
-        value={ad_ability_wait_in_line}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupatin,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line: value,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_ability_wait_in_line ?? value;
-          }
-          if (errors.ad_ability_wait_in_line?.hasError) {
-            runValidationTasks("ad_ability_wait_in_line", value);
-          }
-          setAd_ability_wait_in_line(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_ability_wait_in_line", ad_ability_wait_in_line)
-        }
-        errorMessage={errors.ad_ability_wait_in_line?.errorMessage}
-        hasError={errors.ad_ability_wait_in_line?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_wait_in_line")}
-      >
-        <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_wait_in_lineoption0")}
-        ></option>
-        <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_wait_in_lineoption1")}
-        ></option>
-        <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_wait_in_lineoption2")}
-        ></option>
-      </SelectField>
-      <SelectField
-        label="Lift heavy objects"
-        placeholder="Please select an option"
-        isDisabled={false}
-        value={ad_ability_lift_heavy}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupatin,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy: value,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_ability_lift_heavy ?? value;
-          }
-          if (errors.ad_ability_lift_heavy?.hasError) {
-            runValidationTasks("ad_ability_lift_heavy", value);
-          }
-          setAd_ability_lift_heavy(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_ability_lift_heavy", ad_ability_lift_heavy)
-        }
-        errorMessage={errors.ad_ability_lift_heavy?.errorMessage}
-        hasError={errors.ad_ability_lift_heavy?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_lift_heavy")}
-      >
-        <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_lift_heavyoption0")}
-        ></option>
-        <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_lift_heavyoption1")}
-        ></option>
-        <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_lift_heavyoption2")}
-        ></option>
-      </SelectField>
-      <SelectField
-        label="Lift heavier objects"
-        placeholder="Please select an option"
-        isDisabled={false}
-        value={ad_ability_lift_heavier}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupatin,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier: value,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_ability_lift_heavier ?? value;
-          }
-          if (errors.ad_ability_lift_heavier?.hasError) {
-            runValidationTasks("ad_ability_lift_heavier", value);
-          }
-          setAd_ability_lift_heavier(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_ability_lift_heavier", ad_ability_lift_heavier)
-        }
-        errorMessage={errors.ad_ability_lift_heavier?.errorMessage}
-        hasError={errors.ad_ability_lift_heavier?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_lift_heavier")}
-      >
-        <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_lift_heavieroption0")}
-        ></option>
-        <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_lift_heavieroption1")}
-        ></option>
-        <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_lift_heavieroption2")}
-        ></option>
-      </SelectField>
-      <SelectField
-        label="Go up 2 flights of stairs"
-        placeholder="Please select an option"
-        isDisabled={false}
-        value={ad_ability_climb_2_flights}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupatin,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights: value,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_ability_climb_2_flights ?? value;
-          }
-          if (errors.ad_ability_climb_2_flights?.hasError) {
-            runValidationTasks("ad_ability_climb_2_flights", value);
-          }
-          setAd_ability_climb_2_flights(value);
-        }}
-        onBlur={() =>
-          runValidationTasks(
-            "ad_ability_climb_2_flights",
-            ad_ability_climb_2_flights
-          )
-        }
-        errorMessage={errors.ad_ability_climb_2_flights?.errorMessage}
-        hasError={errors.ad_ability_climb_2_flights?.hasError}
-        {...getOverrideProps(overrides, "ad_ability_climb_2_flights")}
-      >
-        <option
-          children="Without ANY Difficulty"
-          value="Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_climb_2_flightsoption0")}
-        ></option>
-        <option
-          children="With SOME Difficulty"
-          value="With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_climb_2_flightsoption1")}
-        ></option>
-        <option
-          children="With MUCH Difficulty"
-          value="With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_ability_climb_2_flightsoption2")}
-        ></option>
-        <option
-          children="UNABLE to do"
-          value="UNABLE to do"
-          {...getOverrideProps(overrides, "ad_ability_climb_2_flightsoption3")}
-        ></option>
-      </SelectField>
-      <ArrayField
-        onChange={async (items) => {
-          let values = items;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupatin,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities: values,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            values = result?.ad_aids_devices_activities ?? values;
-          }
-          setAd_aids_devices_activities(values);
-          setCurrentAd_aids_devices_activitiesValue(undefined);
-        }}
-        currentFieldValue={currentAd_aids_devices_activitiesValue}
-        label={
-          "Please write down any AIDS OR DEVICES that you usually use for any of these activities: (Cane, Crutches, Wheelchair, Walker)"
-        }
-        items={ad_aids_devices_activities}
-        hasError={errors?.ad_aids_devices_activities?.hasError}
-        runValidationTasks={async () =>
-          await runValidationTasks(
-            "ad_aids_devices_activities",
-            currentAd_aids_devices_activitiesValue
-          )
-        }
-        errorMessage={errors?.ad_aids_devices_activities?.errorMessage}
-        setFieldValue={setCurrentAd_aids_devices_activitiesValue}
-        inputFieldRef={ad_aids_devices_activitiesRef}
-        defaultFieldValue={""}
-      >
-        <Autocomplete
-          label="Please write down any AIDS OR DEVICES that you usually use for any of these activities: (Cane, Crutches, Wheelchair, Walker)"
-          isRequired={false}
-          isReadOnly={false}
-          value={currentAd_aids_devices_activitiesValue}
-          options={[
-            {
-              id: "Cane",
-              label: "Cane",
-            },
-            {
-              id: "Crutches ",
-              label: "Crutches ",
-            },
-            {
-              id: "Wheelchair",
-              label: "Wheelchair",
-            },
-            {
-              id: "Walker",
-              label: "Walker",
-            },
-          ]}
-          onSelect={({ id, label }) => {
-            setCurrentAd_aids_devices_activitiesValue(id);
-            runValidationTasks("ad_aids_devices_activities", id);
-          }}
-          onClear={() => {
-            setCurrentAd_aids_devices_activitiesDisplayValue("");
-          }}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (errors.ad_aids_devices_activities?.hasError) {
-              runValidationTasks("ad_aids_devices_activities", value);
-            }
-            setCurrentAd_aids_devices_activitiesValue(value);
-          }}
-          onBlur={() =>
-            runValidationTasks(
-              "ad_aids_devices_activities",
-              currentAd_aids_devices_activitiesValue
-            )
-          }
-          errorMessage={errors.ad_aids_devices_activities?.errorMessage}
-          hasError={errors.ad_aids_devices_activities?.hasError}
-          ref={ad_aids_devices_activitiesRef}
-          labelHidden={true}
-          {...getOverrideProps(overrides, "ad_aids_devices_activities")}
-        ></Autocomplete>
-      </ArrayField>
-      <ArrayField
-        onChange={async (items) => {
-          let values = items;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupatin,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help: values,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            values = result?.ad_categories_help ?? values;
-          }
-          setAd_categories_help(values);
-          setCurrentAd_categories_helpValue(undefined);
-        }}
-        currentFieldValue={currentAd_categories_helpValue}
-        label={
-          "Please write down any categories for which you usually need help from another person: (Dressing & Grooming, Eating, Arising, Walking)"
-        }
-        items={ad_categories_help}
-        hasError={errors?.ad_categories_help?.hasError}
-        runValidationTasks={async () =>
-          await runValidationTasks(
-            "ad_categories_help",
-            currentAd_categories_helpValue
-          )
-        }
-        errorMessage={errors?.ad_categories_help?.errorMessage}
-        setFieldValue={setCurrentAd_categories_helpValue}
-        inputFieldRef={ad_categories_helpRef}
-        defaultFieldValue={""}
-      >
-        <Autocomplete
-          label="Please write down any categories for which you usually need help from another person: (Dressing & Grooming, Eating, Arising, Walking)"
-          isRequired={false}
-          isReadOnly={false}
-          value={currentAd_categories_helpValue}
-          options={[
-            {
-              id: "Dressing & Grooming ",
-              label: "Dressing & Grooming ",
-            },
-            {
-              id: "Eating",
-              label: "Eating",
-            },
-            {
-              id: "Arising",
-              label: "Arising",
-            },
-            {
-              id: "Walking",
-              label: "Walking",
-            },
-          ]}
-          onSelect={({ id, label }) => {
-            setCurrentAd_categories_helpValue(id);
-            runValidationTasks("ad_categories_help", id);
-          }}
-          onClear={() => {
-            setCurrentAd_categories_helpDisplayValue("");
-          }}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (errors.ad_categories_help?.hasError) {
-              runValidationTasks("ad_categories_help", value);
-            }
-            setCurrentAd_categories_helpValue(value);
-          }}
-          onBlur={() =>
-            runValidationTasks(
-              "ad_categories_help",
-              currentAd_categories_helpValue
-            )
-          }
-          errorMessage={errors.ad_categories_help?.errorMessage}
-          hasError={errors.ad_categories_help?.hasError}
-          ref={ad_categories_helpRef}
-          labelHidden={true}
-          {...getOverrideProps(overrides, "ad_categories_help")}
-        ></Autocomplete>
-      </ArrayField>
+      <Divider
+        orientation="horizontal"
+        {...getOverrideProps(overrides, "SectionalElement5")}
+      ></Divider>
       <SliderField
-        label="On a scale of 0-100, how much pain do you have on a daily basis? (0 = no pain, 100 = severe pain)"
+        label="2. How much pain have you had because of your condition OVER THE PAST WEEK? Please indicate below how severe your pain has been: (0 = NO PAIN, 10 = PAIN AS BAD AS IT COULD BE) *"
         isDisabled={false}
-        isRequired={false}
+        isRequired={true}
         value={ad_daily_pain_scale}
         onChange={(e) => {
           let value = e;
@@ -11499,7 +10920,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -11525,7 +10946,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -11550,21 +10971,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale: value,
               ad_how_well_doing_scale,
             };
@@ -11583,10 +11002,14 @@ export default function NewPatientCreateForm(props) {
         hasError={errors.ad_daily_pain_scale?.hasError}
         {...getOverrideProps(overrides, "ad_daily_pain_scale")}
       ></SliderField>
+      <Divider
+        orientation="horizontal"
+        {...getOverrideProps(overrides, "SectionalElement7")}
+      ></Divider>
       <SliderField
-        label="Considering all the ways your arthritis affects you, rate how well you are doing on the following scale (0 = very well; 100 = very poorly)"
+        label="3. Considering all the ways in which illness and health conditions may affect you at this time, please indicate below how you are doing: (0 = NO PAIN, 10 = PAIN AS BAD AS IT COULD BE) *"
         isDisabled={false}
-        isRequired={false}
+        isRequired={true}
         value={ad_how_well_doing_scale}
         onChange={(e) => {
           let value = e;
@@ -11613,7 +11036,7 @@ export default function NewPatientCreateForm(props) {
               employer,
               education,
               veteran,
-              occupatin,
+              occupation,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -11639,7 +11062,7 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
+              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -11664,21 +11087,19 @@ export default function NewPatientCreateForm(props) {
               ph_complications,
               ph_symptoms,
               ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale: value,
             };
