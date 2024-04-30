@@ -154,10 +154,8 @@ function App() {
           if(fields["email"] != undefined){
             setEmail(fields["email"]);
           }
-          return fields
-        }}
-        onSuccess={() => {
           setStep(2)
+          return fields
         }}
       /> 
       }
