@@ -8,6 +8,84 @@ type GeneratedSubscription<InputType, OutputType> = string & {
   __generatedSubscriptionOutput: OutputType;
 };
 
+export const onCreatePrivacyNotice = /* GraphQL */ `subscription OnCreatePrivacyNotice(
+  $filter: ModelSubscriptionPrivacyNoticeFilterInput
+) {
+  onCreatePrivacyNotice(filter: $filter) {
+    id
+    full_name
+    authorized_1
+    relationship_1
+    authorized_2
+    relationship_2
+    authorized_3
+    relationship_3
+    decline
+    date
+    open_payment_signature
+    open_payment_date
+    signature
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreatePrivacyNoticeSubscriptionVariables,
+  APITypes.OnCreatePrivacyNoticeSubscription
+>;
+export const onUpdatePrivacyNotice = /* GraphQL */ `subscription OnUpdatePrivacyNotice(
+  $filter: ModelSubscriptionPrivacyNoticeFilterInput
+) {
+  onUpdatePrivacyNotice(filter: $filter) {
+    id
+    full_name
+    authorized_1
+    relationship_1
+    authorized_2
+    relationship_2
+    authorized_3
+    relationship_3
+    decline
+    date
+    open_payment_signature
+    open_payment_date
+    signature
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdatePrivacyNoticeSubscriptionVariables,
+  APITypes.OnUpdatePrivacyNoticeSubscription
+>;
+export const onDeletePrivacyNotice = /* GraphQL */ `subscription OnDeletePrivacyNotice(
+  $filter: ModelSubscriptionPrivacyNoticeFilterInput
+) {
+  onDeletePrivacyNotice(filter: $filter) {
+    id
+    full_name
+    authorized_1
+    relationship_1
+    authorized_2
+    relationship_2
+    authorized_3
+    relationship_3
+    decline
+    date
+    open_payment_signature
+    open_payment_date
+    signature
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeletePrivacyNoticeSubscriptionVariables,
+  APITypes.OnDeletePrivacyNoticeSubscription
+>;
 export const onCreateNewPatient = /* GraphQL */ `subscription OnCreateNewPatient(
   $filter: ModelSubscriptionNewPatientFilterInput
 ) {
@@ -100,6 +178,7 @@ export const onCreateNewPatient = /* GraphQL */ `subscription OnCreateNewPatient
     ph_symptoms
     ad_deal_anxiety_nervous
     ad_deal_depression_blue
+    insurance_primary_insured_person_dob
     createdAt
     updatedAt
     __typename
@@ -201,6 +280,7 @@ export const onUpdateNewPatient = /* GraphQL */ `subscription OnUpdateNewPatient
     ph_symptoms
     ad_deal_anxiety_nervous
     ad_deal_depression_blue
+    insurance_primary_insured_person_dob
     createdAt
     updatedAt
     __typename
@@ -302,6 +382,7 @@ export const onDeleteNewPatient = /* GraphQL */ `subscription OnDeleteNewPatient
     ph_symptoms
     ad_deal_anxiety_nervous
     ad_deal_depression_blue
+    insurance_primary_insured_person_dob
     createdAt
     updatedAt
     __typename

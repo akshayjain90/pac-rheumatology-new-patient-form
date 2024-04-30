@@ -5,7 +5,7 @@
  **************************************************************************/
 
 import * as React from "react";
-import { DividerProps, GridProps, HeadingProps, SelectFieldProps, SliderFieldProps, SwitchFieldProps, TextAreaFieldProps, TextFieldProps, TextProps } from "@aws-amplify/ui-react";
+import { AutocompleteProps, DividerProps, GridProps, HeadingProps, SelectFieldProps, SliderFieldProps, SwitchFieldProps, TextAreaFieldProps, TextFieldProps, TextProps } from "@aws-amplify/ui-react";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -53,6 +53,7 @@ export declare type NewPatientCreateFormInputValues = {
     insurance_primary_phone?: string;
     insurance_primary_insured_person?: string;
     insurance_primary_insured_person_relation?: string;
+    insurance_primary_insured_person_dob?: string;
     insurance_secondary?: string;
     insurance_secondary_id?: string;
     insurance_secondary_group?: string;
@@ -93,7 +94,7 @@ export declare type NewPatientCreateFormInputValues = {
     ph_live_births?: string;
     ph_complications?: string;
     ad_people_in_household?: string;
-    ph_symptoms?: string;
+    ph_symptoms?: string[];
     ad_dress_yourself?: string;
     ad_get_in_out_bed?: string;
     ad_lift_full_cup_mouth?: string;
@@ -142,6 +143,7 @@ export declare type NewPatientCreateFormValidationValues = {
     insurance_primary_phone?: ValidationFunction<string>;
     insurance_primary_insured_person?: ValidationFunction<string>;
     insurance_primary_insured_person_relation?: ValidationFunction<string>;
+    insurance_primary_insured_person_dob?: ValidationFunction<string>;
     insurance_secondary?: ValidationFunction<string>;
     insurance_secondary_id?: ValidationFunction<string>;
     insurance_secondary_group?: ValidationFunction<string>;
@@ -244,7 +246,9 @@ export declare type NewPatientCreateFormOverridesProps = {
     insurance_primary_address?: PrimitiveOverrideProps<TextFieldProps>;
     insurance_primary_phone?: PrimitiveOverrideProps<TextFieldProps>;
     insurance_primary_insured_person?: PrimitiveOverrideProps<TextFieldProps>;
+    RowGrid21?: PrimitiveOverrideProps<GridProps>;
     insurance_primary_insured_person_relation?: PrimitiveOverrideProps<TextFieldProps>;
+    insurance_primary_insured_person_dob?: PrimitiveOverrideProps<TextFieldProps>;
     insurance_secondary?: PrimitiveOverrideProps<TextFieldProps>;
     RowGrid23?: PrimitiveOverrideProps<GridProps>;
     insurance_secondary_id?: PrimitiveOverrideProps<TextFieldProps>;
@@ -281,8 +285,8 @@ export declare type NewPatientCreateFormOverridesProps = {
     ph_current_medicines?: PrimitiveOverrideProps<TextAreaFieldProps>;
     ph_allergy_to_med?: PrimitiveOverrideProps<SwitchFieldProps>;
     ph_allergy_to_med_list?: PrimitiveOverrideProps<TextFieldProps>;
-    SectionalElement17?: PrimitiveOverrideProps<DividerProps>;
-    SectionalElement16?: PrimitiveOverrideProps<TextProps>;
+    SectionalElement11?: PrimitiveOverrideProps<DividerProps>;
+    SectionalElement16?: PrimitiveOverrideProps<HeadingProps>;
     RowGrid48?: PrimitiveOverrideProps<GridProps>;
     ph_rh_history_osteoarthritis?: PrimitiveOverrideProps<TextFieldProps>;
     ph_rh_history_gout?: PrimitiveOverrideProps<TextFieldProps>;
@@ -311,10 +315,11 @@ export declare type NewPatientCreateFormOverridesProps = {
     ph_live_births?: PrimitiveOverrideProps<TextFieldProps>;
     ph_complications?: PrimitiveOverrideProps<TextFieldProps>;
     ad_people_in_household?: PrimitiveOverrideProps<TextAreaFieldProps>;
-    ph_symptoms?: PrimitiveOverrideProps<TextAreaFieldProps>;
-    SectionalElement18?: PrimitiveOverrideProps<DividerProps>;
-    SectionalElement19?: PrimitiveOverrideProps<DividerProps>;
+    SectionalElement5?: PrimitiveOverrideProps<HeadingProps>;
+    ph_symptoms?: PrimitiveOverrideProps<AutocompleteProps>;
     SectionalElement20?: PrimitiveOverrideProps<DividerProps>;
+    SectionalElement19?: PrimitiveOverrideProps<DividerProps>;
+    SectionalElement18?: PrimitiveOverrideProps<DividerProps>;
     SectionalElement900?: PrimitiveOverrideProps<HeadingProps>;
     SectionalElement120?: PrimitiveOverrideProps<HeadingProps>;
     SectionalElement2?: PrimitiveOverrideProps<TextProps>;
@@ -331,9 +336,9 @@ export declare type NewPatientCreateFormOverridesProps = {
     ad_good_night_sleep?: PrimitiveOverrideProps<SelectFieldProps>;
     ad_deal_anxiety_nervous?: PrimitiveOverrideProps<SelectFieldProps>;
     ad_deal_depression_blue?: PrimitiveOverrideProps<SelectFieldProps>;
-    SectionalElement5?: PrimitiveOverrideProps<DividerProps>;
+    SectionalElement7?: PrimitiveOverrideProps<HeadingProps>;
     ad_daily_pain_scale?: PrimitiveOverrideProps<SliderFieldProps>;
-    SectionalElement7?: PrimitiveOverrideProps<DividerProps>;
+    SectionalElement17?: PrimitiveOverrideProps<HeadingProps>;
     ad_how_well_doing_scale?: PrimitiveOverrideProps<SliderFieldProps>;
 } & EscapeHatchProps;
 export declare type NewPatientCreateFormProps = React.PropsWithChildren<{

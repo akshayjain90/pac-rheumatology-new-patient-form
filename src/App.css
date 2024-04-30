@@ -2,7 +2,7 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  text-align: left;
 }
 
 .logo {
@@ -18,6 +18,9 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+.centered {
+  text-align: center;
+}
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -40,3 +43,9 @@
 .read-the-docs {
   color: #888;
 }
+
+.display-linebreak {
+  white-space: pre-line;
+  text-align: left;
+}
+

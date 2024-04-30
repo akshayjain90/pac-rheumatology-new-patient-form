@@ -1,3 +1,19 @@
+type PrivacyNotice @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  full_name: String
+  authorized_1: String
+  relationship_1: String
+  authorized_2: String
+  relationship_2: String
+  authorized_3: String
+  relationship_3: String
+  decline: Boolean
+  date: AWSDate!
+  open_payment_signature: String!
+  open_payment_date: AWSDate!
+  signature: String!
+}
+
 type NewPatient @model @auth(rules: [{allow: public}]) {
   id: ID!
   date: AWSDate!
@@ -10,9 +26,9 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   race: String
   primary_language: String
   address: String!
-  city: String
-  state: String
-  zip: String
+  city: String!
+  state: String!
+  zip: String!
   home_phone: AWSPhone!
   work_phone: AWSPhone
   mobile_phone: AWSPhone
@@ -46,7 +62,7 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   signature_page_1_date: AWSDate!
   ph_briefly_describe_present_symptoms: String!
   ph_previous_treatment_for_problem: String
-  ph_current_medicines: String
+  ph_current_medicines: String!
   emergency_contact_phone: AWSPhone!
   ph_allergy_to_med: Boolean!
   ph_allergy_to_med_list: String
@@ -84,8 +100,9 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   ad_daily_pain_scale: Int!
   ad_how_well_doing_scale: Int!
   ph_alcohol_weekly: String
-  ph_symptoms: String
+  ph_symptoms: [String!]!
   ad_deal_anxiety_nervous: String!
   ad_deal_depression_blue: String!
+  insurance_primary_insured_person_dob: AWSDate
 }
  

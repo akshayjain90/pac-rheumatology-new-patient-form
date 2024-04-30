@@ -8,6 +8,62 @@ type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryOutput: OutputType;
 };
 
+export const getPrivacyNotice = /* GraphQL */ `query GetPrivacyNotice($id: ID!) {
+  getPrivacyNotice(id: $id) {
+    id
+    full_name
+    authorized_1
+    relationship_1
+    authorized_2
+    relationship_2
+    authorized_3
+    relationship_3
+    decline
+    date
+    open_payment_signature
+    open_payment_date
+    signature
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.GetPrivacyNoticeQueryVariables,
+  APITypes.GetPrivacyNoticeQuery
+>;
+export const listPrivacyNotices = /* GraphQL */ `query ListPrivacyNotices(
+  $filter: ModelPrivacyNoticeFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listPrivacyNotices(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      full_name
+      authorized_1
+      relationship_1
+      authorized_2
+      relationship_2
+      authorized_3
+      relationship_3
+      decline
+      date
+      open_payment_signature
+      open_payment_date
+      signature
+      createdAt
+      updatedAt
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListPrivacyNoticesQueryVariables,
+  APITypes.ListPrivacyNoticesQuery
+>;
 export const getNewPatient = /* GraphQL */ `query GetNewPatient($id: ID!) {
   getNewPatient(id: $id) {
     id
@@ -98,6 +154,7 @@ export const getNewPatient = /* GraphQL */ `query GetNewPatient($id: ID!) {
     ph_symptoms
     ad_deal_anxiety_nervous
     ad_deal_depression_blue
+    insurance_primary_insured_person_dob
     createdAt
     updatedAt
     __typename
@@ -202,6 +259,7 @@ export const listNewPatients = /* GraphQL */ `query ListNewPatients(
       ph_symptoms
       ad_deal_anxiety_nervous
       ad_deal_depression_blue
+      insurance_primary_insured_person_dob
       createdAt
       updatedAt
       __typename

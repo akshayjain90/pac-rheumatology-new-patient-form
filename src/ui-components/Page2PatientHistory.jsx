@@ -8,23 +8,182 @@
 import * as React from "react";
 import {
   Autocomplete,
+  Badge,
   Button,
   Divider,
   Flex,
   Grid,
   Heading,
+  Icon,
+  ScrollView,
   SelectField,
   SliderField,
   SwitchField,
   Text,
   TextAreaField,
   TextField,
+  useTheme,
 } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getNewPatient } from "../graphql/queries";
 import { updateNewPatient } from "../graphql/mutations";
 const client = generateClient();
+function ArrayField({
+  items = [],
+  onChange,
+  label,
+  inputFieldRef,
+  children,
+  hasError,
+  setFieldValue,
+  currentFieldValue,
+  defaultFieldValue,
+  lengthLimit,
+  getBadgeText,
+  runValidationTasks,
+  errorMessage,
+}) {
+  const labelElement = <Text>{label}</Text>;
+  const {
+    tokens: {
+      components: {
+        fieldmessages: { error: errorStyles },
+      },
+    },
+  } = useTheme();
+  const [selectedBadgeIndex, setSelectedBadgeIndex] = React.useState();
+  const [isEditing, setIsEditing] = React.useState();
+  React.useEffect(() => {
+    if (isEditing) {
+      inputFieldRef?.current?.focus();
+    }
+  }, [isEditing]);
+  const removeItem = async (removeIndex) => {
+    const newItems = items.filter((value, index) => index !== removeIndex);
+    await onChange(newItems);
+    setSelectedBadgeIndex(undefined);
+  };
+  const addItem = async () => {
+    const { hasError } = runValidationTasks();
+    if (
+      currentFieldValue !== undefined &&
+      currentFieldValue !== null &&
+      currentFieldValue !== "" &&
+      !hasError
+    ) {
+      const newItems = [...items];
+      if (selectedBadgeIndex !== undefined) {
+        newItems[selectedBadgeIndex] = currentFieldValue;
+        setSelectedBadgeIndex(undefined);
+      } else {
+        newItems.push(currentFieldValue);
+      }
+      await onChange(newItems);
+      setIsEditing(false);
+    }
+  };
+  const arraySection = (
+    <React.Fragment>
+      {!!items?.length && (
+        <ScrollView height="inherit" width="inherit" maxHeight={"7rem"}>
+          {items.map((value, index) => {
+            return (
+              <Badge
+                key={index}
+                style={{
+                  cursor: "pointer",
+                  alignItems: "center",
+                  marginRight: 3,
+                  marginTop: 3,
+                  backgroundColor:
+                    index === selectedBadgeIndex ? "#B8CEF9" : "",
+                }}
+                onClick={() => {
+                  setSelectedBadgeIndex(index);
+                  setFieldValue(items[index]);
+                  setIsEditing(true);
+                }}
+              >
+                {getBadgeText ? getBadgeText(value) : value.toString()}
+                <Icon
+                  style={{
+                    cursor: "pointer",
+                    paddingLeft: 3,
+                    width: 20,
+                    height: 20,
+                  }}
+                  viewBox={{ width: 20, height: 20 }}
+                  paths={[
+                    {
+                      d: "M10 10l5.09-5.09L10 10l5.09 5.09L10 10zm0 0L4.91 4.91 10 10l-5.09 5.09L10 10z",
+                      stroke: "black",
+                    },
+                  ]}
+                  ariaLabel="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeItem(index);
+                  }}
+                />
+              </Badge>
+            );
+          })}
+        </ScrollView>
+      )}
+      <Divider orientation="horizontal" marginTop={5} />
+    </React.Fragment>
+  );
+  if (lengthLimit !== undefined && items.length >= lengthLimit && !isEditing) {
+    return (
+      <React.Fragment>
+        {labelElement}
+        {arraySection}
+      </React.Fragment>
+    );
+  }
+  return (
+    <React.Fragment>
+      {labelElement}
+      {isEditing && children}
+      {!isEditing ? (
+        <>
+          <Button
+            onClick={() => {
+              setIsEditing(true);
+            }}
+          >
+            Add item
+          </Button>
+          {errorMessage && hasError && (
+            <Text color={errorStyles.color} fontSize={errorStyles.fontSize}>
+              {errorMessage}
+            </Text>
+          )}
+        </>
+      ) : (
+        <Flex justifyContent="flex-end">
+          {(currentFieldValue || isEditing) && (
+            <Button
+              children="Cancel"
+              type="button"
+              size="small"
+              onClick={() => {
+                setFieldValue(defaultFieldValue);
+                setIsEditing(false);
+                setSelectedBadgeIndex(undefined);
+              }}
+            ></Button>
+          )}
+          <Button size="small" variation="link" onClick={addItem}>
+            {selectedBadgeIndex !== undefined ? "Save" : "Add"}
+          </Button>
+        </Flex>
+      )}
+      {arraySection}
+    </React.Fragment>
+  );
+}
 export default function Page2PatientHistory(props) {
   const {
     id: idProp,
@@ -77,7 +236,7 @@ export default function Page2PatientHistory(props) {
     ph_pregnant: "",
     ph_live_births: "",
     ph_complications: "",
-    ph_symptoms: "",
+    ph_symptoms: [],
     ad_people_in_household: "",
     ad_who_shopping: "",
     ad_housework: "",
@@ -111,6 +270,7 @@ export default function Page2PatientHistory(props) {
     ad_good_night_sleep: "",
     ad_deal_anxiety_nervous: "",
     ad_deal_depression_blue: "",
+    insurance_primary_insured_person_dob: "",
   };
   const [
     ph_briefly_describe_present_symptoms,
@@ -315,6 +475,10 @@ export default function Page2PatientHistory(props) {
   const [ad_deal_depression_blue, setAd_deal_depression_blue] = React.useState(
     initialValues.ad_deal_depression_blue
   );
+  const [
+    insurance_primary_insured_person_dob,
+    setInsurance_primary_insured_person_dob,
+  ] = React.useState(initialValues.insurance_primary_insured_person_dob);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = newPatientRecord
@@ -367,7 +531,8 @@ export default function Page2PatientHistory(props) {
     setPh_pregnant(cleanValues.ph_pregnant);
     setPh_live_births(cleanValues.ph_live_births);
     setPh_complications(cleanValues.ph_complications);
-    setPh_symptoms(cleanValues.ph_symptoms);
+    setPh_symptoms(cleanValues.ph_symptoms ?? []);
+    setCurrentPh_symptomsValue("");
     setAd_people_in_household(cleanValues.ad_people_in_household);
     setAd_who_shopping(cleanValues.ad_who_shopping);
     setAd_housework(cleanValues.ad_housework);
@@ -405,6 +570,9 @@ export default function Page2PatientHistory(props) {
     setAd_good_night_sleep(cleanValues.ad_good_night_sleep);
     setAd_deal_anxiety_nervous(cleanValues.ad_deal_anxiety_nervous);
     setAd_deal_depression_blue(cleanValues.ad_deal_depression_blue);
+    setInsurance_primary_insured_person_dob(
+      cleanValues.insurance_primary_insured_person_dob
+    );
     setErrors({});
   };
   const [newPatientRecord, setNewPatientRecord] =
@@ -424,6 +592,9 @@ export default function Page2PatientHistory(props) {
     queryData();
   }, [idProp, newPatientModelProp]);
   React.useEffect(resetStateValues, [newPatientRecord]);
+  const [currentPh_symptomsValue, setCurrentPh_symptomsValue] =
+    React.useState("");
+  const ph_symptomsRef = React.createRef();
   const validations = {
     ph_briefly_describe_present_symptoms: [{ type: "Required" }],
     ph_previous_treatment_for_problem: [],
@@ -464,7 +635,7 @@ export default function Page2PatientHistory(props) {
     ph_pregnant: [],
     ph_live_births: [],
     ph_complications: [],
-    ph_symptoms: [{ type: "JSON" }],
+    ph_symptoms: [{ type: "Required" }, { type: "JSON" }],
     ad_people_in_household: [],
     ad_who_shopping: [],
     ad_housework: [],
@@ -484,7 +655,7 @@ export default function Page2PatientHistory(props) {
     ad_daily_pain_scale: [{ type: "Required" }],
     ad_how_well_doing_scale: [{ type: "Required" }],
     occupation: [{ type: "Required" }],
-    ph_current_medicines: [],
+    ph_current_medicines: [{ type: "Required" }],
     ad_dress_yourself: [{ type: "Required" }],
     ad_get_in_out_bed: [{ type: "Required" }],
     ad_lift_full_cup_mouth: [{ type: "Required" }],
@@ -498,6 +669,7 @@ export default function Page2PatientHistory(props) {
     ad_good_night_sleep: [{ type: "Required" }],
     ad_deal_anxiety_nervous: [{ type: "Required" }],
     ad_deal_depression_blue: [{ type: "Required" }],
+    insurance_primary_insured_person_dob: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -568,7 +740,7 @@ export default function Page2PatientHistory(props) {
           ph_pregnant: ph_pregnant ?? null,
           ph_live_births: ph_live_births ?? null,
           ph_complications: ph_complications ?? null,
-          ph_symptoms: ph_symptoms ?? null,
+          ph_symptoms,
           ad_people_in_household: ad_people_in_household ?? null,
           ad_who_shopping: ad_who_shopping ?? null,
           ad_housework: ad_housework ?? null,
@@ -588,7 +760,7 @@ export default function Page2PatientHistory(props) {
           ad_daily_pain_scale,
           ad_how_well_doing_scale,
           occupation,
-          ph_current_medicines: ph_current_medicines ?? null,
+          ph_current_medicines,
           ad_dress_yourself,
           ad_get_in_out_bed,
           ad_lift_full_cup_mouth,
@@ -602,6 +774,8 @@ export default function Page2PatientHistory(props) {
           ad_good_night_sleep,
           ad_deal_anxiety_nervous,
           ad_deal_depression_blue,
+          insurance_primary_insured_person_dob:
+            insurance_primary_insured_person_dob ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -666,12 +840,12 @@ export default function Page2PatientHistory(props) {
             ph_pregnant: modelFields.ph_pregnant ?? null,
             ph_live_births: modelFields.ph_live_births ?? null,
             ph_complications: modelFields.ph_complications ?? null,
-            ph_symptoms: modelFields.ph_symptoms ?? null,
+            ph_symptoms: modelFields.ph_symptoms,
             ad_people_in_household: modelFields.ad_people_in_household ?? null,
             ad_daily_pain_scale: modelFields.ad_daily_pain_scale,
             ad_how_well_doing_scale: modelFields.ad_how_well_doing_scale,
             occupation: modelFields.occupation,
-            ph_current_medicines: modelFields.ph_current_medicines ?? null,
+            ph_current_medicines: modelFields.ph_current_medicines,
             ad_dress_yourself: modelFields.ad_dress_yourself,
             ad_get_in_out_bed: modelFields.ad_get_in_out_bed,
             ad_lift_full_cup_mouth: modelFields.ad_lift_full_cup_mouth,
@@ -687,6 +861,8 @@ export default function Page2PatientHistory(props) {
             ad_good_night_sleep: modelFields.ad_good_night_sleep,
             ad_deal_anxiety_nervous: modelFields.ad_deal_anxiety_nervous,
             ad_deal_depression_blue: modelFields.ad_deal_depression_blue,
+            insurance_primary_insured_person_dob:
+              modelFields.insurance_primary_insured_person_dob ?? null,
           };
           await client.graphql({
             query: updateNewPatient.replaceAll("__typename", ""),
@@ -792,6 +968,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_briefly_describe_present_symptoms ?? value;
@@ -893,6 +1070,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_previous_treatment_for_problem ?? value;
@@ -1002,6 +1180,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_1 ?? value;
@@ -1098,6 +1277,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_2 ?? value;
@@ -1194,6 +1374,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_3 ?? value;
@@ -1297,6 +1478,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_4 ?? value;
@@ -1393,6 +1575,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_5 ?? value;
@@ -1489,6 +1672,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_6 ?? value;
@@ -1592,6 +1776,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_7 ?? value;
@@ -1688,6 +1873,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_8 ?? value;
@@ -1784,6 +1970,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_9 ?? value;
@@ -1887,6 +2074,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_10 ?? value;
@@ -1983,6 +2171,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_11 ?? value;
@@ -2079,6 +2268,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_12 ?? value;
@@ -2182,6 +2372,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_13 ?? value;
@@ -2278,6 +2469,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_14 ?? value;
@@ -2374,6 +2566,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_15 ?? value;
@@ -2473,6 +2666,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_allergy_to_med ?? value;
@@ -2571,6 +2765,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_allergy_to_med_list ?? value;
@@ -2684,6 +2879,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_osteoarthritis ?? value;
@@ -2786,6 +2982,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_gout ?? value;
@@ -2892,6 +3089,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_juvenile_arthritis ?? value;
@@ -2994,6 +3192,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_vasculitis ?? value;
@@ -3103,6 +3302,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_lupus ?? value;
@@ -3202,6 +3402,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_rheumatoid ?? value;
@@ -3311,6 +3512,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_spondyloarthropathy ?? value;
@@ -3413,6 +3615,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_osteoporosis ?? value;
@@ -3515,6 +3718,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_past_medical_history ?? value;
@@ -3613,6 +3817,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_past_surgery_history ?? value;
@@ -3717,6 +3922,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_smoke ?? value;
@@ -3829,6 +4035,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_drugs ?? value;
@@ -3948,6 +4155,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_alcohol ?? value;
@@ -4060,6 +4268,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_alcohol_weekly ?? value;
@@ -4159,6 +4368,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_sleep ?? value;
@@ -4255,6 +4465,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_exercise ?? value;
@@ -4351,6 +4562,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_travel ?? value;
@@ -4453,6 +4665,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_pregnant ?? value;
@@ -4560,6 +4773,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ph_live_births ?? value;
@@ -4657,6 +4871,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_complications ?? value;
@@ -4671,13 +4886,9 @@ export default function Page2PatientHistory(props) {
         hasError={errors.ph_complications?.hasError}
         {...getOverrideProps(overrides, "ph_complications")}
       ></TextField>
-      <TextAreaField
-        label="Review of Symptoms (Please write if you are currently or recently experiencing any of these symptoms): Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urine, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
-        isRequired={false}
-        isReadOnly={false}
-        value={ph_symptoms}
-        onChange={(e) => {
-          let { value } = e.target;
+      <ArrayField
+        onChange={async (items) => {
+          let values = items;
           if (onChange) {
             const modelFields = {
               ph_briefly_describe_present_symptoms,
@@ -4719,7 +4930,7 @@ export default function Page2PatientHistory(props) {
               ph_pregnant,
               ph_live_births,
               ph_complications,
-              ph_symptoms: value,
+              ph_symptoms: values,
               ad_people_in_household,
               ad_who_shopping,
               ad_housework,
@@ -4753,20 +4964,50 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
-            value = result?.ph_symptoms ?? value;
+            values = result?.ph_symptoms ?? values;
           }
-          if (errors.ph_symptoms?.hasError) {
-            runValidationTasks("ph_symptoms", value);
-          }
-          setPh_symptoms(value);
+          setPh_symptoms(values);
+          setCurrentPh_symptomsValue("");
         }}
-        onBlur={() => runValidationTasks("ph_symptoms", ph_symptoms)}
-        errorMessage={errors.ph_symptoms?.errorMessage}
-        hasError={errors.ph_symptoms?.hasError}
-        {...getOverrideProps(overrides, "ph_symptoms")}
-      ></TextAreaField>
+        currentFieldValue={currentPh_symptomsValue}
+        label={
+          "Review of Symptoms (Please write if you are currently or recently experiencing any of these symptoms): Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urine, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
+        }
+        items={ph_symptoms}
+        hasError={errors?.ph_symptoms?.hasError}
+        runValidationTasks={async () =>
+          await runValidationTasks("ph_symptoms", currentPh_symptomsValue)
+        }
+        errorMessage={errors?.ph_symptoms?.errorMessage}
+        setFieldValue={setCurrentPh_symptomsValue}
+        inputFieldRef={ph_symptomsRef}
+        defaultFieldValue={""}
+      >
+        <TextAreaField
+          label="Review of Symptoms (Please write if you are currently or recently experiencing any of these symptoms): Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urine, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
+          isRequired={true}
+          isReadOnly={false}
+          value={currentPh_symptomsValue}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (errors.ph_symptoms?.hasError) {
+              runValidationTasks("ph_symptoms", value);
+            }
+            setCurrentPh_symptomsValue(value);
+          }}
+          onBlur={() =>
+            runValidationTasks("ph_symptoms", currentPh_symptomsValue)
+          }
+          errorMessage={errors.ph_symptoms?.errorMessage}
+          hasError={errors.ph_symptoms?.hasError}
+          ref={ph_symptomsRef}
+          labelHidden={true}
+          {...getOverrideProps(overrides, "ph_symptoms")}
+        ></TextAreaField>
+      </ArrayField>
       <Divider
         orientation="horizontal"
         {...getOverrideProps(overrides, "SectionalElement3")}
@@ -4862,6 +5103,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_people_in_household ?? value;
@@ -4964,6 +5206,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ad_who_shopping ?? value;
@@ -5058,6 +5301,7 @@ export default function Page2PatientHistory(props) {
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
+                insurance_primary_insured_person_dob,
               };
               const result = onChange(modelFields);
               value = result?.ad_housework ?? value;
@@ -5153,6 +5397,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_hardest_thing ?? value;
@@ -5252,6 +5497,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_stand_up_chair ?? value;
@@ -5373,6 +5619,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_walk_outdoors_flat ?? value;
@@ -5506,6 +5753,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_get_on_toilet ?? value;
@@ -5627,6 +5875,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_reach_5_pound ?? value;
@@ -5748,6 +5997,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_car_doors ?? value;
@@ -5866,6 +6116,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_outside_work ?? value;
@@ -5984,6 +6235,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_wait_in_line ?? value;
@@ -6102,6 +6354,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_lift_heavy ?? value;
@@ -6220,6 +6473,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_lift_heavier ?? value;
@@ -6338,6 +6592,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_climb_2_flights ?? value;
@@ -6483,6 +6738,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_aids_devices_activities ?? value;
@@ -6608,6 +6864,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_categories_help ?? value;
@@ -6707,6 +6964,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_daily_pain_scale ?? value;
@@ -6805,6 +7063,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_how_well_doing_scale ?? value;
@@ -6903,6 +7162,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.occupation ?? value;
@@ -6919,7 +7179,7 @@ export default function Page2PatientHistory(props) {
       ></TextField>
       <TextField
         label="Ph current medicines"
-        isRequired={false}
+        isRequired={true}
         isReadOnly={false}
         value={ph_current_medicines}
         onChange={(e) => {
@@ -6999,6 +7259,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ph_current_medicines ?? value;
@@ -7097,6 +7358,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_dress_yourself ?? value;
@@ -7195,6 +7457,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_get_in_out_bed ?? value;
@@ -7293,6 +7556,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_lift_full_cup_mouth ?? value;
@@ -7391,6 +7655,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_walk_outdoor_flat ?? value;
@@ -7489,6 +7754,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_wash_dry_body ?? value;
@@ -7585,6 +7851,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_pick_clothing_floor ?? value;
@@ -7683,6 +7950,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_turn_faucets_on_off ?? value;
@@ -7781,6 +8049,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_get_in_out_car_bus_train_plane ?? value;
@@ -7882,6 +8151,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_walk_two_miles ?? value;
@@ -7980,6 +8250,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_recreational_activities_sports ?? value;
@@ -8081,6 +8352,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep: value,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_good_night_sleep ?? value;
@@ -8179,6 +8451,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous: value,
               ad_deal_depression_blue,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_deal_anxiety_nervous ?? value;
@@ -8277,6 +8550,7 @@ export default function Page2PatientHistory(props) {
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue: value,
+              insurance_primary_insured_person_dob,
             };
             const result = onChange(modelFields);
             value = result?.ad_deal_depression_blue ?? value;
@@ -8292,6 +8566,109 @@ export default function Page2PatientHistory(props) {
         errorMessage={errors.ad_deal_depression_blue?.errorMessage}
         hasError={errors.ad_deal_depression_blue?.hasError}
         {...getOverrideProps(overrides, "ad_deal_depression_blue")}
+      ></TextField>
+      <TextField
+        label="Insurance primary insured person dob"
+        isRequired={false}
+        isReadOnly={false}
+        type="date"
+        value={insurance_primary_insured_person_dob}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicine_1,
+              ph_current_medicine_2,
+              ph_current_medicine_3,
+              ph_current_medicine_4,
+              ph_current_medicine_5,
+              ph_current_medicine_6,
+              ph_current_medicine_7,
+              ph_current_medicine_8,
+              ph_current_medicine_9,
+              ph_current_medicine_10,
+              ph_current_medicine_11,
+              ph_current_medicine_12,
+              ph_current_medicine_13,
+              ph_current_medicine_14,
+              ph_current_medicine_15,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ph_symptoms,
+              ad_people_in_household,
+              ad_who_shopping,
+              ad_housework,
+              ad_hardest_thing,
+              ad_ability_stand_up_chair,
+              ad_ability_walk_outdoors_flat,
+              ad_ability_get_on_toilet,
+              ad_ability_reach_5_pound,
+              ad_ability_car_doors,
+              ad_ability_outside_work,
+              ad_ability_wait_in_line,
+              ad_ability_lift_heavy,
+              ad_ability_lift_heavier,
+              ad_ability_climb_2_flights,
+              ad_aids_devices_activities,
+              ad_categories_help,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+              occupation,
+              ph_current_medicines,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              insurance_primary_insured_person_dob: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.insurance_primary_insured_person_dob ?? value;
+          }
+          if (errors.insurance_primary_insured_person_dob?.hasError) {
+            runValidationTasks("insurance_primary_insured_person_dob", value);
+          }
+          setInsurance_primary_insured_person_dob(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "insurance_primary_insured_person_dob",
+            insurance_primary_insured_person_dob
+          )
+        }
+        errorMessage={errors.insurance_primary_insured_person_dob?.errorMessage}
+        hasError={errors.insurance_primary_insured_person_dob?.hasError}
+        {...getOverrideProps(overrides, "insurance_primary_insured_person_dob")}
       ></TextField>
       <Flex
         justifyContent="space-between"

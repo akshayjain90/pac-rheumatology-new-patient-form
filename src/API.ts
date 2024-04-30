@@ -2,6 +2,128 @@
 /* eslint-disable */
 //  This file was automatically generated and should not be edited.
 
+export type CreatePrivacyNoticeInput = {
+  id?: string | null,
+  full_name?: string | null,
+  authorized_1?: string | null,
+  relationship_1?: string | null,
+  authorized_2?: string | null,
+  relationship_2?: string | null,
+  authorized_3?: string | null,
+  relationship_3?: string | null,
+  decline?: boolean | null,
+  date: string,
+  open_payment_signature: string,
+  open_payment_date: string,
+  signature: string,
+};
+
+export type ModelPrivacyNoticeConditionInput = {
+  full_name?: ModelStringInput | null,
+  authorized_1?: ModelStringInput | null,
+  relationship_1?: ModelStringInput | null,
+  authorized_2?: ModelStringInput | null,
+  relationship_2?: ModelStringInput | null,
+  authorized_3?: ModelStringInput | null,
+  relationship_3?: ModelStringInput | null,
+  decline?: ModelBooleanInput | null,
+  date?: ModelStringInput | null,
+  open_payment_signature?: ModelStringInput | null,
+  open_payment_date?: ModelStringInput | null,
+  signature?: ModelStringInput | null,
+  and?: Array< ModelPrivacyNoticeConditionInput | null > | null,
+  or?: Array< ModelPrivacyNoticeConditionInput | null > | null,
+  not?: ModelPrivacyNoticeConditionInput | null,
+  createdAt?: ModelStringInput | null,
+  updatedAt?: ModelStringInput | null,
+};
+
+export type ModelStringInput = {
+  ne?: string | null,
+  eq?: string | null,
+  le?: string | null,
+  lt?: string | null,
+  ge?: string | null,
+  gt?: string | null,
+  contains?: string | null,
+  notContains?: string | null,
+  between?: Array< string | null > | null,
+  beginsWith?: string | null,
+  attributeExists?: boolean | null,
+  attributeType?: ModelAttributeTypes | null,
+  size?: ModelSizeInput | null,
+};
+
+export enum ModelAttributeTypes {
+  binary = "binary",
+  binarySet = "binarySet",
+  bool = "bool",
+  list = "list",
+  map = "map",
+  number = "number",
+  numberSet = "numberSet",
+  string = "string",
+  stringSet = "stringSet",
+  _null = "_null",
+}
+
+
+export type ModelSizeInput = {
+  ne?: number | null,
+  eq?: number | null,
+  le?: number | null,
+  lt?: number | null,
+  ge?: number | null,
+  gt?: number | null,
+  between?: Array< number | null > | null,
+};
+
+export type ModelBooleanInput = {
+  ne?: boolean | null,
+  eq?: boolean | null,
+  attributeExists?: boolean | null,
+  attributeType?: ModelAttributeTypes | null,
+};
+
+export type PrivacyNotice = {
+  __typename: "PrivacyNotice",
+  id: string,
+  full_name?: string | null,
+  authorized_1?: string | null,
+  relationship_1?: string | null,
+  authorized_2?: string | null,
+  relationship_2?: string | null,
+  authorized_3?: string | null,
+  relationship_3?: string | null,
+  decline?: boolean | null,
+  date: string,
+  open_payment_signature: string,
+  open_payment_date: string,
+  signature: string,
+  createdAt: string,
+  updatedAt: string,
+};
+
+export type UpdatePrivacyNoticeInput = {
+  id: string,
+  full_name?: string | null,
+  authorized_1?: string | null,
+  relationship_1?: string | null,
+  authorized_2?: string | null,
+  relationship_2?: string | null,
+  authorized_3?: string | null,
+  relationship_3?: string | null,
+  decline?: boolean | null,
+  date?: string | null,
+  open_payment_signature?: string | null,
+  open_payment_date?: string | null,
+  signature?: string | null,
+};
+
+export type DeletePrivacyNoticeInput = {
+  id: string,
+};
+
 export type CreateNewPatientInput = {
   id?: string | null,
   date: string,
@@ -14,9 +136,9 @@ export type CreateNewPatientInput = {
   race?: string | null,
   primary_language?: string | null,
   address: string,
-  city?: string | null,
-  state?: string | null,
-  zip?: string | null,
+  city: string,
+  state: string,
+  zip: string,
   home_phone: string,
   work_phone?: string | null,
   mobile_phone?: string | null,
@@ -50,7 +172,7 @@ export type CreateNewPatientInput = {
   signature_page_1_date: string,
   ph_briefly_describe_present_symptoms: string,
   ph_previous_treatment_for_problem?: string | null,
-  ph_current_medicines?: string | null,
+  ph_current_medicines: string,
   emergency_contact_phone: string,
   ph_allergy_to_med: boolean,
   ph_allergy_to_med_list?: string | null,
@@ -88,9 +210,10 @@ export type CreateNewPatientInput = {
   ad_daily_pain_scale: number,
   ad_how_well_doing_scale: number,
   ph_alcohol_weekly?: string | null,
-  ph_symptoms?: string | null,
+  ph_symptoms: Array< string >,
   ad_deal_anxiety_nervous: string,
   ad_deal_depression_blue: string,
+  insurance_primary_insured_person_dob?: string | null,
 };
 
 export type ModelNewPatientConditionInput = {
@@ -181,58 +304,12 @@ export type ModelNewPatientConditionInput = {
   ph_symptoms?: ModelStringInput | null,
   ad_deal_anxiety_nervous?: ModelStringInput | null,
   ad_deal_depression_blue?: ModelStringInput | null,
+  insurance_primary_insured_person_dob?: ModelStringInput | null,
   and?: Array< ModelNewPatientConditionInput | null > | null,
   or?: Array< ModelNewPatientConditionInput | null > | null,
   not?: ModelNewPatientConditionInput | null,
   createdAt?: ModelStringInput | null,
   updatedAt?: ModelStringInput | null,
-};
-
-export type ModelStringInput = {
-  ne?: string | null,
-  eq?: string | null,
-  le?: string | null,
-  lt?: string | null,
-  ge?: string | null,
-  gt?: string | null,
-  contains?: string | null,
-  notContains?: string | null,
-  between?: Array< string | null > | null,
-  beginsWith?: string | null,
-  attributeExists?: boolean | null,
-  attributeType?: ModelAttributeTypes | null,
-  size?: ModelSizeInput | null,
-};
-
-export enum ModelAttributeTypes {
-  binary = "binary",
-  binarySet = "binarySet",
-  bool = "bool",
-  list = "list",
-  map = "map",
-  number = "number",
-  numberSet = "numberSet",
-  string = "string",
-  stringSet = "stringSet",
-  _null = "_null",
-}
-
-
-export type ModelSizeInput = {
-  ne?: number | null,
-  eq?: number | null,
-  le?: number | null,
-  lt?: number | null,
-  ge?: number | null,
-  gt?: number | null,
-  between?: Array< number | null > | null,
-};
-
-export type ModelBooleanInput = {
-  ne?: boolean | null,
-  eq?: boolean | null,
-  attributeExists?: boolean | null,
-  attributeType?: ModelAttributeTypes | null,
 };
 
 export type ModelIntInput = {
@@ -260,9 +337,9 @@ export type NewPatient = {
   race?: string | null,
   primary_language?: string | null,
   address: string,
-  city?: string | null,
-  state?: string | null,
-  zip?: string | null,
+  city: string,
+  state: string,
+  zip: string,
   home_phone: string,
   work_phone?: string | null,
   mobile_phone?: string | null,
@@ -296,7 +373,7 @@ export type NewPatient = {
   signature_page_1_date: string,
   ph_briefly_describe_present_symptoms: string,
   ph_previous_treatment_for_problem?: string | null,
-  ph_current_medicines?: string | null,
+  ph_current_medicines: string,
   emergency_contact_phone: string,
   ph_allergy_to_med: boolean,
   ph_allergy_to_med_list?: string | null,
@@ -334,9 +411,10 @@ export type NewPatient = {
   ad_daily_pain_scale: number,
   ad_how_well_doing_scale: number,
   ph_alcohol_weekly?: string | null,
-  ph_symptoms?: string | null,
+  ph_symptoms: Array< string >,
   ad_deal_anxiety_nervous: string,
   ad_deal_depression_blue: string,
+  insurance_primary_insured_person_dob?: string | null,
   createdAt: string,
   updatedAt: string,
 };
@@ -427,13 +505,57 @@ export type UpdateNewPatientInput = {
   ad_daily_pain_scale?: number | null,
   ad_how_well_doing_scale?: number | null,
   ph_alcohol_weekly?: string | null,
-  ph_symptoms?: string | null,
+  ph_symptoms?: Array< string > | null,
   ad_deal_anxiety_nervous?: string | null,
   ad_deal_depression_blue?: string | null,
+  insurance_primary_insured_person_dob?: string | null,
 };
 
 export type DeleteNewPatientInput = {
   id: string,
+};
+
+export type ModelPrivacyNoticeFilterInput = {
+  id?: ModelIDInput | null,
+  full_name?: ModelStringInput | null,
+  authorized_1?: ModelStringInput | null,
+  relationship_1?: ModelStringInput | null,
+  authorized_2?: ModelStringInput | null,
+  relationship_2?: ModelStringInput | null,
+  authorized_3?: ModelStringInput | null,
+  relationship_3?: ModelStringInput | null,
+  decline?: ModelBooleanInput | null,
+  date?: ModelStringInput | null,
+  open_payment_signature?: ModelStringInput | null,
+  open_payment_date?: ModelStringInput | null,
+  signature?: ModelStringInput | null,
+  createdAt?: ModelStringInput | null,
+  updatedAt?: ModelStringInput | null,
+  and?: Array< ModelPrivacyNoticeFilterInput | null > | null,
+  or?: Array< ModelPrivacyNoticeFilterInput | null > | null,
+  not?: ModelPrivacyNoticeFilterInput | null,
+};
+
+export type ModelIDInput = {
+  ne?: string | null,
+  eq?: string | null,
+  le?: string | null,
+  lt?: string | null,
+  ge?: string | null,
+  gt?: string | null,
+  contains?: string | null,
+  notContains?: string | null,
+  between?: Array< string | null > | null,
+  beginsWith?: string | null,
+  attributeExists?: boolean | null,
+  attributeType?: ModelAttributeTypes | null,
+  size?: ModelSizeInput | null,
+};
+
+export type ModelPrivacyNoticeConnection = {
+  __typename: "ModelPrivacyNoticeConnection",
+  items:  Array<PrivacyNotice | null >,
+  nextToken?: string | null,
 };
 
 export type ModelNewPatientFilterInput = {
@@ -525,6 +647,7 @@ export type ModelNewPatientFilterInput = {
   ph_symptoms?: ModelStringInput | null,
   ad_deal_anxiety_nervous?: ModelStringInput | null,
   ad_deal_depression_blue?: ModelStringInput | null,
+  insurance_primary_insured_person_dob?: ModelStringInput | null,
   createdAt?: ModelStringInput | null,
   updatedAt?: ModelStringInput | null,
   and?: Array< ModelNewPatientFilterInput | null > | null,
@@ -532,7 +655,33 @@ export type ModelNewPatientFilterInput = {
   not?: ModelNewPatientFilterInput | null,
 };
 
-export type ModelIDInput = {
+export type ModelNewPatientConnection = {
+  __typename: "ModelNewPatientConnection",
+  items:  Array<NewPatient | null >,
+  nextToken?: string | null,
+};
+
+export type ModelSubscriptionPrivacyNoticeFilterInput = {
+  id?: ModelSubscriptionIDInput | null,
+  full_name?: ModelSubscriptionStringInput | null,
+  authorized_1?: ModelSubscriptionStringInput | null,
+  relationship_1?: ModelSubscriptionStringInput | null,
+  authorized_2?: ModelSubscriptionStringInput | null,
+  relationship_2?: ModelSubscriptionStringInput | null,
+  authorized_3?: ModelSubscriptionStringInput | null,
+  relationship_3?: ModelSubscriptionStringInput | null,
+  decline?: ModelSubscriptionBooleanInput | null,
+  date?: ModelSubscriptionStringInput | null,
+  open_payment_signature?: ModelSubscriptionStringInput | null,
+  open_payment_date?: ModelSubscriptionStringInput | null,
+  signature?: ModelSubscriptionStringInput | null,
+  createdAt?: ModelSubscriptionStringInput | null,
+  updatedAt?: ModelSubscriptionStringInput | null,
+  and?: Array< ModelSubscriptionPrivacyNoticeFilterInput | null > | null,
+  or?: Array< ModelSubscriptionPrivacyNoticeFilterInput | null > | null,
+};
+
+export type ModelSubscriptionIDInput = {
   ne?: string | null,
   eq?: string | null,
   le?: string | null,
@@ -543,15 +692,28 @@ export type ModelIDInput = {
   notContains?: string | null,
   between?: Array< string | null > | null,
   beginsWith?: string | null,
-  attributeExists?: boolean | null,
-  attributeType?: ModelAttributeTypes | null,
-  size?: ModelSizeInput | null,
+  in?: Array< string | null > | null,
+  notIn?: Array< string | null > | null,
 };
 
-export type ModelNewPatientConnection = {
-  __typename: "ModelNewPatientConnection",
-  items:  Array<NewPatient | null >,
-  nextToken?: string | null,
+export type ModelSubscriptionStringInput = {
+  ne?: string | null,
+  eq?: string | null,
+  le?: string | null,
+  lt?: string | null,
+  ge?: string | null,
+  gt?: string | null,
+  contains?: string | null,
+  notContains?: string | null,
+  between?: Array< string | null > | null,
+  beginsWith?: string | null,
+  in?: Array< string | null > | null,
+  notIn?: Array< string | null > | null,
+};
+
+export type ModelSubscriptionBooleanInput = {
+  ne?: boolean | null,
+  eq?: boolean | null,
 };
 
 export type ModelSubscriptionNewPatientFilterInput = {
@@ -643,45 +805,11 @@ export type ModelSubscriptionNewPatientFilterInput = {
   ph_symptoms?: ModelSubscriptionStringInput | null,
   ad_deal_anxiety_nervous?: ModelSubscriptionStringInput | null,
   ad_deal_depression_blue?: ModelSubscriptionStringInput | null,
+  insurance_primary_insured_person_dob?: ModelSubscriptionStringInput | null,
   createdAt?: ModelSubscriptionStringInput | null,
   updatedAt?: ModelSubscriptionStringInput | null,
   and?: Array< ModelSubscriptionNewPatientFilterInput | null > | null,
   or?: Array< ModelSubscriptionNewPatientFilterInput | null > | null,
-};
-
-export type ModelSubscriptionIDInput = {
-  ne?: string | null,
-  eq?: string | null,
-  le?: string | null,
-  lt?: string | null,
-  ge?: string | null,
-  gt?: string | null,
-  contains?: string | null,
-  notContains?: string | null,
-  between?: Array< string | null > | null,
-  beginsWith?: string | null,
-  in?: Array< string | null > | null,
-  notIn?: Array< string | null > | null,
-};
-
-export type ModelSubscriptionStringInput = {
-  ne?: string | null,
-  eq?: string | null,
-  le?: string | null,
-  lt?: string | null,
-  ge?: string | null,
-  gt?: string | null,
-  contains?: string | null,
-  notContains?: string | null,
-  between?: Array< string | null > | null,
-  beginsWith?: string | null,
-  in?: Array< string | null > | null,
-  notIn?: Array< string | null > | null,
-};
-
-export type ModelSubscriptionBooleanInput = {
-  ne?: boolean | null,
-  eq?: boolean | null,
 };
 
 export type ModelSubscriptionIntInput = {
@@ -694,6 +822,84 @@ export type ModelSubscriptionIntInput = {
   between?: Array< number | null > | null,
   in?: Array< number | null > | null,
   notIn?: Array< number | null > | null,
+};
+
+export type CreatePrivacyNoticeMutationVariables = {
+  input: CreatePrivacyNoticeInput,
+  condition?: ModelPrivacyNoticeConditionInput | null,
+};
+
+export type CreatePrivacyNoticeMutation = {
+  createPrivacyNotice?:  {
+    __typename: "PrivacyNotice",
+    id: string,
+    full_name?: string | null,
+    authorized_1?: string | null,
+    relationship_1?: string | null,
+    authorized_2?: string | null,
+    relationship_2?: string | null,
+    authorized_3?: string | null,
+    relationship_3?: string | null,
+    decline?: boolean | null,
+    date: string,
+    open_payment_signature: string,
+    open_payment_date: string,
+    signature: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type UpdatePrivacyNoticeMutationVariables = {
+  input: UpdatePrivacyNoticeInput,
+  condition?: ModelPrivacyNoticeConditionInput | null,
+};
+
+export type UpdatePrivacyNoticeMutation = {
+  updatePrivacyNotice?:  {
+    __typename: "PrivacyNotice",
+    id: string,
+    full_name?: string | null,
+    authorized_1?: string | null,
+    relationship_1?: string | null,
+    authorized_2?: string | null,
+    relationship_2?: string | null,
+    authorized_3?: string | null,
+    relationship_3?: string | null,
+    decline?: boolean | null,
+    date: string,
+    open_payment_signature: string,
+    open_payment_date: string,
+    signature: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type DeletePrivacyNoticeMutationVariables = {
+  input: DeletePrivacyNoticeInput,
+  condition?: ModelPrivacyNoticeConditionInput | null,
+};
+
+export type DeletePrivacyNoticeMutation = {
+  deletePrivacyNotice?:  {
+    __typename: "PrivacyNotice",
+    id: string,
+    full_name?: string | null,
+    authorized_1?: string | null,
+    relationship_1?: string | null,
+    authorized_2?: string | null,
+    relationship_2?: string | null,
+    authorized_3?: string | null,
+    relationship_3?: string | null,
+    decline?: boolean | null,
+    date: string,
+    open_payment_signature: string,
+    open_payment_date: string,
+    signature: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
 };
 
 export type CreateNewPatientMutationVariables = {
@@ -715,9 +921,9 @@ export type CreateNewPatientMutation = {
     race?: string | null,
     primary_language?: string | null,
     address: string,
-    city?: string | null,
-    state?: string | null,
-    zip?: string | null,
+    city: string,
+    state: string,
+    zip: string,
     home_phone: string,
     work_phone?: string | null,
     mobile_phone?: string | null,
@@ -751,7 +957,7 @@ export type CreateNewPatientMutation = {
     signature_page_1_date: string,
     ph_briefly_describe_present_symptoms: string,
     ph_previous_treatment_for_problem?: string | null,
-    ph_current_medicines?: string | null,
+    ph_current_medicines: string,
     emergency_contact_phone: string,
     ph_allergy_to_med: boolean,
     ph_allergy_to_med_list?: string | null,
@@ -789,9 +995,10 @@ export type CreateNewPatientMutation = {
     ad_daily_pain_scale: number,
     ad_how_well_doing_scale: number,
     ph_alcohol_weekly?: string | null,
-    ph_symptoms?: string | null,
+    ph_symptoms: Array< string >,
     ad_deal_anxiety_nervous: string,
     ad_deal_depression_blue: string,
+    insurance_primary_insured_person_dob?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -816,9 +1023,9 @@ export type UpdateNewPatientMutation = {
     race?: string | null,
     primary_language?: string | null,
     address: string,
-    city?: string | null,
-    state?: string | null,
-    zip?: string | null,
+    city: string,
+    state: string,
+    zip: string,
     home_phone: string,
     work_phone?: string | null,
     mobile_phone?: string | null,
@@ -852,7 +1059,7 @@ export type UpdateNewPatientMutation = {
     signature_page_1_date: string,
     ph_briefly_describe_present_symptoms: string,
     ph_previous_treatment_for_problem?: string | null,
-    ph_current_medicines?: string | null,
+    ph_current_medicines: string,
     emergency_contact_phone: string,
     ph_allergy_to_med: boolean,
     ph_allergy_to_med_list?: string | null,
@@ -890,9 +1097,10 @@ export type UpdateNewPatientMutation = {
     ad_daily_pain_scale: number,
     ad_how_well_doing_scale: number,
     ph_alcohol_weekly?: string | null,
-    ph_symptoms?: string | null,
+    ph_symptoms: Array< string >,
     ad_deal_anxiety_nervous: string,
     ad_deal_depression_blue: string,
+    insurance_primary_insured_person_dob?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -917,9 +1125,9 @@ export type DeleteNewPatientMutation = {
     race?: string | null,
     primary_language?: string | null,
     address: string,
-    city?: string | null,
-    state?: string | null,
-    zip?: string | null,
+    city: string,
+    state: string,
+    zip: string,
     home_phone: string,
     work_phone?: string | null,
     mobile_phone?: string | null,
@@ -953,7 +1161,7 @@ export type DeleteNewPatientMutation = {
     signature_page_1_date: string,
     ph_briefly_describe_present_symptoms: string,
     ph_previous_treatment_for_problem?: string | null,
-    ph_current_medicines?: string | null,
+    ph_current_medicines: string,
     emergency_contact_phone: string,
     ph_allergy_to_med: boolean,
     ph_allergy_to_med_list?: string | null,
@@ -991,11 +1199,68 @@ export type DeleteNewPatientMutation = {
     ad_daily_pain_scale: number,
     ad_how_well_doing_scale: number,
     ph_alcohol_weekly?: string | null,
-    ph_symptoms?: string | null,
+    ph_symptoms: Array< string >,
     ad_deal_anxiety_nervous: string,
     ad_deal_depression_blue: string,
+    insurance_primary_insured_person_dob?: string | null,
     createdAt: string,
     updatedAt: string,
+  } | null,
+};
+
+export type GetPrivacyNoticeQueryVariables = {
+  id: string,
+};
+
+export type GetPrivacyNoticeQuery = {
+  getPrivacyNotice?:  {
+    __typename: "PrivacyNotice",
+    id: string,
+    full_name?: string | null,
+    authorized_1?: string | null,
+    relationship_1?: string | null,
+    authorized_2?: string | null,
+    relationship_2?: string | null,
+    authorized_3?: string | null,
+    relationship_3?: string | null,
+    decline?: boolean | null,
+    date: string,
+    open_payment_signature: string,
+    open_payment_date: string,
+    signature: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type ListPrivacyNoticesQueryVariables = {
+  filter?: ModelPrivacyNoticeFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type ListPrivacyNoticesQuery = {
+  listPrivacyNotices?:  {
+    __typename: "ModelPrivacyNoticeConnection",
+    items:  Array< {
+      __typename: "PrivacyNotice",
+      id: string,
+      full_name?: string | null,
+      authorized_1?: string | null,
+      relationship_1?: string | null,
+      authorized_2?: string | null,
+      relationship_2?: string | null,
+      authorized_3?: string | null,
+      relationship_3?: string | null,
+      decline?: boolean | null,
+      date: string,
+      open_payment_signature: string,
+      open_payment_date: string,
+      signature: string,
+      createdAt: string,
+      updatedAt: string,
+    } | null >,
+    nextToken?: string | null,
   } | null,
 };
 
@@ -1017,9 +1282,9 @@ export type GetNewPatientQuery = {
     race?: string | null,
     primary_language?: string | null,
     address: string,
-    city?: string | null,
-    state?: string | null,
-    zip?: string | null,
+    city: string,
+    state: string,
+    zip: string,
     home_phone: string,
     work_phone?: string | null,
     mobile_phone?: string | null,
@@ -1053,7 +1318,7 @@ export type GetNewPatientQuery = {
     signature_page_1_date: string,
     ph_briefly_describe_present_symptoms: string,
     ph_previous_treatment_for_problem?: string | null,
-    ph_current_medicines?: string | null,
+    ph_current_medicines: string,
     emergency_contact_phone: string,
     ph_allergy_to_med: boolean,
     ph_allergy_to_med_list?: string | null,
@@ -1091,9 +1356,10 @@ export type GetNewPatientQuery = {
     ad_daily_pain_scale: number,
     ad_how_well_doing_scale: number,
     ph_alcohol_weekly?: string | null,
-    ph_symptoms?: string | null,
+    ph_symptoms: Array< string >,
     ad_deal_anxiety_nervous: string,
     ad_deal_depression_blue: string,
+    insurance_primary_insured_person_dob?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -1121,9 +1387,9 @@ export type ListNewPatientsQuery = {
       race?: string | null,
       primary_language?: string | null,
       address: string,
-      city?: string | null,
-      state?: string | null,
-      zip?: string | null,
+      city: string,
+      state: string,
+      zip: string,
       home_phone: string,
       work_phone?: string | null,
       mobile_phone?: string | null,
@@ -1157,7 +1423,7 @@ export type ListNewPatientsQuery = {
       signature_page_1_date: string,
       ph_briefly_describe_present_symptoms: string,
       ph_previous_treatment_for_problem?: string | null,
-      ph_current_medicines?: string | null,
+      ph_current_medicines: string,
       emergency_contact_phone: string,
       ph_allergy_to_med: boolean,
       ph_allergy_to_med_list?: string | null,
@@ -1195,13 +1461,89 @@ export type ListNewPatientsQuery = {
       ad_daily_pain_scale: number,
       ad_how_well_doing_scale: number,
       ph_alcohol_weekly?: string | null,
-      ph_symptoms?: string | null,
+      ph_symptoms: Array< string >,
       ad_deal_anxiety_nervous: string,
       ad_deal_depression_blue: string,
+      insurance_primary_insured_person_dob?: string | null,
       createdAt: string,
       updatedAt: string,
     } | null >,
     nextToken?: string | null,
+  } | null,
+};
+
+export type OnCreatePrivacyNoticeSubscriptionVariables = {
+  filter?: ModelSubscriptionPrivacyNoticeFilterInput | null,
+};
+
+export type OnCreatePrivacyNoticeSubscription = {
+  onCreatePrivacyNotice?:  {
+    __typename: "PrivacyNotice",
+    id: string,
+    full_name?: string | null,
+    authorized_1?: string | null,
+    relationship_1?: string | null,
+    authorized_2?: string | null,
+    relationship_2?: string | null,
+    authorized_3?: string | null,
+    relationship_3?: string | null,
+    decline?: boolean | null,
+    date: string,
+    open_payment_signature: string,
+    open_payment_date: string,
+    signature: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnUpdatePrivacyNoticeSubscriptionVariables = {
+  filter?: ModelSubscriptionPrivacyNoticeFilterInput | null,
+};
+
+export type OnUpdatePrivacyNoticeSubscription = {
+  onUpdatePrivacyNotice?:  {
+    __typename: "PrivacyNotice",
+    id: string,
+    full_name?: string | null,
+    authorized_1?: string | null,
+    relationship_1?: string | null,
+    authorized_2?: string | null,
+    relationship_2?: string | null,
+    authorized_3?: string | null,
+    relationship_3?: string | null,
+    decline?: boolean | null,
+    date: string,
+    open_payment_signature: string,
+    open_payment_date: string,
+    signature: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnDeletePrivacyNoticeSubscriptionVariables = {
+  filter?: ModelSubscriptionPrivacyNoticeFilterInput | null,
+};
+
+export type OnDeletePrivacyNoticeSubscription = {
+  onDeletePrivacyNotice?:  {
+    __typename: "PrivacyNotice",
+    id: string,
+    full_name?: string | null,
+    authorized_1?: string | null,
+    relationship_1?: string | null,
+    authorized_2?: string | null,
+    relationship_2?: string | null,
+    authorized_3?: string | null,
+    relationship_3?: string | null,
+    decline?: boolean | null,
+    date: string,
+    open_payment_signature: string,
+    open_payment_date: string,
+    signature: string,
+    createdAt: string,
+    updatedAt: string,
   } | null,
 };
 
@@ -1223,9 +1565,9 @@ export type OnCreateNewPatientSubscription = {
     race?: string | null,
     primary_language?: string | null,
     address: string,
-    city?: string | null,
-    state?: string | null,
-    zip?: string | null,
+    city: string,
+    state: string,
+    zip: string,
     home_phone: string,
     work_phone?: string | null,
     mobile_phone?: string | null,
@@ -1259,7 +1601,7 @@ export type OnCreateNewPatientSubscription = {
     signature_page_1_date: string,
     ph_briefly_describe_present_symptoms: string,
     ph_previous_treatment_for_problem?: string | null,
-    ph_current_medicines?: string | null,
+    ph_current_medicines: string,
     emergency_contact_phone: string,
     ph_allergy_to_med: boolean,
     ph_allergy_to_med_list?: string | null,
@@ -1297,9 +1639,10 @@ export type OnCreateNewPatientSubscription = {
     ad_daily_pain_scale: number,
     ad_how_well_doing_scale: number,
     ph_alcohol_weekly?: string | null,
-    ph_symptoms?: string | null,
+    ph_symptoms: Array< string >,
     ad_deal_anxiety_nervous: string,
     ad_deal_depression_blue: string,
+    insurance_primary_insured_person_dob?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -1323,9 +1666,9 @@ export type OnUpdateNewPatientSubscription = {
     race?: string | null,
     primary_language?: string | null,
     address: string,
-    city?: string | null,
-    state?: string | null,
-    zip?: string | null,
+    city: string,
+    state: string,
+    zip: string,
     home_phone: string,
     work_phone?: string | null,
     mobile_phone?: string | null,
@@ -1359,7 +1702,7 @@ export type OnUpdateNewPatientSubscription = {
     signature_page_1_date: string,
     ph_briefly_describe_present_symptoms: string,
     ph_previous_treatment_for_problem?: string | null,
-    ph_current_medicines?: string | null,
+    ph_current_medicines: string,
     emergency_contact_phone: string,
     ph_allergy_to_med: boolean,
     ph_allergy_to_med_list?: string | null,
@@ -1397,9 +1740,10 @@ export type OnUpdateNewPatientSubscription = {
     ad_daily_pain_scale: number,
     ad_how_well_doing_scale: number,
     ph_alcohol_weekly?: string | null,
-    ph_symptoms?: string | null,
+    ph_symptoms: Array< string >,
     ad_deal_anxiety_nervous: string,
     ad_deal_depression_blue: string,
+    insurance_primary_insured_person_dob?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -1423,9 +1767,9 @@ export type OnDeleteNewPatientSubscription = {
     race?: string | null,
     primary_language?: string | null,
     address: string,
-    city?: string | null,
-    state?: string | null,
-    zip?: string | null,
+    city: string,
+    state: string,
+    zip: string,
     home_phone: string,
     work_phone?: string | null,
     mobile_phone?: string | null,
@@ -1459,7 +1803,7 @@ export type OnDeleteNewPatientSubscription = {
     signature_page_1_date: string,
     ph_briefly_describe_present_symptoms: string,
     ph_previous_treatment_for_problem?: string | null,
-    ph_current_medicines?: string | null,
+    ph_current_medicines: string,
     emergency_contact_phone: string,
     ph_allergy_to_med: boolean,
     ph_allergy_to_med_list?: string | null,
@@ -1497,9 +1841,10 @@ export type OnDeleteNewPatientSubscription = {
     ad_daily_pain_scale: number,
     ad_how_well_doing_scale: number,
     ph_alcohol_weekly?: string | null,
-    ph_symptoms?: string | null,
+    ph_symptoms: Array< string >,
     ad_deal_anxiety_nervous: string,
     ad_deal_depression_blue: string,
+    insurance_primary_insured_person_dob?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,

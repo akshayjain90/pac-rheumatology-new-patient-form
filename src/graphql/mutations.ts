@@ -8,6 +8,87 @@ type GeneratedMutation<InputType, OutputType> = string & {
   __generatedMutationOutput: OutputType;
 };
 
+export const createPrivacyNotice = /* GraphQL */ `mutation CreatePrivacyNotice(
+  $input: CreatePrivacyNoticeInput!
+  $condition: ModelPrivacyNoticeConditionInput
+) {
+  createPrivacyNotice(input: $input, condition: $condition) {
+    id
+    full_name
+    authorized_1
+    relationship_1
+    authorized_2
+    relationship_2
+    authorized_3
+    relationship_3
+    decline
+    date
+    open_payment_signature
+    open_payment_date
+    signature
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.CreatePrivacyNoticeMutationVariables,
+  APITypes.CreatePrivacyNoticeMutation
+>;
+export const updatePrivacyNotice = /* GraphQL */ `mutation UpdatePrivacyNotice(
+  $input: UpdatePrivacyNoticeInput!
+  $condition: ModelPrivacyNoticeConditionInput
+) {
+  updatePrivacyNotice(input: $input, condition: $condition) {
+    id
+    full_name
+    authorized_1
+    relationship_1
+    authorized_2
+    relationship_2
+    authorized_3
+    relationship_3
+    decline
+    date
+    open_payment_signature
+    open_payment_date
+    signature
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.UpdatePrivacyNoticeMutationVariables,
+  APITypes.UpdatePrivacyNoticeMutation
+>;
+export const deletePrivacyNotice = /* GraphQL */ `mutation DeletePrivacyNotice(
+  $input: DeletePrivacyNoticeInput!
+  $condition: ModelPrivacyNoticeConditionInput
+) {
+  deletePrivacyNotice(input: $input, condition: $condition) {
+    id
+    full_name
+    authorized_1
+    relationship_1
+    authorized_2
+    relationship_2
+    authorized_3
+    relationship_3
+    decline
+    date
+    open_payment_signature
+    open_payment_date
+    signature
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.DeletePrivacyNoticeMutationVariables,
+  APITypes.DeletePrivacyNoticeMutation
+>;
 export const createNewPatient = /* GraphQL */ `mutation CreateNewPatient(
   $input: CreateNewPatientInput!
   $condition: ModelNewPatientConditionInput
@@ -101,6 +182,7 @@ export const createNewPatient = /* GraphQL */ `mutation CreateNewPatient(
     ph_symptoms
     ad_deal_anxiety_nervous
     ad_deal_depression_blue
+    insurance_primary_insured_person_dob
     createdAt
     updatedAt
     __typename
@@ -203,6 +285,7 @@ export const updateNewPatient = /* GraphQL */ `mutation UpdateNewPatient(
     ph_symptoms
     ad_deal_anxiety_nervous
     ad_deal_depression_blue
+    insurance_primary_insured_person_dob
     createdAt
     updatedAt
     __typename
@@ -305,6 +388,7 @@ export const deleteNewPatient = /* GraphQL */ `mutation DeleteNewPatient(
     ph_symptoms
     ad_deal_anxiety_nervous
     ad_deal_depression_blue
+    insurance_primary_insured_person_dob
     createdAt
     updatedAt
     __typename

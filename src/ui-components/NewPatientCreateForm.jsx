@@ -7,11 +7,15 @@
 /* eslint-disable */
 import * as React from "react";
 import {
+  Autocomplete,
+  Badge,
   Button,
   Divider,
   Flex,
   Grid,
   Heading,
+  Icon,
+  ScrollView,
   SelectField,
   SliderField,
   SwitchField,
@@ -24,6 +28,161 @@ import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createNewPatient } from "../graphql/mutations";
 const client = generateClient();
+function ArrayField({
+  items = [],
+  onChange,
+  label,
+  inputFieldRef,
+  children,
+  hasError,
+  setFieldValue,
+  currentFieldValue,
+  defaultFieldValue,
+  lengthLimit,
+  getBadgeText,
+  runValidationTasks,
+  errorMessage,
+}) {
+  const labelElement = <Text>{label}</Text>;
+  const {
+    tokens: {
+      components: {
+        fieldmessages: { error: errorStyles },
+      },
+    },
+  } = useTheme();
+  const [selectedBadgeIndex, setSelectedBadgeIndex] = React.useState();
+  const [isEditing, setIsEditing] = React.useState();
+  React.useEffect(() => {
+    if (isEditing) {
+      inputFieldRef?.current?.focus();
+    }
+  }, [isEditing]);
+  const removeItem = async (removeIndex) => {
+    const newItems = items.filter((value, index) => index !== removeIndex);
+    await onChange(newItems);
+    setSelectedBadgeIndex(undefined);
+  };
+  const addItem = async () => {
+    const { hasError } = runValidationTasks();
+    if (
+      currentFieldValue !== undefined &&
+      currentFieldValue !== null &&
+      currentFieldValue !== "" &&
+      !hasError
+    ) {
+      const newItems = [...items];
+      if (selectedBadgeIndex !== undefined) {
+        newItems[selectedBadgeIndex] = currentFieldValue;
+        setSelectedBadgeIndex(undefined);
+      } else {
+        newItems.push(currentFieldValue);
+      }
+      await onChange(newItems);
+      setIsEditing(false);
+    }
+  };
+  const arraySection = (
+    <React.Fragment>
+      {!!items?.length && (
+        <ScrollView height="inherit" width="inherit" maxHeight={"7rem"}>
+          {items.map((value, index) => {
+            return (
+              <Badge
+                key={index}
+                style={{
+                  cursor: "pointer",
+                  alignItems: "center",
+                  marginRight: 3,
+                  marginTop: 3,
+                  backgroundColor:
+                    index === selectedBadgeIndex ? "#B8CEF9" : "",
+                }}
+                onClick={() => {
+                  setSelectedBadgeIndex(index);
+                  setFieldValue(items[index]);
+                  setIsEditing(true);
+                }}
+              >
+                {getBadgeText ? getBadgeText(value) : value.toString()}
+                <Icon
+                  style={{
+                    cursor: "pointer",
+                    paddingLeft: 3,
+                    width: 20,
+                    height: 20,
+                  }}
+                  viewBox={{ width: 20, height: 20 }}
+                  paths={[
+                    {
+                      d: "M10 10l5.09-5.09L10 10l5.09 5.09L10 10zm0 0L4.91 4.91 10 10l-5.09 5.09L10 10z",
+                      stroke: "black",
+                    },
+                  ]}
+                  ariaLabel="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeItem(index);
+                  }}
+                />
+              </Badge>
+            );
+          })}
+        </ScrollView>
+      )}
+      <Divider orientation="horizontal" marginTop={5} />
+    </React.Fragment>
+  );
+  if (lengthLimit !== undefined && items.length >= lengthLimit && !isEditing) {
+    return (
+      <React.Fragment>
+        {labelElement}
+        {arraySection}
+      </React.Fragment>
+    );
+  }
+  return (
+    <React.Fragment>
+      {labelElement}
+      {isEditing && children}
+      {!isEditing ? (
+        <>
+          <Button
+            onClick={() => {
+              setIsEditing(true);
+            }}
+          >
+            Add item
+          </Button>
+          {errorMessage && hasError && (
+            <Text color={errorStyles.color} fontSize={errorStyles.fontSize}>
+              {errorMessage}
+            </Text>
+          )}
+        </>
+      ) : (
+        <Flex justifyContent="flex-end">
+          {(currentFieldValue || isEditing) && (
+            <Button
+              children="Cancel"
+              type="button"
+              size="small"
+              onClick={() => {
+                setFieldValue(defaultFieldValue);
+                setIsEditing(false);
+                setSelectedBadgeIndex(undefined);
+              }}
+            ></Button>
+          )}
+          <Button size="small" variation="link" onClick={addItem}>
+            {selectedBadgeIndex !== undefined ? "Save" : "Add"}
+          </Button>
+        </Flex>
+      )}
+      {arraySection}
+    </React.Fragment>
+  );
+}
 export default function NewPatientCreateForm(props) {
   const {
     clearOnSuccess = true,
@@ -68,6 +227,7 @@ export default function NewPatientCreateForm(props) {
     insurance_primary_phone: "",
     insurance_primary_insured_person: "",
     insurance_primary_insured_person_relation: "",
+    insurance_primary_insured_person_dob: "",
     insurance_secondary: "",
     insurance_secondary_id: "",
     insurance_secondary_group: "",
@@ -108,7 +268,7 @@ export default function NewPatientCreateForm(props) {
     ph_live_births: "",
     ph_complications: "",
     ad_people_in_household: "",
-    ph_symptoms: "",
+    ph_symptoms: [],
     ad_dress_yourself: "",
     ad_get_in_out_bed: "",
     ad_lift_full_cup_mouth: "",
@@ -183,6 +343,10 @@ export default function NewPatientCreateForm(props) {
     insurance_primary_insured_person_relation,
     setInsurance_primary_insured_person_relation,
   ] = React.useState(initialValues.insurance_primary_insured_person_relation);
+  const [
+    insurance_primary_insured_person_dob,
+    setInsurance_primary_insured_person_dob,
+  ] = React.useState(initialValues.insurance_primary_insured_person_dob);
   const [insurance_secondary, setInsurance_secondary] = React.useState(
     initialValues.insurance_secondary
   );
@@ -372,6 +536,9 @@ export default function NewPatientCreateForm(props) {
     setInsurance_primary_insured_person_relation(
       initialValues.insurance_primary_insured_person_relation
     );
+    setInsurance_primary_insured_person_dob(
+      initialValues.insurance_primary_insured_person_dob
+    );
     setInsurance_secondary(initialValues.insurance_secondary);
     setInsurance_secondary_id(initialValues.insurance_secondary_id);
     setInsurance_secondary_group(initialValues.insurance_secondary_group);
@@ -423,6 +590,7 @@ export default function NewPatientCreateForm(props) {
     setPh_complications(initialValues.ph_complications);
     setAd_people_in_household(initialValues.ad_people_in_household);
     setPh_symptoms(initialValues.ph_symptoms);
+    setCurrentPh_symptomsValue(undefined);
     setAd_dress_yourself(initialValues.ad_dress_yourself);
     setAd_get_in_out_bed(initialValues.ad_get_in_out_bed);
     setAd_lift_full_cup_mouth(initialValues.ad_lift_full_cup_mouth);
@@ -444,6 +612,9 @@ export default function NewPatientCreateForm(props) {
     setAd_how_well_doing_scale(initialValues.ad_how_well_doing_scale);
     setErrors({});
   };
+  const [currentPh_symptomsValue, setCurrentPh_symptomsValue] =
+    React.useState(undefined);
+  const ph_symptomsRef = React.createRef();
   const validations = {
     date: [{ type: "Required" }],
     last_name: [{ type: "Required" }],
@@ -455,9 +626,9 @@ export default function NewPatientCreateForm(props) {
     race: [],
     primary_language: [],
     address: [{ type: "Required" }],
-    city: [],
-    state: [],
-    zip: [],
+    city: [{ type: "Required" }],
+    state: [{ type: "Required" }],
+    zip: [{ type: "Required" }],
     home_phone: [{ type: "Required" }, { type: "Phone" }],
     work_phone: [{ type: "Phone" }],
     mobile_phone: [{ type: "Phone" }],
@@ -476,6 +647,7 @@ export default function NewPatientCreateForm(props) {
     insurance_primary_phone: [{ type: "Phone" }],
     insurance_primary_insured_person: [],
     insurance_primary_insured_person_relation: [],
+    insurance_primary_insured_person_dob: [],
     insurance_secondary: [],
     insurance_secondary_id: [],
     insurance_secondary_group: [],
@@ -492,7 +664,7 @@ export default function NewPatientCreateForm(props) {
     signature_page_1_date: [{ type: "Required" }],
     ph_briefly_describe_present_symptoms: [{ type: "Required" }],
     ph_previous_treatment_for_problem: [],
-    ph_current_medicines: [],
+    ph_current_medicines: [{ type: "Required" }],
     ph_allergy_to_med: [{ type: "Required" }],
     ph_allergy_to_med_list: [],
     ph_rh_history_osteoarthritis: [],
@@ -516,7 +688,7 @@ export default function NewPatientCreateForm(props) {
     ph_live_births: [],
     ph_complications: [],
     ad_people_in_household: [],
-    ph_symptoms: [{ type: "JSON" }],
+    ph_symptoms: [{ type: "Required" }],
     ad_dress_yourself: [{ type: "Required" }],
     ad_get_in_out_bed: [{ type: "Required" }],
     ad_lift_full_cup_mouth: [{ type: "Required" }],
@@ -550,6 +722,7 @@ export default function NewPatientCreateForm(props) {
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
   };
+  React.useEffect(() => {}, []);
   return (
     <Grid
       as="form"
@@ -590,6 +763,7 @@ export default function NewPatientCreateForm(props) {
           insurance_primary_phone,
           insurance_primary_insured_person,
           insurance_primary_insured_person_relation,
+          insurance_primary_insured_person_dob,
           insurance_secondary,
           insurance_secondary_id,
           insurance_secondary_group,
@@ -745,6 +919,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -861,6 +1036,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -971,6 +1147,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -1082,6 +1259,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -1199,6 +1377,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -1309,6 +1488,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -1447,6 +1627,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -1557,6 +1738,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -1667,6 +1849,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -1786,6 +1969,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -1857,8 +2041,8 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "address")}
         ></TextField>
         <TextField
-          label="City"
-          isRequired={false}
+          label="City *"
+          isRequired={true}
           isReadOnly={false}
           value={city}
           onChange={(e) => {
@@ -1896,6 +2080,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -1974,8 +2159,8 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid6")}
       >
         <TextField
-          label="State"
-          isRequired={false}
+          label="State *"
+          isRequired={true}
           isReadOnly={false}
           value={state}
           onChange={(e) => {
@@ -2013,6 +2198,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -2084,8 +2270,8 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "state")}
         ></TextField>
         <TextField
-          label="Zip"
-          isRequired={false}
+          label="Zip *"
+          isRequired={true}
           isReadOnly={false}
           value={zip}
           onChange={(e) => {
@@ -2123,6 +2309,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -2241,6 +2428,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -2352,6 +2540,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -2463,6 +2652,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -2535,7 +2725,7 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
       </Grid>
       <TextField
-        label="Email *"
+        label="Email * (A copy of responses to this form will be sent here)"
         isRequired={true}
         isReadOnly={false}
         value={email}
@@ -2574,6 +2764,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -2690,6 +2881,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -2800,6 +2992,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -2911,6 +3104,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -3037,6 +3231,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -3147,6 +3342,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -3257,6 +3453,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -3367,6 +3564,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -3488,6 +3686,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -3606,6 +3805,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -3718,6 +3918,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -3840,6 +4041,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -3956,6 +4158,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone: value,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -4072,6 +4275,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person: value,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -4147,129 +4351,260 @@ export default function NewPatientCreateForm(props) {
         hasError={errors.insurance_primary_insured_person?.hasError}
         {...getOverrideProps(overrides, "insurance_primary_insured_person")}
       ></TextField>
-      <TextField
-        label="Relation to Insured Person"
-        isRequired={false}
-        isReadOnly={false}
-        value={insurance_primary_insured_person_relation}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupation,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation: value,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicines,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ad_people_in_household,
-              ph_symptoms,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            value = result?.insurance_primary_insured_person_relation ?? value;
-          }
-          if (errors.insurance_primary_insured_person_relation?.hasError) {
+      <Grid
+        columnGap="inherit"
+        rowGap="inherit"
+        templateColumns="repeat(2, auto)"
+        {...getOverrideProps(overrides, "RowGrid21")}
+      >
+        <TextField
+          label="Relation to Insured Person"
+          isRequired={false}
+          isReadOnly={false}
+          value={insurance_primary_insured_person_relation}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (onChange) {
+              const modelFields = {
+                date,
+                last_name,
+                first_name,
+                date_of_birth,
+                gender,
+                marital_status,
+                ethnicity,
+                race,
+                primary_language,
+                address,
+                city,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
+                social_security,
+                employer,
+                education,
+                veteran,
+                occupation,
+                full_time,
+                preferred_pharmacy,
+                insurance_primary_name,
+                insurance_primary_id,
+                insurance_primary_group,
+                insurance_primary_address,
+                insurance_primary_phone,
+                insurance_primary_insured_person,
+                insurance_primary_insured_person_relation: value,
+                insurance_primary_insured_person_dob,
+                insurance_secondary,
+                insurance_secondary_id,
+                insurance_secondary_group,
+                insurance_secondary_address,
+                insurance_secondary_phone,
+                primary_care_physician_name,
+                primary_care_physician_phone,
+                referring_physician_name,
+                referring_physician_phone,
+                emergency_contact_name,
+                emergency_contact_phone,
+                emergency_contact_relationship,
+                signature_page_1,
+                signature_page_1_date,
+                ph_briefly_describe_present_symptoms,
+                ph_previous_treatment_for_problem,
+                ph_current_medicines,
+                ph_allergy_to_med,
+                ph_allergy_to_med_list,
+                ph_rh_history_osteoarthritis,
+                ph_rh_history_gout,
+                ph_rh_history_juvenile_arthritis,
+                ph_rh_history_vasculitis,
+                ph_rh_history_lupus,
+                ph_rh_history_rheumatoid,
+                ph_rh_history_spondyloarthropathy,
+                ph_rh_history_osteoporosis,
+                ph_past_medical_history,
+                ph_past_surgery_history,
+                ph_smoke,
+                ph_drugs,
+                ph_alcohol,
+                ph_alcohol_weekly,
+                ph_sleep,
+                ph_exercise,
+                ph_travel,
+                ph_pregnant,
+                ph_live_births,
+                ph_complications,
+                ad_people_in_household,
+                ph_symptoms,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
+                ad_daily_pain_scale,
+                ad_how_well_doing_scale,
+              };
+              const result = onChange(modelFields);
+              value =
+                result?.insurance_primary_insured_person_relation ?? value;
+            }
+            if (errors.insurance_primary_insured_person_relation?.hasError) {
+              runValidationTasks(
+                "insurance_primary_insured_person_relation",
+                value
+              );
+            }
+            setInsurance_primary_insured_person_relation(value);
+          }}
+          onBlur={() =>
             runValidationTasks(
               "insurance_primary_insured_person_relation",
-              value
-            );
+              insurance_primary_insured_person_relation
+            )
           }
-          setInsurance_primary_insured_person_relation(value);
-        }}
-        onBlur={() =>
-          runValidationTasks(
-            "insurance_primary_insured_person_relation",
-            insurance_primary_insured_person_relation
-          )
-        }
-        errorMessage={
-          errors.insurance_primary_insured_person_relation?.errorMessage
-        }
-        hasError={errors.insurance_primary_insured_person_relation?.hasError}
-        {...getOverrideProps(
-          overrides,
-          "insurance_primary_insured_person_relation"
-        )}
-      ></TextField>
+          errorMessage={
+            errors.insurance_primary_insured_person_relation?.errorMessage
+          }
+          hasError={errors.insurance_primary_insured_person_relation?.hasError}
+          {...getOverrideProps(
+            overrides,
+            "insurance_primary_insured_person_relation"
+          )}
+        ></TextField>
+        <TextField
+          label="Birthdate of Insured Person"
+          isRequired={false}
+          isReadOnly={false}
+          type="date"
+          value={insurance_primary_insured_person_dob}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (onChange) {
+              const modelFields = {
+                date,
+                last_name,
+                first_name,
+                date_of_birth,
+                gender,
+                marital_status,
+                ethnicity,
+                race,
+                primary_language,
+                address,
+                city,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
+                social_security,
+                employer,
+                education,
+                veteran,
+                occupation,
+                full_time,
+                preferred_pharmacy,
+                insurance_primary_name,
+                insurance_primary_id,
+                insurance_primary_group,
+                insurance_primary_address,
+                insurance_primary_phone,
+                insurance_primary_insured_person,
+                insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob: value,
+                insurance_secondary,
+                insurance_secondary_id,
+                insurance_secondary_group,
+                insurance_secondary_address,
+                insurance_secondary_phone,
+                primary_care_physician_name,
+                primary_care_physician_phone,
+                referring_physician_name,
+                referring_physician_phone,
+                emergency_contact_name,
+                emergency_contact_phone,
+                emergency_contact_relationship,
+                signature_page_1,
+                signature_page_1_date,
+                ph_briefly_describe_present_symptoms,
+                ph_previous_treatment_for_problem,
+                ph_current_medicines,
+                ph_allergy_to_med,
+                ph_allergy_to_med_list,
+                ph_rh_history_osteoarthritis,
+                ph_rh_history_gout,
+                ph_rh_history_juvenile_arthritis,
+                ph_rh_history_vasculitis,
+                ph_rh_history_lupus,
+                ph_rh_history_rheumatoid,
+                ph_rh_history_spondyloarthropathy,
+                ph_rh_history_osteoporosis,
+                ph_past_medical_history,
+                ph_past_surgery_history,
+                ph_smoke,
+                ph_drugs,
+                ph_alcohol,
+                ph_alcohol_weekly,
+                ph_sleep,
+                ph_exercise,
+                ph_travel,
+                ph_pregnant,
+                ph_live_births,
+                ph_complications,
+                ad_people_in_household,
+                ph_symptoms,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
+                ad_daily_pain_scale,
+                ad_how_well_doing_scale,
+              };
+              const result = onChange(modelFields);
+              value = result?.insurance_primary_insured_person_dob ?? value;
+            }
+            if (errors.insurance_primary_insured_person_dob?.hasError) {
+              runValidationTasks("insurance_primary_insured_person_dob", value);
+            }
+            setInsurance_primary_insured_person_dob(value);
+          }}
+          onBlur={() =>
+            runValidationTasks(
+              "insurance_primary_insured_person_dob",
+              insurance_primary_insured_person_dob
+            )
+          }
+          errorMessage={
+            errors.insurance_primary_insured_person_dob?.errorMessage
+          }
+          hasError={errors.insurance_primary_insured_person_dob?.hasError}
+          {...getOverrideProps(
+            overrides,
+            "insurance_primary_insured_person_dob"
+          )}
+        ></TextField>
+      </Grid>
       <TextField
         label="Name of Secondary Insurance"
         isRequired={false}
@@ -4310,6 +4645,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary: value,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -4428,6 +4764,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id: value,
                 insurance_secondary_group,
@@ -4540,6 +4877,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group: value,
@@ -4662,6 +5000,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -4778,6 +5117,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -4909,6 +5249,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -5025,6 +5366,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -5147,6 +5489,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -5263,6 +5606,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -5394,6 +5738,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -5507,6 +5852,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -5623,6 +5969,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -5756,6 +6103,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -5869,6 +6217,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -5998,6 +6347,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -6112,6 +6462,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -6188,8 +6539,8 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "ph_previous_treatment_for_problem")}
       ></TextAreaField>
       <TextAreaField
-        label="Current Medications: (Name and Dose)"
-        isRequired={false}
+        label="Current Medications: (Name and Dose) *"
+        isRequired={true}
         isReadOnly={false}
         onChange={(e) => {
           let { value } = e.target;
@@ -6226,6 +6577,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -6338,6 +6690,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -6450,6 +6803,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -6524,12 +6878,12 @@ export default function NewPatientCreateForm(props) {
       ></TextField>
       <Divider
         orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement17")}
+        {...getOverrideProps(overrides, "SectionalElement11")}
       ></Divider>
-      <Text
+      <Heading
         children="Rheumatology / Arthritis History:"
         {...getOverrideProps(overrides, "SectionalElement16")}
-      ></Text>
+      ></Heading>
       <Grid
         columnGap="inherit"
         rowGap="inherit"
@@ -6577,6 +6931,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -6693,6 +7048,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -6813,6 +7169,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -6929,6 +7286,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -7052,6 +7410,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -7165,6 +7524,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -7288,6 +7648,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -7404,6 +7765,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -7519,6 +7881,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -7630,6 +7993,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -7748,6 +8112,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -7874,6 +8239,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -8007,6 +8373,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -8133,6 +8500,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -8246,6 +8614,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -8356,6 +8725,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -8466,6 +8836,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -8582,6 +8953,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -8703,6 +9075,7 @@ export default function NewPatientCreateForm(props) {
                 insurance_primary_phone,
                 insurance_primary_insured_person,
                 insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
                 insurance_secondary,
                 insurance_secondary_id,
                 insurance_secondary_group,
@@ -8814,6 +9187,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -8923,6 +9297,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -8995,12 +9370,13 @@ export default function NewPatientCreateForm(props) {
         hasError={errors.ad_people_in_household?.hasError}
         {...getOverrideProps(overrides, "ad_people_in_household")}
       ></TextAreaField>
-      <TextAreaField
-        label="Review of Symptoms (Please write if you are currently or recently experiencing any of these symptoms): Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urinating, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
-        isRequired={false}
-        isReadOnly={false}
-        onChange={(e) => {
-          let { value } = e.target;
+      <Heading
+        children='Please write if you are currently or recently experiencing any of these symptoms (Write "No Symptoms" if not experiencing any of them): *'
+        {...getOverrideProps(overrides, "SectionalElement5")}
+      ></Heading>
+      <ArrayField
+        onChange={async (items) => {
+          let values = items;
           if (onChange) {
             const modelFields = {
               date,
@@ -9034,6 +9410,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -9074,7 +9451,7 @@ export default function NewPatientCreateForm(props) {
               ph_live_births,
               ph_complications,
               ad_people_in_household,
-              ph_symptoms: value,
+              ph_symptoms: values,
               ad_dress_yourself,
               ad_get_in_out_bed,
               ad_lift_full_cup_mouth,
@@ -9092,21 +9469,327 @@ export default function NewPatientCreateForm(props) {
               ad_how_well_doing_scale,
             };
             const result = onChange(modelFields);
-            value = result?.ph_symptoms ?? value;
+            values = result?.ph_symptoms ?? values;
           }
-          if (errors.ph_symptoms?.hasError) {
-            runValidationTasks("ph_symptoms", value);
-          }
-          setPh_symptoms(value);
+          setPh_symptoms(values);
+          setCurrentPh_symptomsValue(undefined);
         }}
-        onBlur={() => runValidationTasks("ph_symptoms", ph_symptoms)}
-        errorMessage={errors.ph_symptoms?.errorMessage}
-        hasError={errors.ph_symptoms?.hasError}
-        {...getOverrideProps(overrides, "ph_symptoms")}
-      ></TextAreaField>
+        currentFieldValue={currentPh_symptomsValue}
+        label={
+          "Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urinating, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
+        }
+        items={ph_symptoms}
+        hasError={errors?.ph_symptoms?.hasError}
+        runValidationTasks={async () =>
+          await runValidationTasks("ph_symptoms", currentPh_symptomsValue)
+        }
+        errorMessage={errors?.ph_symptoms?.errorMessage}
+        setFieldValue={setCurrentPh_symptomsValue}
+        inputFieldRef={ph_symptomsRef}
+        defaultFieldValue={""}
+      >
+        <Autocomplete
+          label="Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urinating, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
+          isRequired={true}
+          isReadOnly={false}
+          value={currentPh_symptomsValue}
+          options={[
+            {
+              id: "No Symptoms",
+              label: "No Symptoms",
+            },
+            {
+              id: "Fatigue",
+              label: "Fatigue",
+            },
+            {
+              id: "Weight Loss",
+              label: "Weight Loss",
+            },
+            {
+              id: "Weight Gain",
+              label: "Weight Gain",
+            },
+            {
+              id: "Fever",
+              label: "Fever",
+            },
+            {
+              id: "Night Sweats",
+              label: "Night Sweats",
+            },
+            {
+              id: "Dry Eye",
+              label: "Dry Eye",
+            },
+            {
+              id: "Eye Pain",
+              label: "Eye Pain",
+            },
+            {
+              id: "Loss of Vision",
+              label: "Loss of Vision",
+            },
+            {
+              id: "Tinnitus",
+              label: "Tinnitus",
+            },
+            {
+              id: "Hearing Loss",
+              label: "Hearing Loss",
+            },
+            {
+              id: "Nosebleed",
+              label: "Nosebleed",
+            },
+            {
+              id: "Sneezing",
+              label: "Sneezing",
+            },
+            {
+              id: "Dry Mouth",
+              label: "Dry Mouth",
+            },
+            {
+              id: "Canker Sores",
+              label: "Canker Sores",
+            },
+            {
+              id: "Cold Sores",
+              label: "Cold Sores",
+            },
+            {
+              id: "Loss of Smell or Taste",
+              label: "Loss of Smell or Taste",
+            },
+            {
+              id: "Difficulty Swallowing",
+              label: "Difficulty Swallowing",
+            },
+            {
+              id: "Sore Throat",
+              label: "Sore Throat",
+            },
+            {
+              id: "Bleeding Gums",
+              label: "Bleeding Gums",
+            },
+            {
+              id: "Hoarse Voice",
+              label: "Hoarse Voice",
+            },
+            {
+              id: "Chest Pain",
+              label: "Chest Pain",
+            },
+            {
+              id: "Shortness of Breath",
+              label: "Shortness of Breath",
+            },
+            {
+              id: "High Blood Pressure",
+              label: "High Blood Pressure",
+            },
+            {
+              id: "Low Blood Pressure",
+              label: "Low Blood Pressure",
+            },
+            {
+              id: "Heart Murmurs",
+              label: "Heart Murmurs",
+            },
+            {
+              id: "Cough, Nausea",
+              label: "Cough, Nausea",
+            },
+            {
+              id: "Vomiting",
+              label: "Vomiting",
+            },
+            {
+              id: "Diarrhea",
+              label: "Diarrhea",
+            },
+            {
+              id: "Abdominal Pain",
+              label: "Abdominal Pain",
+            },
+            {
+              id: "Constipation",
+              label: "Constipation",
+            },
+            {
+              id: "Blood in Stool",
+              label: "Blood in Stool",
+            },
+            {
+              id: "Heartburn",
+              label: "Heartburn",
+            },
+            {
+              id: "Difficulty Urinating",
+              label: "Difficulty Urinating",
+            },
+            {
+              id: "Urine Infection",
+              label: "Urine Infection",
+            },
+            {
+              id: "Vaginal Ulcers",
+              label: "Vaginal Ulcers",
+            },
+            {
+              id: "STDs",
+              label: "STDs",
+            },
+            {
+              id: "Nighttime Urination",
+              label: "Nighttime Urination",
+            },
+            {
+              id: "Incontinence",
+              label: "Incontinence",
+            },
+            {
+              id: "Stiffness",
+              label: "Stiffness",
+            },
+            {
+              id: "Joint Pain",
+              label: "Joint Pain",
+            },
+            {
+              id: "Joint Swelling",
+              label: "Joint Swelling",
+            },
+            {
+              id: "Muscle Pain",
+              label: "Muscle Pain",
+            },
+            {
+              id: "Weakness",
+              label: "Weakness",
+            },
+            {
+              id: "Numbness/Tingling",
+              label: "Numbness/Tingling",
+            },
+            {
+              id: "Rash",
+              label: "Rash",
+            },
+            {
+              id: "Psoriasis",
+              label: "Psoriasis",
+            },
+            {
+              id: "Bruising",
+              label: "Bruising",
+            },
+            {
+              id: "Skin Nodule",
+              label: "Skin Nodule",
+            },
+            {
+              id: "Skin Ulcer",
+              label: "Skin Ulcer",
+            },
+            {
+              id: "Color changes in Hands/Feet when Cold",
+              label: "Color changes in Hands/Feet when Cold",
+            },
+            {
+              id: "Headaches",
+              label: "Headaches",
+            },
+            {
+              id: "Dizziness",
+              label: "Dizziness",
+            },
+            {
+              id: "Loss of Consciousness",
+              label: "Loss of Consciousness",
+            },
+            {
+              id: "Falling",
+              label: "Falling",
+            },
+            {
+              id: "Memory Loss",
+              label: "Memory Loss",
+            },
+            {
+              id: "Anxiety",
+              label: "Anxiety",
+            },
+            {
+              id: "Depression",
+              label: "Depression",
+            },
+            {
+              id: "Anger",
+              label: "Anger",
+            },
+            {
+              id: "PTSD",
+              label: "PTSD",
+            },
+            {
+              id: "Difficulty Falling Asleep",
+              label: "Difficulty Falling Asleep",
+            },
+            {
+              id: "Difficulty Staying Asleep",
+              label: "Difficulty Staying Asleep",
+            },
+            {
+              id: "Swollen Glands",
+              label: "Swollen Glands",
+            },
+            {
+              id: "Tender Glands",
+              label: "Tender Glands",
+            },
+            {
+              id: "Anemia",
+              label: "Anemia",
+            },
+            {
+              id: "Transfusions",
+              label: "Transfusions",
+            },
+            {
+              id: "Cancer",
+              label: "Cancer",
+            },
+          ]}
+          onSelect={({ id, label }) => {
+            setCurrentPh_symptomsValue(id);
+            runValidationTasks("ph_symptoms", id);
+          }}
+          onClear={() => {
+            setCurrentPh_symptomsDisplayValue("");
+          }}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (errors.ph_symptoms?.hasError) {
+              runValidationTasks("ph_symptoms", value);
+            }
+            setCurrentPh_symptomsValue(value);
+          }}
+          onBlur={() =>
+            runValidationTasks("ph_symptoms", currentPh_symptomsValue)
+          }
+          errorMessage={errors.ph_symptoms?.errorMessage}
+          hasError={errors.ph_symptoms?.hasError}
+          ref={ph_symptomsRef}
+          labelHidden={true}
+          {...getOverrideProps(overrides, "ph_symptoms")}
+        ></Autocomplete>
+      </ArrayField>
       <Divider
         orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement18")}
+        {...getOverrideProps(overrides, "SectionalElement20")}
       ></Divider>
       <Divider
         orientation="horizontal"
@@ -9114,7 +9797,7 @@ export default function NewPatientCreateForm(props) {
       ></Divider>
       <Divider
         orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement20")}
+        {...getOverrideProps(overrides, "SectionalElement18")}
       ></Divider>
       <Heading
         level={4}
@@ -9169,6 +9852,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -9302,6 +9986,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -9435,6 +10120,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -9568,6 +10254,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -9701,6 +10388,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -9832,6 +10520,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -9965,6 +10654,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -10098,6 +10788,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -10246,6 +10937,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -10379,6 +11071,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -10527,6 +11220,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -10660,6 +11354,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -10793,6 +11488,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -10886,12 +11582,12 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "ad_deal_depression_blueoption3")}
         ></option>
       </SelectField>
-      <Divider
-        orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement5")}
-      ></Divider>
+      <Heading
+        children="2. How much pain have you had because of your condition OVER THE PAST WEEK? Please indicate below how severe your pain has been: *"
+        {...getOverrideProps(overrides, "SectionalElement7")}
+      ></Heading>
       <SliderField
-        label="2. How much pain have you had because of your condition OVER THE PAST WEEK? Please indicate below how severe your pain has been: (0 = NO PAIN, 10 = PAIN AS BAD AS IT COULD BE) *"
+        label="(0 = NO PAIN, 10 = PAIN AS BAD AS IT COULD BE)"
         isDisabled={false}
         isRequired={true}
         value={ad_daily_pain_scale}
@@ -10930,6 +11626,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,
@@ -11002,12 +11699,12 @@ export default function NewPatientCreateForm(props) {
         hasError={errors.ad_daily_pain_scale?.hasError}
         {...getOverrideProps(overrides, "ad_daily_pain_scale")}
       ></SliderField>
-      <Divider
-        orientation="horizontal"
-        {...getOverrideProps(overrides, "SectionalElement7")}
-      ></Divider>
+      <Heading
+        children="3. Considering all the ways in which illness and health conditions may affect you at this time, please indicate below how you are doing: *"
+        {...getOverrideProps(overrides, "SectionalElement17")}
+      ></Heading>
       <SliderField
-        label="3. Considering all the ways in which illness and health conditions may affect you at this time, please indicate below how you are doing: (0 = NO PAIN, 10 = PAIN AS BAD AS IT COULD BE) *"
+        label="(0 = NO PAIN, 10 = PAIN AS BAD AS IT COULD BE)"
         isDisabled={false}
         isRequired={true}
         value={ad_how_well_doing_scale}
@@ -11046,6 +11743,7 @@ export default function NewPatientCreateForm(props) {
               insurance_primary_phone,
               insurance_primary_insured_person,
               insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
               insurance_secondary,
               insurance_secondary_id,
               insurance_secondary_group,

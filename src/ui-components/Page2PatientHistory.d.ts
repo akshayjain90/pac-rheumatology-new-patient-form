@@ -62,7 +62,7 @@ export declare type Page2PatientHistoryInputValues = {
     ph_pregnant?: string;
     ph_live_births?: string;
     ph_complications?: string;
-    ph_symptoms?: string;
+    ph_symptoms?: string[];
     ad_people_in_household?: string;
     ad_who_shopping?: string;
     ad_housework?: string;
@@ -96,6 +96,7 @@ export declare type Page2PatientHistoryInputValues = {
     ad_good_night_sleep?: string;
     ad_deal_anxiety_nervous?: string;
     ad_deal_depression_blue?: string;
+    insurance_primary_insured_person_dob?: string;
 };
 export declare type Page2PatientHistoryValidationValues = {
     ph_briefly_describe_present_symptoms?: ValidationFunction<string>;
@@ -171,6 +172,7 @@ export declare type Page2PatientHistoryValidationValues = {
     ad_good_night_sleep?: ValidationFunction<string>;
     ad_deal_anxiety_nervous?: ValidationFunction<string>;
     ad_deal_depression_blue?: ValidationFunction<string>;
+    insurance_primary_insured_person_dob?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type Page2PatientHistoryOverridesProps = {
@@ -268,6 +270,7 @@ export declare type Page2PatientHistoryOverridesProps = {
     ad_good_night_sleep?: PrimitiveOverrideProps<TextFieldProps>;
     ad_deal_anxiety_nervous?: PrimitiveOverrideProps<TextFieldProps>;
     ad_deal_depression_blue?: PrimitiveOverrideProps<TextFieldProps>;
+    insurance_primary_insured_person_dob?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type Page2PatientHistoryProps = React.PropsWithChildren<{
     overrides?: Page2PatientHistoryOverridesProps | undefined | null;
