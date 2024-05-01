@@ -642,7 +642,7 @@ export default function NewPatientCreateForm(props) {
     preferred_pharmacy: [],
     insurance_primary_name: [{ type: "Required" }],
     insurance_primary_id: [{ type: "Required" }],
-    insurance_primary_group: [],
+    insurance_primary_group: [{ type: "Required" }],
     insurance_primary_address: [],
     insurance_primary_phone: [{ type: "Phone" }],
     insurance_primary_insured_person: [],
@@ -3176,19 +3176,24 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "education")}
       >
         <option
+          children="Other"
+          value="Other"
+          {...getOverrideProps(overrides, "educationoption0")}
+        ></option>
+        <option
           children="High School"
           value="High School"
-          {...getOverrideProps(overrides, "educationoption0")}
+          {...getOverrideProps(overrides, "educationoption1")}
         ></option>
         <option
           children="College"
           value="College"
-          {...getOverrideProps(overrides, "educationoption1")}
+          {...getOverrideProps(overrides, "educationoption2")}
         ></option>
         <option
           children="Grad School"
           value="Grad School"
-          {...getOverrideProps(overrides, "educationoption2")}
+          {...getOverrideProps(overrides, "educationoption3")}
         ></option>
       </SelectField>
       <SwitchField
@@ -3879,8 +3884,8 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "insurance_primary_id")}
         ></TextField>
         <TextField
-          label="Group #"
-          isRequired={false}
+          label="Group # *"
+          isRequired={true}
           isReadOnly={false}
           value={insurance_primary_group}
           onChange={(e) => {
@@ -4002,7 +4007,7 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid19")}
       >
         <TextField
-          label="Address"
+          label="Insurance Address"
           isRequired={false}
           isReadOnly={false}
           value={insurance_primary_address}
@@ -4961,7 +4966,7 @@ export default function NewPatientCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid24")}
       >
         <TextField
-          label="Address"
+          label="Insurance Address"
           isRequired={false}
           isReadOnly={false}
           value={insurance_secondary_address}

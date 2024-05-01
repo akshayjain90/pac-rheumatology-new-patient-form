@@ -17,7 +17,6 @@ function Heading() {
   return <h1 className="centered">PACIFIC RHEUMATOLOGY ASSOCIATES</h1>;
 }
 
-
 function ParagraphWithNewlines() {
   const text = [
     '2100 WEBSTER STREET, SUITE 112, SAN FRANCISCO, CA 94115',
@@ -135,8 +134,10 @@ function LastPage() {
 function App() {
   var [name, setName] = useState("")
   var [email, setEmail] = useState("")
+  const [insurancePrimaryInsuredPerson, setInsurancePrimaryInsuredPerson] = useState<string|undefined>("");
 
   const [step, setStep] = useState(1)
+
 
   return (
     <>
@@ -147,15 +148,43 @@ function App() {
           ad_daily_pain_scale: {
             max : 10,
             step : 0.5,
+          },
+          ad_how_well_doing_scale: {
+            max : 10,
+            step : 0.5,
           }
         }}
         onSubmit={(fields) => {
-          setName(fields["first_name"] + " " + fields["last_name"])
+          setName(fields["first_name"] + " " + fields["last_name"]);
           if(fields["email"] != undefined){
             setEmail(fields["email"]);
           }
-          setStep(2)
-          return fields
+          setStep(2);
+          return fields;
+        }}
+        onChange={(fields) => {
+          setInsurancePrimaryInsuredPerson(fields["insurance_primary_insured_person"])
+          return fields;
+        }}
+        onValidate={{
+          insurance_primary_insured_person_relation: (value, validationResponse) => {
+            if (insurancePrimaryInsuredPerson && insurancePrimaryInsuredPerson.length > 0 && (value == undefined || value.length == 0)) {
+              return {
+                hasError: true,
+                errorMessage: 'Relation to insured person is required'
+              };
+            }
+            return validationResponse;
+          },
+          insurance_primary_insured_person_dob: (value, validationResponse) => {
+            if (insurancePrimaryInsuredPerson && insurancePrimaryInsuredPerson.length > 0 && (value == undefined || value.length == 0)) {
+              return {
+                hasError: true,
+                errorMessage: 'Date of Birth of insured person is required'
+              };
+            }
+            return validationResponse;
+          }
         }}
       /> 
       }
