@@ -97,8 +97,8 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   ad_walk_two_miles: String!
   ad_recreational_activities_sports: String!
   ad_good_night_sleep: String!
-  ad_daily_pain_scale: Int!
-  ad_how_well_doing_scale: Int!
+  ad_daily_pain_scale: Float!
+  ad_how_well_doing_scale: Float!
   ph_alcohol_weekly: String
   ph_symptoms: [String!]!
   ad_deal_anxiety_nervous: String!

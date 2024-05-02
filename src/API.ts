@@ -298,8 +298,8 @@ export type ModelNewPatientConditionInput = {
   ad_walk_two_miles?: ModelStringInput | null,
   ad_recreational_activities_sports?: ModelStringInput | null,
   ad_good_night_sleep?: ModelStringInput | null,
-  ad_daily_pain_scale?: ModelIntInput | null,
-  ad_how_well_doing_scale?: ModelIntInput | null,
+  ad_daily_pain_scale?: ModelFloatInput | null,
+  ad_how_well_doing_scale?: ModelFloatInput | null,
   ph_alcohol_weekly?: ModelStringInput | null,
   ph_symptoms?: ModelStringInput | null,
   ad_deal_anxiety_nervous?: ModelStringInput | null,
@@ -312,7 +312,7 @@ export type ModelNewPatientConditionInput = {
   updatedAt?: ModelStringInput | null,
 };
 
-export type ModelIntInput = {
+export type ModelFloatInput = {
   ne?: number | null,
   eq?: number | null,
   le?: number | null,
@@ -641,8 +641,8 @@ export type ModelNewPatientFilterInput = {
   ad_walk_two_miles?: ModelStringInput | null,
   ad_recreational_activities_sports?: ModelStringInput | null,
   ad_good_night_sleep?: ModelStringInput | null,
-  ad_daily_pain_scale?: ModelIntInput | null,
-  ad_how_well_doing_scale?: ModelIntInput | null,
+  ad_daily_pain_scale?: ModelFloatInput | null,
+  ad_how_well_doing_scale?: ModelFloatInput | null,
   ph_alcohol_weekly?: ModelStringInput | null,
   ph_symptoms?: ModelStringInput | null,
   ad_deal_anxiety_nervous?: ModelStringInput | null,
@@ -799,8 +799,8 @@ export type ModelSubscriptionNewPatientFilterInput = {
   ad_walk_two_miles?: ModelSubscriptionStringInput | null,
   ad_recreational_activities_sports?: ModelSubscriptionStringInput | null,
   ad_good_night_sleep?: ModelSubscriptionStringInput | null,
-  ad_daily_pain_scale?: ModelSubscriptionIntInput | null,
-  ad_how_well_doing_scale?: ModelSubscriptionIntInput | null,
+  ad_daily_pain_scale?: ModelSubscriptionFloatInput | null,
+  ad_how_well_doing_scale?: ModelSubscriptionFloatInput | null,
   ph_alcohol_weekly?: ModelSubscriptionStringInput | null,
   ph_symptoms?: ModelSubscriptionStringInput | null,
   ad_deal_anxiety_nervous?: ModelSubscriptionStringInput | null,
@@ -812,7 +812,7 @@ export type ModelSubscriptionNewPatientFilterInput = {
   or?: Array< ModelSubscriptionNewPatientFilterInput | null > | null,
 };
 
-export type ModelSubscriptionIntInput = {
+export type ModelSubscriptionFloatInput = {
   ne?: number | null,
   eq?: number | null,
   le?: number | null,
