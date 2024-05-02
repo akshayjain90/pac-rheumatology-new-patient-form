@@ -141,7 +141,7 @@ function App() {
   var [insurancePrimaryInsuredPerson, setInsurancePrimaryInsuredPerson] = useState<string|undefined>("");
   var [allergy, setAllergy] = useState<boolean|undefined>(false);
   var [privacyName, setPrivacyName] = useState<string|undefined>("");
-  var [step, setStep] = useState(2)
+  var [step, setStep] = useState(1)
 
 
   return (
