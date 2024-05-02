@@ -630,8 +630,8 @@ export default function NewPatientCreateForm(props) {
     state: [{ type: "Required" }],
     zip: [{ type: "Required" }],
     home_phone: [{ type: "Required" }, { type: "Phone" }],
-    work_phone: [{ type: "Phone" }],
-    mobile_phone: [{ type: "Phone" }],
+    work_phone: [],
+    mobile_phone: [],
     email: [{ type: "Required" }],
     social_security: [],
     employer: [],
@@ -2503,7 +2503,6 @@ export default function NewPatientCreateForm(props) {
           label="Work phone"
           isRequired={false}
           isReadOnly={false}
-          type="tel"
           value={work_phone}
           onChange={(e) => {
             let { value } = e.target;
@@ -2615,7 +2614,6 @@ export default function NewPatientCreateForm(props) {
           label="Mobile phone"
           isRequired={false}
           isReadOnly={false}
-          type="tel"
           value={mobile_phone}
           onChange={(e) => {
             let { value } = e.target;

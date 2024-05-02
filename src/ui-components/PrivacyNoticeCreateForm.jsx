@@ -417,7 +417,7 @@ export default function PrivacyNoticeCreateForm(props) {
         ></TextField>
       </Grid>
       <SwitchField
-        label="I decline to name anyone under the Notice of Privacy Practices."
+        label="I decline to name anyone under the Notice of Privacy Practices. *"
         defaultChecked={false}
         isDisabled={false}
         isChecked={decline}
@@ -457,7 +457,7 @@ export default function PrivacyNoticeCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid4")}
       >
         <TextField
-          label="Patient's Signature"
+          label="Patient's Signature *"
           isRequired={true}
           isReadOnly={false}
           value={signature}
@@ -491,7 +491,7 @@ export default function PrivacyNoticeCreateForm(props) {
           {...getOverrideProps(overrides, "signature")}
         ></TextField>
         <TextField
-          label="Date"
+          label="Date *"
           isRequired={true}
           isReadOnly={false}
           type="date"
@@ -557,7 +557,7 @@ export default function PrivacyNoticeCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid11")}
       >
         <TextField
-          label="Patient's Signature"
+          label="Patient's Signature *"
           isRequired={true}
           isReadOnly={false}
           value={open_payment_signature}
@@ -593,7 +593,7 @@ export default function PrivacyNoticeCreateForm(props) {
           {...getOverrideProps(overrides, "open_payment_signature")}
         ></TextField>
         <TextField
-          label="Date"
+          label="Date *"
           isRequired={true}
           isReadOnly={false}
           type="date"

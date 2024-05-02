@@ -56,7 +56,7 @@ function PrivacyNoticeHeader() {
 }
 function PrivacyNoticeMessage(props:PrivacyNoticeMessageProps) {
   const text = [
-    'I, ' + props.name + ' From Pacific Rheumatology Associates Medical Group. I understand that my record at the office will only be released in accordance to HIPAA Guidelines and California State Law.',
+    'I, ' + props.name + ' , acknowledge that I have received the "Notice of Privacy Practices" From Pacific Rheumatology Associates Medical Group. I understand that my record at the office will only be released in accordance to HIPAA Guidelines and California State Law.',
     'My record will be released upon my written authorization. I also authorize the following person(s) to receive my medical information over the telephone from your office and make appointments on my behalf as my Representative:'
   ];
   return (
@@ -72,7 +72,7 @@ function PrivacyNoticeMessage(props:PrivacyNoticeMessageProps) {
 }
 
 function EmailSentMessage(props:EmailSentMessageProps) {
-  return <h4 className="centered">Responses have been recorded and a copy has been sent to "{props.email}" for your records</h4>;
+  return <h4 className="centered">Responses have been sent to the clinic and a copy has been sent to "{props.email}" for your records.</h4>;
 }
 
 
@@ -123,6 +123,10 @@ function LastPage() {
   200 Independence Ave, S.W. \n \
   Washington, D.C. 20201 \n \
   877-696-6775 (toll-free) \n \
+  \n \
+  \n \
+  \n \
+  \n \
   '];
   return ( 
     <div className="display-linebreak"> 
@@ -134,9 +138,10 @@ function LastPage() {
 function App() {
   var [name, setName] = useState("")
   var [email, setEmail] = useState("")
-  const [insurancePrimaryInsuredPerson, setInsurancePrimaryInsuredPerson] = useState<string|undefined>("");
-
-  const [step, setStep] = useState(1)
+  var [insurancePrimaryInsuredPerson, setInsurancePrimaryInsuredPerson] = useState<string|undefined>("");
+  var [allergy, setAllergy] = useState<boolean|undefined>(false);
+  var [privacyName, setPrivacyName] = useState<string|undefined>("");
+  var [step, setStep] = useState(2)
 
 
   return (
@@ -164,6 +169,7 @@ function App() {
         }}
         onChange={(fields) => {
           setInsurancePrimaryInsuredPerson(fields["insurance_primary_insured_person"])
+          setAllergy(fields["ph_allergy_to_med"])
           return fields;
         }}
         onValidate={{
@@ -184,9 +190,24 @@ function App() {
               };
             }
             return validationResponse;
+          },
+          ph_allergy_to_med_list: (value, validationResponse) => {
+            if (allergy && (value == undefined || value.length == 0)) {
+              return {
+                hasError: true,
+                errorMessage: 'Medicine list is required if you have allery to meds'
+              };
+            }
+            return validationResponse;
           }
         }}
       /> 
+      }
+      {step == 2 &&
+        <LastPageHeading />
+      }
+      {step == 2 &&
+        <LastPage />
       }
       {step == 2 &&
         <PrivacyNoticeHeader /> 
@@ -198,8 +219,23 @@ function App() {
       }
       {step == 2 &&
         <PrivacyNoticeCreateForm 
+          onChange={(fields) => {
+            setPrivacyName(fields["authorized_1"])
+            return fields;
+          }}
           onSuccess={() => {
             setStep(3)
+          }}
+          onValidate={{
+            decline: (value, validationResponse) => {
+              if ((!privacyName || privacyName=="") && (value == undefined || value == false)) {
+                return {
+                  hasError: true,
+                  errorMessage: 'You must choose to decline if you are not authorizing anyone'
+                };
+              }
+              return validationResponse;
+            },
           }}
         />
       }
@@ -207,12 +243,6 @@ function App() {
         <EmailSentMessage 
           email={email}
         />
-      }
-      {step == 3 &&
-        <LastPageHeading />
-      }
-      {step == 3 &&
-        <LastPage />
       }
     </>
   )

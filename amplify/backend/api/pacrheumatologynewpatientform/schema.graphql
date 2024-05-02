@@ -29,9 +29,9 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   city: String!
   state: String!
   zip: String!
-  home_phone: AWSPhone!
-  work_phone: AWSPhone
-  mobile_phone: AWSPhone
+  home_phone: String!
+  work_phone: String
+  mobile_phone: String
   email: String!
   social_security: String
   employer: String
@@ -43,18 +43,18 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   insurance_primary_id: String!
   insurance_primary_group: String
   insurance_primary_address: String
-  insurance_primary_phone: AWSPhone
+  insurance_primary_phone: String
   insurance_primary_insured_person: String
   insurance_primary_insured_person_relation: String
   insurance_secondary: String
   insurance_secondary_id: String
   insurance_secondary_group: String
   insurance_secondary_address: String
-  insurance_secondary_phone: AWSPhone
+  insurance_secondary_phone: String
   primary_care_physician_name: String
   referring_physician_name: String!
-  primary_care_physician_phone: AWSPhone
-  referring_physician_phone: AWSPhone
+  primary_care_physician_phone: String
+  referring_physician_phone: String
   emergency_contact_name: String!
   full_time: Boolean
   emergency_contact_relationship: String!
@@ -63,7 +63,7 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   ph_briefly_describe_present_symptoms: String!
   ph_previous_treatment_for_problem: String
   ph_current_medicines: String!
-  emergency_contact_phone: AWSPhone!
+  emergency_contact_phone: String!
   ph_allergy_to_med: Boolean!
   ph_allergy_to_med_list: String
   ph_rh_history_osteoarthritis: String
