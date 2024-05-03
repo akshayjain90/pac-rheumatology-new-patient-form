@@ -43,6 +43,8 @@ export default function PrivacyNoticeCreateForm(props) {
     decline: false,
     signature: "",
     date: "",
+    first_name: "",
+    last_name: "",
     open_payment_signature: "",
     open_payment_date: "",
   };
@@ -67,6 +69,8 @@ export default function PrivacyNoticeCreateForm(props) {
   const [decline, setDecline] = React.useState(initialValues.decline);
   const [signature, setSignature] = React.useState(initialValues.signature);
   const [date, setDate] = React.useState(initialValues.date);
+  const [first_name, setFirst_name] = React.useState(initialValues.first_name);
+  const [last_name, setLast_name] = React.useState(initialValues.last_name);
   const [open_payment_signature, setOpen_payment_signature] = React.useState(
     initialValues.open_payment_signature
   );
@@ -84,6 +88,8 @@ export default function PrivacyNoticeCreateForm(props) {
     setDecline(initialValues.decline);
     setSignature(initialValues.signature);
     setDate(initialValues.date);
+    setFirst_name(initialValues.first_name);
+    setLast_name(initialValues.last_name);
     setOpen_payment_signature(initialValues.open_payment_signature);
     setOpen_payment_date(initialValues.open_payment_date);
     setErrors({});
@@ -98,6 +104,8 @@ export default function PrivacyNoticeCreateForm(props) {
     decline: [],
     signature: [{ type: "Required" }],
     date: [{ type: "Required" }],
+    first_name: [],
+    last_name: [],
     open_payment_signature: [{ type: "Required" }],
     open_payment_date: [{ type: "Required" }],
   };
@@ -136,6 +144,8 @@ export default function PrivacyNoticeCreateForm(props) {
           decline,
           signature,
           date,
+          first_name,
+          last_name,
           open_payment_signature,
           open_payment_date,
         };
@@ -215,6 +225,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature,
                 date,
+                first_name,
+                last_name,
                 open_payment_signature,
                 open_payment_date,
               };
@@ -249,6 +261,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature,
                 date,
+                first_name,
+                last_name,
                 open_payment_signature,
                 open_payment_date,
               };
@@ -290,6 +304,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature,
                 date,
+                first_name,
+                last_name,
                 open_payment_signature,
                 open_payment_date,
               };
@@ -324,6 +340,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature,
                 date,
+                first_name,
+                last_name,
                 open_payment_signature,
                 open_payment_date,
               };
@@ -365,6 +383,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature,
                 date,
+                first_name,
+                last_name,
                 open_payment_signature,
                 open_payment_date,
               };
@@ -399,6 +419,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature,
                 date,
+                first_name,
+                last_name,
                 open_payment_signature,
                 open_payment_date,
               };
@@ -434,6 +456,8 @@ export default function PrivacyNoticeCreateForm(props) {
               decline: value,
               signature,
               date,
+              first_name,
+              last_name,
               open_payment_signature,
               open_payment_date,
             };
@@ -474,6 +498,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature: value,
                 date,
+                first_name,
+                last_name,
                 open_payment_signature,
                 open_payment_date,
               };
@@ -509,6 +535,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature,
                 date: value,
+                first_name,
+                last_name,
                 open_payment_signature,
                 open_payment_date,
               };
@@ -542,6 +570,85 @@ export default function PrivacyNoticeCreateForm(props) {
         orientation="horizontal"
         {...getOverrideProps(overrides, "SectionalElement0000")}
       ></Divider>
+      <Grid
+        columnGap="inherit"
+        rowGap="inherit"
+        templateColumns="repeat(2, auto)"
+        {...getOverrideProps(overrides, "RowGrid9")}
+      >
+        <TextField
+          label="First name"
+          isRequired={false}
+          isReadOnly={false}
+          value={first_name}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (onChange) {
+              const modelFields = {
+                authorized_1,
+                relationship_1,
+                authorized_2,
+                relationship_2,
+                authorized_3,
+                relationship_3,
+                decline,
+                signature,
+                date,
+                first_name: value,
+                last_name,
+                open_payment_signature,
+                open_payment_date,
+              };
+              const result = onChange(modelFields);
+              value = result?.first_name ?? value;
+            }
+            if (errors.first_name?.hasError) {
+              runValidationTasks("first_name", value);
+            }
+            setFirst_name(value);
+          }}
+          onBlur={() => runValidationTasks("first_name", first_name)}
+          errorMessage={errors.first_name?.errorMessage}
+          hasError={errors.first_name?.hasError}
+          {...getOverrideProps(overrides, "first_name")}
+        ></TextField>
+        <TextField
+          label="Last name"
+          isRequired={false}
+          isReadOnly={false}
+          value={last_name}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (onChange) {
+              const modelFields = {
+                authorized_1,
+                relationship_1,
+                authorized_2,
+                relationship_2,
+                authorized_3,
+                relationship_3,
+                decline,
+                signature,
+                date,
+                first_name,
+                last_name: value,
+                open_payment_signature,
+                open_payment_date,
+              };
+              const result = onChange(modelFields);
+              value = result?.last_name ?? value;
+            }
+            if (errors.last_name?.hasError) {
+              runValidationTasks("last_name", value);
+            }
+            setLast_name(value);
+          }}
+          onBlur={() => runValidationTasks("last_name", last_name)}
+          errorMessage={errors.last_name?.errorMessage}
+          hasError={errors.last_name?.hasError}
+          {...getOverrideProps(overrides, "last_name")}
+        ></TextField>
+      </Grid>
       <Heading
         children="RECEIPT OF NOTICE OF THE OPEN PAYMENTS DATABASE"
         {...getOverrideProps(overrides, "SectionalElement1")}
@@ -554,7 +661,7 @@ export default function PrivacyNoticeCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid11")}
+        {...getOverrideProps(overrides, "RowGrid12")}
       >
         <TextField
           label="Patient's Signature *"
@@ -574,6 +681,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature,
                 date,
+                first_name,
+                last_name,
                 open_payment_signature: value,
                 open_payment_date,
               };
@@ -611,6 +720,8 @@ export default function PrivacyNoticeCreateForm(props) {
                 decline,
                 signature,
                 date,
+                first_name,
+                last_name,
                 open_payment_signature,
                 open_payment_date: value,
               };

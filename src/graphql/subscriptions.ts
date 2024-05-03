@@ -25,6 +25,8 @@ export const onCreatePrivacyNotice = /* GraphQL */ `subscription OnCreatePrivacy
     open_payment_signature
     open_payment_date
     signature
+    first_name
+    last_name
     createdAt
     updatedAt
     __typename
@@ -51,6 +53,8 @@ export const onUpdatePrivacyNotice = /* GraphQL */ `subscription OnUpdatePrivacy
     open_payment_signature
     open_payment_date
     signature
+    first_name
+    last_name
     createdAt
     updatedAt
     __typename
@@ -77,6 +81,8 @@ export const onDeletePrivacyNotice = /* GraphQL */ `subscription OnDeletePrivacy
     open_payment_signature
     open_payment_date
     signature
+    first_name
+    last_name
     createdAt
     updatedAt
     __typename

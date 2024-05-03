@@ -23,6 +23,8 @@ export const getPrivacyNotice = /* GraphQL */ `query GetPrivacyNotice($id: ID!) 
     open_payment_signature
     open_payment_date
     signature
+    first_name
+    last_name
     createdAt
     updatedAt
     __typename
@@ -52,6 +54,8 @@ export const listPrivacyNotices = /* GraphQL */ `query ListPrivacyNotices(
       open_payment_signature
       open_payment_date
       signature
+      first_name
+      last_name
       createdAt
       updatedAt
       __typename

@@ -31,6 +31,8 @@ export declare type PrivacyNoticeCreateFormInputValues = {
     decline?: boolean;
     signature?: string;
     date?: string;
+    first_name?: string;
+    last_name?: string;
     open_payment_signature?: string;
     open_payment_date?: string;
 };
@@ -44,6 +46,8 @@ export declare type PrivacyNoticeCreateFormValidationValues = {
     decline?: ValidationFunction<boolean>;
     signature?: ValidationFunction<string>;
     date?: ValidationFunction<string>;
+    first_name?: ValidationFunction<string>;
+    last_name?: ValidationFunction<string>;
     open_payment_signature?: ValidationFunction<string>;
     open_payment_date?: ValidationFunction<string>;
 };
@@ -67,9 +71,12 @@ export declare type PrivacyNoticeCreateFormOverridesProps = {
     SectionalElement00?: PrimitiveOverrideProps<DividerProps>;
     SectionalElement000?: PrimitiveOverrideProps<DividerProps>;
     SectionalElement0000?: PrimitiveOverrideProps<DividerProps>;
+    RowGrid9?: PrimitiveOverrideProps<GridProps>;
+    first_name?: PrimitiveOverrideProps<TextFieldProps>;
+    last_name?: PrimitiveOverrideProps<TextFieldProps>;
     SectionalElement1?: PrimitiveOverrideProps<HeadingProps>;
     SectionalElement2?: PrimitiveOverrideProps<TextProps>;
-    RowGrid11?: PrimitiveOverrideProps<GridProps>;
+    RowGrid12?: PrimitiveOverrideProps<GridProps>;
     open_payment_signature?: PrimitiveOverrideProps<TextFieldProps>;
     open_payment_date?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;

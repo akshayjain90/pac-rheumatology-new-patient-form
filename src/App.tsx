@@ -136,7 +136,9 @@ function LastPage() {
 }
 
 function App() {
-  var [name, setName] = useState("")
+  var [firstName, setFirstName] = useState<string|undefined>("")
+  var [lastName, setLastName] = useState<string|undefined>("")
+
   var [email, setEmail] = useState("")
   var [insurancePrimaryInsuredPerson, setInsurancePrimaryInsuredPerson] = useState<string|undefined>("");
   var [allergy, setAllergy] = useState<boolean|undefined>(false);
@@ -160,7 +162,8 @@ function App() {
           }
         }}
         onSubmit={(fields) => {
-          setName(fields["first_name"] + " " + fields["last_name"]);
+          setFirstName(fields["first_name"])
+          setLastName(fields["last_name"])
           if(fields["email"] != undefined){
             setEmail(fields["email"]);
           }
@@ -214,15 +217,39 @@ function App() {
       }
       {step == 2 &&
         <PrivacyNoticeMessage 
-        name = {name}
+        name = {firstName + " " + lastName}
         />
       }
       {step == 2 &&
         <PrivacyNoticeCreateForm 
+          overrides={
+            {
+              first_name: {
+                style :{
+                  visibility: "hidden"
+                },
+                labelHidden: true,
+                value: firstName
+              },
+              last_name: {
+                style :{
+                  visibility: "hidden"
+                },
+                labelHidden: true,
+                value: lastName
+              },
+            }
+          }
           onChange={(fields) => {
             setPrivacyName(fields["authorized_1"])
             return fields;
           }}
+          onSubmit={(fields) => {
+            
+            return fields;
+          }
+
+          }
           onSuccess={() => {
             setStep(3)
           }}
@@ -236,6 +263,7 @@ function App() {
               }
               return validationResponse;
             },
+            
           }}
         />
       }

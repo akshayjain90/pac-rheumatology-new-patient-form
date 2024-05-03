@@ -35,6 +35,8 @@ export declare type PrivacyNoticeUpdateFormInputValues = {
     open_payment_signature?: string;
     open_payment_date?: string;
     signature?: string;
+    first_name?: string;
+    last_name?: string;
 };
 export declare type PrivacyNoticeUpdateFormValidationValues = {
     full_name?: ValidationFunction<string>;
@@ -49,6 +51,8 @@ export declare type PrivacyNoticeUpdateFormValidationValues = {
     open_payment_signature?: ValidationFunction<string>;
     open_payment_date?: ValidationFunction<string>;
     signature?: ValidationFunction<string>;
+    first_name?: ValidationFunction<string>;
+    last_name?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PrivacyNoticeUpdateFormOverridesProps = {
@@ -65,6 +69,8 @@ export declare type PrivacyNoticeUpdateFormOverridesProps = {
     open_payment_signature?: PrimitiveOverrideProps<TextFieldProps>;
     open_payment_date?: PrimitiveOverrideProps<TextFieldProps>;
     signature?: PrimitiveOverrideProps<TextFieldProps>;
+    first_name?: PrimitiveOverrideProps<TextFieldProps>;
+    last_name?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type PrivacyNoticeUpdateFormProps = React.PropsWithChildren<{
     overrides?: PrivacyNoticeUpdateFormOverridesProps | undefined | null;

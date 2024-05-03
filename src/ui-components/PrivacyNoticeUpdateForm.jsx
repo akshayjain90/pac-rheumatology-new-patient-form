@@ -43,6 +43,8 @@ export default function PrivacyNoticeUpdateForm(props) {
     open_payment_signature: "",
     open_payment_date: "",
     signature: "",
+    first_name: "",
+    last_name: "",
   };
   const [full_name, setFull_name] = React.useState(initialValues.full_name);
   const [authorized_1, setAuthorized_1] = React.useState(
@@ -72,6 +74,8 @@ export default function PrivacyNoticeUpdateForm(props) {
     initialValues.open_payment_date
   );
   const [signature, setSignature] = React.useState(initialValues.signature);
+  const [first_name, setFirst_name] = React.useState(initialValues.first_name);
+  const [last_name, setLast_name] = React.useState(initialValues.last_name);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = privacyNoticeRecord
@@ -89,6 +93,8 @@ export default function PrivacyNoticeUpdateForm(props) {
     setOpen_payment_signature(cleanValues.open_payment_signature);
     setOpen_payment_date(cleanValues.open_payment_date);
     setSignature(cleanValues.signature);
+    setFirst_name(cleanValues.first_name);
+    setLast_name(cleanValues.last_name);
     setErrors({});
   };
   const [privacyNoticeRecord, setPrivacyNoticeRecord] = React.useState(
@@ -122,6 +128,8 @@ export default function PrivacyNoticeUpdateForm(props) {
     open_payment_signature: [{ type: "Required" }],
     open_payment_date: [{ type: "Required" }],
     signature: [{ type: "Required" }],
+    first_name: [],
+    last_name: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -161,6 +169,8 @@ export default function PrivacyNoticeUpdateForm(props) {
           open_payment_signature,
           open_payment_date,
           signature,
+          first_name: first_name ?? null,
+          last_name: last_name ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -233,6 +243,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.full_name ?? value;
@@ -268,6 +280,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.authorized_1 ?? value;
@@ -303,6 +317,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.relationship_1 ?? value;
@@ -338,6 +354,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.authorized_2 ?? value;
@@ -373,6 +391,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.relationship_2 ?? value;
@@ -408,6 +428,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.authorized_3 ?? value;
@@ -443,6 +465,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.relationship_3 ?? value;
@@ -478,6 +502,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.decline ?? value;
@@ -514,6 +540,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.date ?? value;
@@ -549,6 +577,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature: value,
               open_payment_date,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.open_payment_signature ?? value;
@@ -587,6 +617,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date: value,
               signature,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.open_payment_date ?? value;
@@ -624,6 +656,8 @@ export default function PrivacyNoticeUpdateForm(props) {
               open_payment_signature,
               open_payment_date,
               signature: value,
+              first_name,
+              last_name,
             };
             const result = onChange(modelFields);
             value = result?.signature ?? value;
@@ -637,6 +671,80 @@ export default function PrivacyNoticeUpdateForm(props) {
         errorMessage={errors.signature?.errorMessage}
         hasError={errors.signature?.hasError}
         {...getOverrideProps(overrides, "signature")}
+      ></TextField>
+      <TextField
+        label="First name"
+        isRequired={false}
+        isReadOnly={false}
+        value={first_name}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              full_name,
+              authorized_1,
+              relationship_1,
+              authorized_2,
+              relationship_2,
+              authorized_3,
+              relationship_3,
+              decline,
+              date,
+              open_payment_signature,
+              open_payment_date,
+              signature,
+              first_name: value,
+              last_name,
+            };
+            const result = onChange(modelFields);
+            value = result?.first_name ?? value;
+          }
+          if (errors.first_name?.hasError) {
+            runValidationTasks("first_name", value);
+          }
+          setFirst_name(value);
+        }}
+        onBlur={() => runValidationTasks("first_name", first_name)}
+        errorMessage={errors.first_name?.errorMessage}
+        hasError={errors.first_name?.hasError}
+        {...getOverrideProps(overrides, "first_name")}
+      ></TextField>
+      <TextField
+        label="Last name"
+        isRequired={false}
+        isReadOnly={false}
+        value={last_name}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              full_name,
+              authorized_1,
+              relationship_1,
+              authorized_2,
+              relationship_2,
+              authorized_3,
+              relationship_3,
+              decline,
+              date,
+              open_payment_signature,
+              open_payment_date,
+              signature,
+              first_name,
+              last_name: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.last_name ?? value;
+          }
+          if (errors.last_name?.hasError) {
+            runValidationTasks("last_name", value);
+          }
+          setLast_name(value);
+        }}
+        onBlur={() => runValidationTasks("last_name", last_name)}
+        errorMessage={errors.last_name?.errorMessage}
+        hasError={errors.last_name?.hasError}
+        {...getOverrideProps(overrides, "last_name")}
       ></TextField>
       <Flex
         justifyContent="space-between"

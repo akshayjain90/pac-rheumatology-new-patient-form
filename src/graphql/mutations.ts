@@ -26,6 +26,8 @@ export const createPrivacyNotice = /* GraphQL */ `mutation CreatePrivacyNotice(
     open_payment_signature
     open_payment_date
     signature
+    first_name
+    last_name
     createdAt
     updatedAt
     __typename
@@ -53,6 +55,8 @@ export const updatePrivacyNotice = /* GraphQL */ `mutation UpdatePrivacyNotice(
     open_payment_signature
     open_payment_date
     signature
+    first_name
+    last_name
     createdAt
     updatedAt
     __typename
@@ -80,6 +84,8 @@ export const deletePrivacyNotice = /* GraphQL */ `mutation DeletePrivacyNotice(
     open_payment_signature
     open_payment_date
     signature
+    first_name
+    last_name
     createdAt
     updatedAt
     __typename
