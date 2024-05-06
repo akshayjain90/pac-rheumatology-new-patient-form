@@ -164,9 +164,14 @@ function App() {
         onSubmit={(fields) => {
           setFirstName(fields["first_name"])
           setLastName(fields["last_name"])
+
+          if (typeof fields["email"] === 'string') {
+            fields["email"] = fields["email"].trim()
+          }
           if(fields["email"] != undefined){
             setEmail(fields["email"]);
           }
+
           setStep(2);
           return fields;
         }}
@@ -229,14 +234,12 @@ function App() {
                   visibility: "hidden"
                 },
                 labelHidden: true,
-                value: firstName
               },
               last_name: {
                 style :{
                   visibility: "hidden"
                 },
                 labelHidden: true,
-                value: lastName
               },
             }
           }
@@ -245,7 +248,8 @@ function App() {
             return fields;
           }}
           onSubmit={(fields) => {
-            
+            fields["first_name"] = firstName;
+            fields["last_name"] = lastName;
             return fields;
           }
 
