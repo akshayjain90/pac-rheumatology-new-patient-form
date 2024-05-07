@@ -141,9 +141,7 @@ function App() {
   var [firstName, setFirstName] = useState<string|undefined>("Akshay")
   var [lastName, setLastName] = useState<string|undefined>("Jain")
   var [dob, setDOB] = useState<string|undefined>("1992-08-16")
-
-
-  var [email, setEmail] = useState("")
+  var [email, setEmail] = useState("aks.jain.1990@gmail.com")
   var [insurancePrimaryInsuredPerson, setInsurancePrimaryInsuredPerson] = useState<string|undefined>("");
   var [allergy, setAllergy] = useState<boolean|undefined>(false);
   var [privacyName, setPrivacyName] = useState<string|undefined>("");
@@ -206,6 +204,7 @@ function App() {
             fields["first_name"] = firstName;
             fields["last_name"] = lastName;
             fields["date_of_birth"] = dob;
+            fields["email"] = email;
             return fields;
           }}
           onSuccess={() => {
@@ -239,6 +238,12 @@ function App() {
               errorMessage: undefined
             };
           },
+          email: (_value, _validationResponse) => {
+            return {
+              hasError: false,
+              errorMessage: undefined
+            };
+          },
         }}
         overrides={
           {
@@ -262,6 +267,13 @@ function App() {
               },
               labelHidden: true,
               value: dob
+            },
+            email: {
+              style :{
+                visibility: "hidden"
+              },
+              labelHidden: true,
+              value: email
             }
           }
         }
@@ -273,6 +285,7 @@ function App() {
             fields["first_name"] = firstName;
             fields["last_name"] = lastName;
             fields["date_of_birth"] = dob;
+            fields["email"] = email;
             return fields;
           }}
           onSuccess={() => {
@@ -308,6 +321,13 @@ function App() {
                 },
                 labelHidden: true,
                 value: dob
+              },
+              email: {
+                style :{
+                  visibility: "hidden"
+                },
+                labelHidden: true,
+                value: email
               }
             }
           }
@@ -325,6 +345,12 @@ function App() {
               };
             },
             date_of_birth: (_value, _validationResponse) => {
+              return {
+                hasError: false,
+                errorMessage: undefined
+              };
+            },
+            email: (_value, _validationResponse) => {
               return {
                 hasError: false,
                 errorMessage: undefined
@@ -371,6 +397,13 @@ function App() {
               },
               labelHidden: true,
               value: dob
+            },
+            email: {
+              style :{
+                visibility: "hidden"
+              },
+              labelHidden: true,
+              value: email
             }
           }
         }
@@ -382,6 +415,7 @@ function App() {
             fields["first_name"] = firstName;
             fields["last_name"] = lastName;
             fields["date_of_birth"] = dob
+            fields["email"] = email;
             return fields;
           }}
           onSuccess={() => {
@@ -410,6 +444,12 @@ function App() {
               };
             },
             date_of_birth: (_value, _validationResponse) => {
+              return {
+                hasError: false,
+                errorMessage: undefined
+              };
+            },
+            email: (_value, _validationResponse) => {
               return {
                 hasError: false,
                 errorMessage: undefined

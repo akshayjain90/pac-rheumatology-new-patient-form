@@ -38,6 +38,7 @@ export declare type PrivacyNoticeUpdateFormInputValues = {
     first_name?: string;
     last_name?: string;
     date_of_birth?: string;
+    email?: string;
 };
 export declare type PrivacyNoticeUpdateFormValidationValues = {
     full_name?: ValidationFunction<string>;
@@ -55,6 +56,7 @@ export declare type PrivacyNoticeUpdateFormValidationValues = {
     first_name?: ValidationFunction<string>;
     last_name?: ValidationFunction<string>;
     date_of_birth?: ValidationFunction<string>;
+    email?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PrivacyNoticeUpdateFormOverridesProps = {
@@ -74,6 +76,7 @@ export declare type PrivacyNoticeUpdateFormOverridesProps = {
     first_name?: PrimitiveOverrideProps<TextFieldProps>;
     last_name?: PrimitiveOverrideProps<TextFieldProps>;
     date_of_birth?: PrimitiveOverrideProps<TextFieldProps>;
+    email?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type PrivacyNoticeUpdateFormProps = React.PropsWithChildren<{
     overrides?: PrivacyNoticeUpdateFormOverridesProps | undefined | null;

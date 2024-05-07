@@ -222,6 +222,7 @@ export default function PatientHistoryUpdateForm(props) {
     ph_complications: "",
     ad_people_in_household: "",
     ph_symptoms: [],
+    email: "",
   };
   const [first_name, setFirst_name] = React.useState(initialValues.first_name);
   const [last_name, setLast_name] = React.useState(initialValues.last_name);
@@ -299,6 +300,7 @@ export default function PatientHistoryUpdateForm(props) {
   const [ph_symptoms, setPh_symptoms] = React.useState(
     initialValues.ph_symptoms
   );
+  const [email, setEmail] = React.useState(initialValues.email);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = patientHistoryRecord
@@ -343,6 +345,7 @@ export default function PatientHistoryUpdateForm(props) {
     setAd_people_in_household(cleanValues.ad_people_in_household);
     setPh_symptoms(cleanValues.ph_symptoms ?? []);
     setCurrentPh_symptomsValue("");
+    setEmail(cleanValues.email);
     setErrors({});
   };
   const [patientHistoryRecord, setPatientHistoryRecord] = React.useState(
@@ -397,6 +400,7 @@ export default function PatientHistoryUpdateForm(props) {
     ph_complications: [],
     ad_people_in_household: [],
     ph_symptoms: [{ type: "Required" }],
+    email: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -457,6 +461,7 @@ export default function PatientHistoryUpdateForm(props) {
           ph_complications: ph_complications ?? null,
           ad_people_in_household: ad_people_in_household ?? null,
           ph_symptoms,
+          email,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -547,6 +552,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.first_name ?? value;
@@ -600,6 +606,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.last_name ?? value;
@@ -654,6 +661,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.date_of_birth ?? value;
@@ -707,6 +715,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_briefly_describe_present_symptoms ?? value;
@@ -765,6 +774,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_previous_treatment_for_problem ?? value;
@@ -823,6 +833,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_current_medicines ?? value;
@@ -878,6 +889,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_allergy_to_med ?? value;
@@ -933,6 +945,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_allergy_to_med_list ?? value;
@@ -988,6 +1001,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_rh_history_osteoarthritis ?? value;
@@ -1046,6 +1060,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_rh_history_gout ?? value;
@@ -1101,6 +1116,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_rh_history_juvenile_arthritis ?? value;
@@ -1159,6 +1175,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_rh_history_vasculitis ?? value;
@@ -1217,6 +1234,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_rh_history_lupus ?? value;
@@ -1272,6 +1290,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_rh_history_rheumatoid ?? value;
@@ -1330,6 +1349,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_rh_history_spondyloarthropathy ?? value;
@@ -1388,6 +1408,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_rh_history_osteoporosis ?? value;
@@ -1446,6 +1467,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_past_medical_history ?? value;
@@ -1501,6 +1523,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_past_surgery_history ?? value;
@@ -1556,6 +1579,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_smoke ?? value;
@@ -1609,6 +1633,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_drugs ?? value;
@@ -1662,6 +1687,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_alcohol ?? value;
@@ -1715,6 +1741,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_alcohol_weekly ?? value;
@@ -1770,6 +1797,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_sleep ?? value;
@@ -1823,6 +1851,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_exercise ?? value;
@@ -1876,6 +1905,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_travel ?? value;
@@ -1929,6 +1959,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_pregnant ?? value;
@@ -1982,6 +2013,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_live_births ?? value;
@@ -2035,6 +2067,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications: value,
               ad_people_in_household,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_complications ?? value;
@@ -2088,6 +2121,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household: value,
               ph_symptoms,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_people_in_household ?? value;
@@ -2139,6 +2173,7 @@ export default function PatientHistoryUpdateForm(props) {
               ph_complications,
               ad_people_in_household,
               ph_symptoms: values,
+              email,
             };
             const result = onChange(modelFields);
             values = result?.ph_symptoms ?? values;
@@ -2180,6 +2215,60 @@ export default function PatientHistoryUpdateForm(props) {
           {...getOverrideProps(overrides, "ph_symptoms")}
         ></TextField>
       </ArrayField>
+      <TextField
+        label="Email"
+        isRequired={true}
+        isReadOnly={false}
+        value={email}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              first_name,
+              last_name,
+              date_of_birth,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicines,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ad_people_in_household,
+              ph_symptoms,
+              email: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.email ?? value;
+          }
+          if (errors.email?.hasError) {
+            runValidationTasks("email", value);
+          }
+          setEmail(value);
+        }}
+        onBlur={() => runValidationTasks("email", email)}
+        errorMessage={errors.email?.errorMessage}
+        hasError={errors.email?.hasError}
+        {...getOverrideProps(overrides, "email")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

@@ -52,6 +52,7 @@ export default function Rapid3CreateForm(props) {
     ad_deal_depression_blue: "",
     ad_daily_pain_scale: 0,
     ad_how_well_doing_scale: 0,
+    email: "",
   };
   const [first_name, setFirst_name] = React.useState(initialValues.first_name);
   const [last_name, setLast_name] = React.useState(initialValues.last_name);
@@ -105,6 +106,7 @@ export default function Rapid3CreateForm(props) {
   const [ad_how_well_doing_scale, setAd_how_well_doing_scale] = React.useState(
     initialValues.ad_how_well_doing_scale
   );
+  const [email, setEmail] = React.useState(initialValues.email);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setFirst_name(initialValues.first_name);
@@ -129,6 +131,7 @@ export default function Rapid3CreateForm(props) {
     setAd_deal_depression_blue(initialValues.ad_deal_depression_blue);
     setAd_daily_pain_scale(initialValues.ad_daily_pain_scale);
     setAd_how_well_doing_scale(initialValues.ad_how_well_doing_scale);
+    setEmail(initialValues.email);
     setErrors({});
   };
   const validations = {
@@ -150,6 +153,7 @@ export default function Rapid3CreateForm(props) {
     ad_deal_depression_blue: [{ type: "Required" }],
     ad_daily_pain_scale: [],
     ad_how_well_doing_scale: [],
+    email: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -195,6 +199,7 @@ export default function Rapid3CreateForm(props) {
           ad_deal_depression_blue,
           ad_daily_pain_scale,
           ad_how_well_doing_scale,
+          email,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -281,6 +286,7 @@ export default function Rapid3CreateForm(props) {
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.first_name ?? value;
@@ -322,6 +328,7 @@ export default function Rapid3CreateForm(props) {
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.last_name ?? value;
@@ -364,6 +371,7 @@ export default function Rapid3CreateForm(props) {
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.date_of_birth ?? value;
@@ -419,6 +427,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_dress_yourself ?? value;
@@ -483,6 +492,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_get_in_out_bed ?? value;
@@ -547,6 +557,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_lift_full_cup_mouth ?? value;
@@ -611,6 +622,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_walk_outdoor_flat ?? value;
@@ -675,6 +687,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_wash_dry_body ?? value;
@@ -737,6 +750,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_pick_clothing_floor ?? value;
@@ -801,6 +815,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_turn_faucets_on_off ?? value;
@@ -865,6 +880,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_get_in_out_car_bus_train_plane ?? value;
@@ -944,6 +960,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_walk_two_miles ?? value;
@@ -1008,6 +1025,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_recreational_activities_sports ?? value;
@@ -1087,6 +1105,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_good_night_sleep ?? value;
@@ -1151,6 +1170,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_deal_anxiety_nervous ?? value;
@@ -1215,6 +1235,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue: value,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_deal_depression_blue ?? value;
@@ -1283,6 +1304,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale: value,
               ad_how_well_doing_scale,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_daily_pain_scale ?? value;
@@ -1330,6 +1352,7 @@ export default function Rapid3CreateForm(props) {
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale: value,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_how_well_doing_scale ?? value;
@@ -1346,6 +1369,48 @@ export default function Rapid3CreateForm(props) {
         hasError={errors.ad_how_well_doing_scale?.hasError}
         {...getOverrideProps(overrides, "ad_how_well_doing_scale")}
       ></SliderField>
+      <TextField
+        label="Email"
+        isRequired={true}
+        isReadOnly={false}
+        value={email}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              first_name,
+              last_name,
+              date_of_birth,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+              email: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.email ?? value;
+          }
+          if (errors.email?.hasError) {
+            runValidationTasks("email", value);
+          }
+          setEmail(value);
+        }}
+        onBlur={() => runValidationTasks("email", email)}
+        errorMessage={errors.email?.errorMessage}
+        hasError={errors.email?.hasError}
+        {...getOverrideProps(overrides, "email")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

@@ -46,6 +46,7 @@ export default function PrivacyNoticeUpdateForm(props) {
     first_name: "",
     last_name: "",
     date_of_birth: "",
+    email: "",
   };
   const [full_name, setFull_name] = React.useState(initialValues.full_name);
   const [authorized_1, setAuthorized_1] = React.useState(
@@ -80,6 +81,7 @@ export default function PrivacyNoticeUpdateForm(props) {
   const [date_of_birth, setDate_of_birth] = React.useState(
     initialValues.date_of_birth
   );
+  const [email, setEmail] = React.useState(initialValues.email);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = privacyNoticeRecord
@@ -100,6 +102,7 @@ export default function PrivacyNoticeUpdateForm(props) {
     setFirst_name(cleanValues.first_name);
     setLast_name(cleanValues.last_name);
     setDate_of_birth(cleanValues.date_of_birth);
+    setEmail(cleanValues.email);
     setErrors({});
   };
   const [privacyNoticeRecord, setPrivacyNoticeRecord] = React.useState(
@@ -136,6 +139,7 @@ export default function PrivacyNoticeUpdateForm(props) {
     first_name: [{ type: "Required" }],
     last_name: [{ type: "Required" }],
     date_of_birth: [{ type: "Required" }],
+    email: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -178,6 +182,7 @@ export default function PrivacyNoticeUpdateForm(props) {
           first_name,
           last_name,
           date_of_birth,
+          email,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -253,6 +258,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.full_name ?? value;
@@ -291,6 +297,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.authorized_1 ?? value;
@@ -329,6 +336,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.relationship_1 ?? value;
@@ -367,6 +375,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.authorized_2 ?? value;
@@ -405,6 +414,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.relationship_2 ?? value;
@@ -443,6 +453,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.authorized_3 ?? value;
@@ -481,6 +492,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.relationship_3 ?? value;
@@ -519,6 +531,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.decline ?? value;
@@ -558,6 +571,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.date ?? value;
@@ -596,6 +610,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.open_payment_signature ?? value;
@@ -637,6 +652,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.open_payment_date ?? value;
@@ -677,6 +693,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.signature ?? value;
@@ -715,6 +732,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name: value,
               last_name,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.first_name ?? value;
@@ -753,6 +771,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name: value,
               date_of_birth,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.last_name ?? value;
@@ -792,6 +811,7 @@ export default function PrivacyNoticeUpdateForm(props) {
               first_name,
               last_name,
               date_of_birth: value,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.date_of_birth ?? value;
@@ -805,6 +825,45 @@ export default function PrivacyNoticeUpdateForm(props) {
         errorMessage={errors.date_of_birth?.errorMessage}
         hasError={errors.date_of_birth?.hasError}
         {...getOverrideProps(overrides, "date_of_birth")}
+      ></TextField>
+      <TextField
+        label="Email"
+        isRequired={true}
+        isReadOnly={false}
+        value={email}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              full_name,
+              authorized_1,
+              relationship_1,
+              authorized_2,
+              relationship_2,
+              authorized_3,
+              relationship_3,
+              decline,
+              date,
+              open_payment_signature,
+              open_payment_date,
+              signature,
+              first_name,
+              last_name,
+              date_of_birth,
+              email: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.email ?? value;
+          }
+          if (errors.email?.hasError) {
+            runValidationTasks("email", value);
+          }
+          setEmail(value);
+        }}
+        onBlur={() => runValidationTasks("email", email)}
+        errorMessage={errors.email?.errorMessage}
+        hasError={errors.email?.hasError}
+        {...getOverrideProps(overrides, "email")}
       ></TextField>
       <Flex
         justifyContent="space-between"

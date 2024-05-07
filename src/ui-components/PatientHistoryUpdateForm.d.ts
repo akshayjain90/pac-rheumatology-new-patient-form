@@ -53,6 +53,7 @@ export declare type PatientHistoryUpdateFormInputValues = {
     ph_complications?: string;
     ad_people_in_household?: string;
     ph_symptoms?: string[];
+    email?: string;
 };
 export declare type PatientHistoryUpdateFormValidationValues = {
     first_name?: ValidationFunction<string>;
@@ -85,6 +86,7 @@ export declare type PatientHistoryUpdateFormValidationValues = {
     ph_complications?: ValidationFunction<string>;
     ad_people_in_household?: ValidationFunction<string>;
     ph_symptoms?: ValidationFunction<string>;
+    email?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PatientHistoryUpdateFormOverridesProps = {
@@ -119,6 +121,7 @@ export declare type PatientHistoryUpdateFormOverridesProps = {
     ph_complications?: PrimitiveOverrideProps<TextFieldProps>;
     ad_people_in_household?: PrimitiveOverrideProps<TextFieldProps>;
     ph_symptoms?: PrimitiveOverrideProps<TextFieldProps>;
+    email?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type PatientHistoryUpdateFormProps = React.PropsWithChildren<{
     overrides?: PatientHistoryUpdateFormOverridesProps | undefined | null;

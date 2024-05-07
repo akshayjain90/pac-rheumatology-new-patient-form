@@ -41,6 +41,7 @@ export declare type Rapid3UpdateFormInputValues = {
     ad_deal_depression_blue?: string;
     ad_daily_pain_scale?: number;
     ad_how_well_doing_scale?: number;
+    email?: string;
 };
 export declare type Rapid3UpdateFormValidationValues = {
     first_name?: ValidationFunction<string>;
@@ -61,6 +62,7 @@ export declare type Rapid3UpdateFormValidationValues = {
     ad_deal_depression_blue?: ValidationFunction<string>;
     ad_daily_pain_scale?: ValidationFunction<number>;
     ad_how_well_doing_scale?: ValidationFunction<number>;
+    email?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type Rapid3UpdateFormOverridesProps = {
@@ -83,6 +85,7 @@ export declare type Rapid3UpdateFormOverridesProps = {
     ad_deal_depression_blue?: PrimitiveOverrideProps<TextFieldProps>;
     ad_daily_pain_scale?: PrimitiveOverrideProps<TextFieldProps>;
     ad_how_well_doing_scale?: PrimitiveOverrideProps<TextFieldProps>;
+    email?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type Rapid3UpdateFormProps = React.PropsWithChildren<{
     overrides?: Rapid3UpdateFormOverridesProps | undefined | null;

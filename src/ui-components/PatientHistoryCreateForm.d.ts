@@ -52,6 +52,7 @@ export declare type PatientHistoryCreateFormInputValues = {
     ph_complications?: string;
     ad_people_in_household?: string;
     ph_symptoms?: string[];
+    email?: string;
 };
 export declare type PatientHistoryCreateFormValidationValues = {
     first_name?: ValidationFunction<string>;
@@ -84,6 +85,7 @@ export declare type PatientHistoryCreateFormValidationValues = {
     ph_complications?: ValidationFunction<string>;
     ad_people_in_household?: ValidationFunction<string>;
     ph_symptoms?: ValidationFunction<string>;
+    email?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PatientHistoryCreateFormOverridesProps = {
@@ -130,6 +132,7 @@ export declare type PatientHistoryCreateFormOverridesProps = {
     ad_people_in_household?: PrimitiveOverrideProps<TextAreaFieldProps>;
     SectionalElement3?: PrimitiveOverrideProps<HeadingProps>;
     ph_symptoms?: PrimitiveOverrideProps<AutocompleteProps>;
+    email?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type PatientHistoryCreateFormProps = React.PropsWithChildren<{
     overrides?: PatientHistoryCreateFormOverridesProps | undefined | null;
