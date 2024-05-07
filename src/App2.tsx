@@ -1,8 +1,6 @@
 import './App.css'
 import {
-  PatientCreateCustomForm,
-  PatientHistoryCreateForm,
-  Rapid3CreateForm,
+  NewPatientCreateForm,
   PrivacyNoticeCreateForm
 } from './ui-components';
 import { useState } from 'react';
@@ -30,14 +28,14 @@ function ParagraphWithNewlines() {
   ];
 
   return (
-    <div>
+    <p>
       {text.map((line, index) => (
         <div className="centered" key={index}>
           {line}
           <br />
         </div>
       ))}
-    </div>
+    </p>
   );
 }
 
@@ -46,14 +44,14 @@ function PrivacyNoticeHeader() {
     'RECEIPT OF NOTICE OF PRIVACY PRACTICES WRITTEN ACKNOWLEDGEMENT FORM',
   ];
   return (
-    <div><b>
+    <p><b>
       {text.map((line, index) => (
         <div key={index}>
           {line}
           <br />
         </div>
       ))}
-    </b></div>
+    </b></p>
   );
 }
 function PrivacyNoticeMessage(props:PrivacyNoticeMessageProps) {
@@ -62,14 +60,14 @@ function PrivacyNoticeMessage(props:PrivacyNoticeMessageProps) {
     'My record will be released upon my written authorization. I also authorize the following person(s) to receive my medical information over the telephone from your office and make appointments on my behalf as my Representative:'
   ];
   return (
-    <div>
+    <p>
       {text.map((line, index) => (
         <div key={index}>
           {line}
           <br />
         </div>
       ))}
-    </div>
+    </p>
   );
 }
 
@@ -138,10 +136,8 @@ function LastPage() {
 }
 
 function App() {
-  var [firstName, setFirstName] = useState<string|undefined>("Akshay")
-  var [lastName, setLastName] = useState<string|undefined>("Jain")
-  var [dob, setDOB] = useState<string|undefined>("1992-08-16")
-
+  var [firstName, setFirstName] = useState<string|undefined>("")
+  var [lastName, setLastName] = useState<string|undefined>("")
 
   var [email, setEmail] = useState("")
   var [insurancePrimaryInsuredPerson, setInsurancePrimaryInsuredPerson] = useState<string|undefined>("");
@@ -154,11 +150,20 @@ function App() {
     <>
       <Heading />
       <ParagraphWithNewlines />
-      {step == 1 && <PatientCreateCustomForm 
+      {step == 1 && <NewPatientCreateForm 
+        overrides={{
+          ad_daily_pain_scale: {
+            max : 10,
+            step : 0.5,
+          },
+          ad_how_well_doing_scale: {
+            max : 10,
+            step : 0.5,
+          }
+        }}
         onSubmit={(fields) => {
           setFirstName(fields["first_name"])
           setLastName(fields["last_name"])
-          setDOB(fields["date_of_birth"])
 
           if (typeof fields["email"] === 'string') {
             fields["email"] = fields["email"].trim()
@@ -172,6 +177,7 @@ function App() {
         }}
         onChange={(fields) => {
           setInsurancePrimaryInsuredPerson(fields["insurance_primary_insured_person"])
+          setAllergy(fields["ph_allergy_to_med"])
           return fields;
         }}
         onValidate={{
@@ -192,27 +198,7 @@ function App() {
               };
             }
             return validationResponse;
-          }
-        }}
-      /> 
-      }
-      {step == 2 &&
-        <PatientHistoryCreateForm 
-          
-          onChange={(fields) => {
-            setAllergy(fields["ph_allergy_to_med"])
-            return fields;
-          }}
-          onSubmit={(fields) => {
-            fields["first_name"] = firstName;
-            fields["last_name"] = lastName;
-            fields["date_of_birth"] = dob;
-            return fields;
-          }}
-          onSuccess={() => {
-            setStep(3)
-          }}
-        onValidate={{
+          },
           ph_allergy_to_med_list: (value, validationResponse) => {
             if (allergy && (value == undefined || value.length == 0)) {
               return {
@@ -221,160 +207,42 @@ function App() {
               };
             }
             return validationResponse;
-          },
-          first_name: (value, validationResponse) => {
-              return {
-                hasError: false,
-                errorMessage: undefined
-              };
-          },
-          last_name: (value, validationResponse) => {
-            return {
-              hasError: false,
-              errorMessage: undefined
-            };
-          },
-          date_of_birth: (value, validationResponse) => {
-            return {
-              hasError: false,
-              errorMessage: undefined
-            };
-          },
-        }}
-        overrides={
-          {
-            first_name: {
-              style :{
-                visibility: "hidden"
-              },
-              labelHidden: true,
-              value: firstName
-            },
-            last_name: {
-              style :{
-                visibility: "hidden"
-              },
-              labelHidden: true,
-              value: lastName
-            },
-            date_of_birth: {
-              style :{
-                visibility: "hidden"
-              },
-              labelHidden: true,
-              value: dob
-            }
           }
-        }
-        />  
+        }}
+      /> 
       }
-      {step == 3 &&
-        <Rapid3CreateForm 
-          onSubmit={(fields) => {
-            fields["first_name"] = firstName;
-            fields["last_name"] = lastName;
-            fields["date_of_birth"] = dob;
-            return fields;
-          }}
-          onSuccess={() => {
-            setStep(4)
-          }}
+      {step == 2 &&
+        <LastPageHeading />
+      }
+      {step == 2 &&
+        <LastPage />
+      }
+      {step == 2 &&
+        <PrivacyNoticeHeader /> 
+      }
+      {step == 2 &&
+        <PrivacyNoticeMessage 
+        name = {firstName + " " + lastName}
+        />
+      }
+      {step == 2 &&
+        <PrivacyNoticeCreateForm 
           overrides={
-            { 
-                ad_daily_pain_scale: {
-                  max : 10,
-                  step : 0.5,
-                },
-                ad_how_well_doing_scale: {
-                  max : 10,
-                  step : 0.5,
-                },
+            {
               first_name: {
                 style :{
                   visibility: "hidden"
                 },
                 labelHidden: true,
-                value: firstName
               },
               last_name: {
                 style :{
                   visibility: "hidden"
                 },
                 labelHidden: true,
-                value: lastName
               },
-              date_of_birth: {
-                style :{
-                  visibility: "hidden"
-                },
-                labelHidden: true,
-                value: dob
-              }
             }
           }
-          onValidate={{
-            first_name: (value, validationResponse) => {
-                return {
-                  hasError: false,
-                  errorMessage: undefined
-                };
-            },
-            last_name: (value, validationResponse) => {
-              return {
-                hasError: false,
-                errorMessage: undefined
-              };
-            },
-            date_of_birth: (value, validationResponse) => {
-              return {
-                hasError: false,
-                errorMessage: undefined
-              };
-            },
-          }}
-        />
-      }
-      {step == 4 &&
-        <LastPageHeading />
-      }
-      {step == 4 &&
-        <LastPage />
-      }
-      {step == 4 &&
-        <PrivacyNoticeHeader /> 
-      }
-      {step == 4 &&
-        <PrivacyNoticeMessage 
-        name = {firstName + " " + lastName}
-        />
-      }
-      {step == 4 &&
-        <PrivacyNoticeCreateForm 
-        overrides={
-          {
-            first_name: {
-              style :{
-                visibility: "hidden"
-              },
-              labelHidden: true,
-              value: firstName
-            },
-            last_name: {
-              style :{
-                visibility: "hidden"
-              },
-              labelHidden: true,
-              value: lastName
-            },
-            date_of_birth: {
-              style :{
-                visibility: "hidden"
-              },
-              labelHidden: true,
-              value: dob
-            }
-          }
-        }
           onChange={(fields) => {
             setPrivacyName(fields["authorized_1"])
             return fields;
@@ -382,11 +250,12 @@ function App() {
           onSubmit={(fields) => {
             fields["first_name"] = firstName;
             fields["last_name"] = lastName;
-            fields["date_of_birth"] = dob
             return fields;
-          }}
+          }
+
+          }
           onSuccess={() => {
-            setStep(5)
+            setStep(3)
           }}
           onValidate={{
             decline: (value, validationResponse) => {
@@ -398,28 +267,11 @@ function App() {
               }
               return validationResponse;
             },
-            first_name: (value, validationResponse) => {
-              return {
-                hasError: false,
-                errorMessage: undefined
-              };
-            },
-            last_name: (value, validationResponse) => {
-              return {
-                hasError: false,
-                errorMessage: undefined
-              };
-            },
-            date_of_birth: (value, validationResponse) => {
-              return {
-                hasError: false,
-                errorMessage: undefined
-              };
-            },
+            
           }}
         />
       }
-      {step == 5 &&
+      {step == 3 &&
         <EmailSentMessage 
           email={email}
         />

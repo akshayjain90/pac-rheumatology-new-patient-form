@@ -8,6 +8,163 @@ type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryOutput: OutputType;
 };
 
+export const getPatientHistory = /* GraphQL */ `query GetPatientHistory($id: ID!) {
+  getPatientHistory(id: $id) {
+    id
+    first_name
+    last_name
+    date_of_birth
+    ph_briefly_describe_present_symptoms
+    ph_previous_treatment_for_problem
+    ph_current_medicines
+    ph_allergy_to_med
+    ph_allergy_to_med_list
+    ph_rh_history_osteoarthritis
+    ph_rh_history_gout
+    ph_rh_history_juvenile_arthritis
+    ph_rh_history_vasculitis
+    ph_rh_history_lupus
+    ph_rh_history_rheumatoid
+    ph_rh_history_spondyloarthropathy
+    ph_rh_history_osteoporosis
+    ph_past_medical_history
+    ph_past_surgery_history
+    ph_smoke
+    ph_drugs
+    ph_alcohol
+    ph_alcohol_weekly
+    ph_sleep
+    ph_exercise
+    ph_travel
+    ph_pregnant
+    ph_live_births
+    ph_complications
+    ad_people_in_household
+    ph_symptoms
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.GetPatientHistoryQueryVariables,
+  APITypes.GetPatientHistoryQuery
+>;
+export const listPatientHistories = /* GraphQL */ `query ListPatientHistories(
+  $filter: ModelPatientHistoryFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listPatientHistories(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      first_name
+      last_name
+      date_of_birth
+      ph_briefly_describe_present_symptoms
+      ph_previous_treatment_for_problem
+      ph_current_medicines
+      ph_allergy_to_med
+      ph_allergy_to_med_list
+      ph_rh_history_osteoarthritis
+      ph_rh_history_gout
+      ph_rh_history_juvenile_arthritis
+      ph_rh_history_vasculitis
+      ph_rh_history_lupus
+      ph_rh_history_rheumatoid
+      ph_rh_history_spondyloarthropathy
+      ph_rh_history_osteoporosis
+      ph_past_medical_history
+      ph_past_surgery_history
+      ph_smoke
+      ph_drugs
+      ph_alcohol
+      ph_alcohol_weekly
+      ph_sleep
+      ph_exercise
+      ph_travel
+      ph_pregnant
+      ph_live_births
+      ph_complications
+      ad_people_in_household
+      ph_symptoms
+      createdAt
+      updatedAt
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListPatientHistoriesQueryVariables,
+  APITypes.ListPatientHistoriesQuery
+>;
+export const getRapid3 = /* GraphQL */ `query GetRapid3($id: ID!) {
+  getRapid3(id: $id) {
+    id
+    first_name
+    last_name
+    date_of_birth
+    ad_dress_yourself
+    ad_get_in_out_bed
+    ad_lift_full_cup_mouth
+    ad_walk_outdoor_flat
+    ad_wash_dry_body
+    ad_pick_clothing_floor
+    ad_turn_faucets_on_off
+    ad_get_in_out_car_bus_train_plane
+    ad_walk_two_miles
+    ad_recreational_activities_sports
+    ad_good_night_sleep
+    ad_deal_anxiety_nervous
+    ad_deal_depression_blue
+    ad_daily_pain_scale
+    ad_how_well_doing_scale
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<APITypes.GetRapid3QueryVariables, APITypes.GetRapid3Query>;
+export const listRapid3s = /* GraphQL */ `query ListRapid3s(
+  $filter: ModelRapid3FilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listRapid3s(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      first_name
+      last_name
+      date_of_birth
+      ad_dress_yourself
+      ad_get_in_out_bed
+      ad_lift_full_cup_mouth
+      ad_walk_outdoor_flat
+      ad_wash_dry_body
+      ad_pick_clothing_floor
+      ad_turn_faucets_on_off
+      ad_get_in_out_car_bus_train_plane
+      ad_walk_two_miles
+      ad_recreational_activities_sports
+      ad_good_night_sleep
+      ad_deal_anxiety_nervous
+      ad_deal_depression_blue
+      ad_daily_pain_scale
+      ad_how_well_doing_scale
+      createdAt
+      updatedAt
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListRapid3sQueryVariables,
+  APITypes.ListRapid3sQuery
+>;
 export const getPrivacyNotice = /* GraphQL */ `query GetPrivacyNotice($id: ID!) {
   getPrivacyNotice(id: $id) {
     id
@@ -25,6 +182,7 @@ export const getPrivacyNotice = /* GraphQL */ `query GetPrivacyNotice($id: ID!) 
     signature
     first_name
     last_name
+    date_of_birth
     createdAt
     updatedAt
     __typename
@@ -56,6 +214,7 @@ export const listPrivacyNotices = /* GraphQL */ `query ListPrivacyNotices(
       signature
       first_name
       last_name
+      date_of_birth
       createdAt
       updatedAt
       __typename
@@ -115,50 +274,9 @@ export const getNewPatient = /* GraphQL */ `query GetNewPatient($id: ID!) {
     emergency_contact_relationship
     signature_page_1
     signature_page_1_date
-    ph_briefly_describe_present_symptoms
-    ph_previous_treatment_for_problem
-    ph_current_medicines
     emergency_contact_phone
-    ph_allergy_to_med
-    ph_allergy_to_med_list
-    ph_rh_history_osteoarthritis
-    ph_rh_history_gout
-    ph_rh_history_vasculitis
-    ph_rh_history_lupus
-    ph_rh_history_rheumatoid
-    ph_rh_history_spondyloarthropathy
-    ph_rh_history_osteoporosis
-    ph_past_medical_history
-    ph_past_surgery_history
-    ph_smoke
-    ph_alcohol
-    ph_rh_history_juvenile_arthritis
-    ph_sleep
-    ph_exercise
-    ph_travel
-    ph_pregnant
-    ph_live_births
-    ph_complications
-    ph_drugs
-    ad_people_in_household
-    ad_dress_yourself
-    ad_get_in_out_bed
-    ad_lift_full_cup_mouth
-    ad_walk_outdoor_flat
-    ad_wash_dry_body
-    ad_pick_clothing_floor
-    ad_turn_faucets_on_off
-    ad_get_in_out_car_bus_train_plane
-    ad_walk_two_miles
-    ad_recreational_activities_sports
-    ad_good_night_sleep
-    ad_daily_pain_scale
-    ad_how_well_doing_scale
-    ph_alcohol_weekly
-    ph_symptoms
-    ad_deal_anxiety_nervous
-    ad_deal_depression_blue
     insurance_primary_insured_person_dob
+    race_other
     createdAt
     updatedAt
     __typename
@@ -220,50 +338,9 @@ export const listNewPatients = /* GraphQL */ `query ListNewPatients(
       emergency_contact_relationship
       signature_page_1
       signature_page_1_date
-      ph_briefly_describe_present_symptoms
-      ph_previous_treatment_for_problem
-      ph_current_medicines
       emergency_contact_phone
-      ph_allergy_to_med
-      ph_allergy_to_med_list
-      ph_rh_history_osteoarthritis
-      ph_rh_history_gout
-      ph_rh_history_vasculitis
-      ph_rh_history_lupus
-      ph_rh_history_rheumatoid
-      ph_rh_history_spondyloarthropathy
-      ph_rh_history_osteoporosis
-      ph_past_medical_history
-      ph_past_surgery_history
-      ph_smoke
-      ph_alcohol
-      ph_rh_history_juvenile_arthritis
-      ph_sleep
-      ph_exercise
-      ph_travel
-      ph_pregnant
-      ph_live_births
-      ph_complications
-      ph_drugs
-      ad_people_in_household
-      ad_dress_yourself
-      ad_get_in_out_bed
-      ad_lift_full_cup_mouth
-      ad_walk_outdoor_flat
-      ad_wash_dry_body
-      ad_pick_clothing_floor
-      ad_turn_faucets_on_off
-      ad_get_in_out_car_bus_train_plane
-      ad_walk_two_miles
-      ad_recreational_activities_sports
-      ad_good_night_sleep
-      ad_daily_pain_scale
-      ad_how_well_doing_scale
-      ph_alcohol_weekly
-      ph_symptoms
-      ad_deal_anxiety_nervous
-      ad_deal_depression_blue
       insurance_primary_insured_person_dob
+      race_other
       createdAt
       updatedAt
       __typename

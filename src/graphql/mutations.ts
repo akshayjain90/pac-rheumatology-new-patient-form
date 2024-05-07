@@ -8,6 +8,240 @@ type GeneratedMutation<InputType, OutputType> = string & {
   __generatedMutationOutput: OutputType;
 };
 
+export const createPatientHistory = /* GraphQL */ `mutation CreatePatientHistory(
+  $input: CreatePatientHistoryInput!
+  $condition: ModelPatientHistoryConditionInput
+) {
+  createPatientHistory(input: $input, condition: $condition) {
+    id
+    first_name
+    last_name
+    date_of_birth
+    ph_briefly_describe_present_symptoms
+    ph_previous_treatment_for_problem
+    ph_current_medicines
+    ph_allergy_to_med
+    ph_allergy_to_med_list
+    ph_rh_history_osteoarthritis
+    ph_rh_history_gout
+    ph_rh_history_juvenile_arthritis
+    ph_rh_history_vasculitis
+    ph_rh_history_lupus
+    ph_rh_history_rheumatoid
+    ph_rh_history_spondyloarthropathy
+    ph_rh_history_osteoporosis
+    ph_past_medical_history
+    ph_past_surgery_history
+    ph_smoke
+    ph_drugs
+    ph_alcohol
+    ph_alcohol_weekly
+    ph_sleep
+    ph_exercise
+    ph_travel
+    ph_pregnant
+    ph_live_births
+    ph_complications
+    ad_people_in_household
+    ph_symptoms
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.CreatePatientHistoryMutationVariables,
+  APITypes.CreatePatientHistoryMutation
+>;
+export const updatePatientHistory = /* GraphQL */ `mutation UpdatePatientHistory(
+  $input: UpdatePatientHistoryInput!
+  $condition: ModelPatientHistoryConditionInput
+) {
+  updatePatientHistory(input: $input, condition: $condition) {
+    id
+    first_name
+    last_name
+    date_of_birth
+    ph_briefly_describe_present_symptoms
+    ph_previous_treatment_for_problem
+    ph_current_medicines
+    ph_allergy_to_med
+    ph_allergy_to_med_list
+    ph_rh_history_osteoarthritis
+    ph_rh_history_gout
+    ph_rh_history_juvenile_arthritis
+    ph_rh_history_vasculitis
+    ph_rh_history_lupus
+    ph_rh_history_rheumatoid
+    ph_rh_history_spondyloarthropathy
+    ph_rh_history_osteoporosis
+    ph_past_medical_history
+    ph_past_surgery_history
+    ph_smoke
+    ph_drugs
+    ph_alcohol
+    ph_alcohol_weekly
+    ph_sleep
+    ph_exercise
+    ph_travel
+    ph_pregnant
+    ph_live_births
+    ph_complications
+    ad_people_in_household
+    ph_symptoms
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.UpdatePatientHistoryMutationVariables,
+  APITypes.UpdatePatientHistoryMutation
+>;
+export const deletePatientHistory = /* GraphQL */ `mutation DeletePatientHistory(
+  $input: DeletePatientHistoryInput!
+  $condition: ModelPatientHistoryConditionInput
+) {
+  deletePatientHistory(input: $input, condition: $condition) {
+    id
+    first_name
+    last_name
+    date_of_birth
+    ph_briefly_describe_present_symptoms
+    ph_previous_treatment_for_problem
+    ph_current_medicines
+    ph_allergy_to_med
+    ph_allergy_to_med_list
+    ph_rh_history_osteoarthritis
+    ph_rh_history_gout
+    ph_rh_history_juvenile_arthritis
+    ph_rh_history_vasculitis
+    ph_rh_history_lupus
+    ph_rh_history_rheumatoid
+    ph_rh_history_spondyloarthropathy
+    ph_rh_history_osteoporosis
+    ph_past_medical_history
+    ph_past_surgery_history
+    ph_smoke
+    ph_drugs
+    ph_alcohol
+    ph_alcohol_weekly
+    ph_sleep
+    ph_exercise
+    ph_travel
+    ph_pregnant
+    ph_live_births
+    ph_complications
+    ad_people_in_household
+    ph_symptoms
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.DeletePatientHistoryMutationVariables,
+  APITypes.DeletePatientHistoryMutation
+>;
+export const createRapid3 = /* GraphQL */ `mutation CreateRapid3(
+  $input: CreateRapid3Input!
+  $condition: ModelRapid3ConditionInput
+) {
+  createRapid3(input: $input, condition: $condition) {
+    id
+    first_name
+    last_name
+    date_of_birth
+    ad_dress_yourself
+    ad_get_in_out_bed
+    ad_lift_full_cup_mouth
+    ad_walk_outdoor_flat
+    ad_wash_dry_body
+    ad_pick_clothing_floor
+    ad_turn_faucets_on_off
+    ad_get_in_out_car_bus_train_plane
+    ad_walk_two_miles
+    ad_recreational_activities_sports
+    ad_good_night_sleep
+    ad_deal_anxiety_nervous
+    ad_deal_depression_blue
+    ad_daily_pain_scale
+    ad_how_well_doing_scale
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.CreateRapid3MutationVariables,
+  APITypes.CreateRapid3Mutation
+>;
+export const updateRapid3 = /* GraphQL */ `mutation UpdateRapid3(
+  $input: UpdateRapid3Input!
+  $condition: ModelRapid3ConditionInput
+) {
+  updateRapid3(input: $input, condition: $condition) {
+    id
+    first_name
+    last_name
+    date_of_birth
+    ad_dress_yourself
+    ad_get_in_out_bed
+    ad_lift_full_cup_mouth
+    ad_walk_outdoor_flat
+    ad_wash_dry_body
+    ad_pick_clothing_floor
+    ad_turn_faucets_on_off
+    ad_get_in_out_car_bus_train_plane
+    ad_walk_two_miles
+    ad_recreational_activities_sports
+    ad_good_night_sleep
+    ad_deal_anxiety_nervous
+    ad_deal_depression_blue
+    ad_daily_pain_scale
+    ad_how_well_doing_scale
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.UpdateRapid3MutationVariables,
+  APITypes.UpdateRapid3Mutation
+>;
+export const deleteRapid3 = /* GraphQL */ `mutation DeleteRapid3(
+  $input: DeleteRapid3Input!
+  $condition: ModelRapid3ConditionInput
+) {
+  deleteRapid3(input: $input, condition: $condition) {
+    id
+    first_name
+    last_name
+    date_of_birth
+    ad_dress_yourself
+    ad_get_in_out_bed
+    ad_lift_full_cup_mouth
+    ad_walk_outdoor_flat
+    ad_wash_dry_body
+    ad_pick_clothing_floor
+    ad_turn_faucets_on_off
+    ad_get_in_out_car_bus_train_plane
+    ad_walk_two_miles
+    ad_recreational_activities_sports
+    ad_good_night_sleep
+    ad_deal_anxiety_nervous
+    ad_deal_depression_blue
+    ad_daily_pain_scale
+    ad_how_well_doing_scale
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.DeleteRapid3MutationVariables,
+  APITypes.DeleteRapid3Mutation
+>;
 export const createPrivacyNotice = /* GraphQL */ `mutation CreatePrivacyNotice(
   $input: CreatePrivacyNoticeInput!
   $condition: ModelPrivacyNoticeConditionInput
@@ -28,6 +262,7 @@ export const createPrivacyNotice = /* GraphQL */ `mutation CreatePrivacyNotice(
     signature
     first_name
     last_name
+    date_of_birth
     createdAt
     updatedAt
     __typename
@@ -57,6 +292,7 @@ export const updatePrivacyNotice = /* GraphQL */ `mutation UpdatePrivacyNotice(
     signature
     first_name
     last_name
+    date_of_birth
     createdAt
     updatedAt
     __typename
@@ -86,6 +322,7 @@ export const deletePrivacyNotice = /* GraphQL */ `mutation DeletePrivacyNotice(
     signature
     first_name
     last_name
+    date_of_birth
     createdAt
     updatedAt
     __typename
@@ -145,50 +382,9 @@ export const createNewPatient = /* GraphQL */ `mutation CreateNewPatient(
     emergency_contact_relationship
     signature_page_1
     signature_page_1_date
-    ph_briefly_describe_present_symptoms
-    ph_previous_treatment_for_problem
-    ph_current_medicines
     emergency_contact_phone
-    ph_allergy_to_med
-    ph_allergy_to_med_list
-    ph_rh_history_osteoarthritis
-    ph_rh_history_gout
-    ph_rh_history_vasculitis
-    ph_rh_history_lupus
-    ph_rh_history_rheumatoid
-    ph_rh_history_spondyloarthropathy
-    ph_rh_history_osteoporosis
-    ph_past_medical_history
-    ph_past_surgery_history
-    ph_smoke
-    ph_alcohol
-    ph_rh_history_juvenile_arthritis
-    ph_sleep
-    ph_exercise
-    ph_travel
-    ph_pregnant
-    ph_live_births
-    ph_complications
-    ph_drugs
-    ad_people_in_household
-    ad_dress_yourself
-    ad_get_in_out_bed
-    ad_lift_full_cup_mouth
-    ad_walk_outdoor_flat
-    ad_wash_dry_body
-    ad_pick_clothing_floor
-    ad_turn_faucets_on_off
-    ad_get_in_out_car_bus_train_plane
-    ad_walk_two_miles
-    ad_recreational_activities_sports
-    ad_good_night_sleep
-    ad_daily_pain_scale
-    ad_how_well_doing_scale
-    ph_alcohol_weekly
-    ph_symptoms
-    ad_deal_anxiety_nervous
-    ad_deal_depression_blue
     insurance_primary_insured_person_dob
+    race_other
     createdAt
     updatedAt
     __typename
@@ -248,50 +444,9 @@ export const updateNewPatient = /* GraphQL */ `mutation UpdateNewPatient(
     emergency_contact_relationship
     signature_page_1
     signature_page_1_date
-    ph_briefly_describe_present_symptoms
-    ph_previous_treatment_for_problem
-    ph_current_medicines
     emergency_contact_phone
-    ph_allergy_to_med
-    ph_allergy_to_med_list
-    ph_rh_history_osteoarthritis
-    ph_rh_history_gout
-    ph_rh_history_vasculitis
-    ph_rh_history_lupus
-    ph_rh_history_rheumatoid
-    ph_rh_history_spondyloarthropathy
-    ph_rh_history_osteoporosis
-    ph_past_medical_history
-    ph_past_surgery_history
-    ph_smoke
-    ph_alcohol
-    ph_rh_history_juvenile_arthritis
-    ph_sleep
-    ph_exercise
-    ph_travel
-    ph_pregnant
-    ph_live_births
-    ph_complications
-    ph_drugs
-    ad_people_in_household
-    ad_dress_yourself
-    ad_get_in_out_bed
-    ad_lift_full_cup_mouth
-    ad_walk_outdoor_flat
-    ad_wash_dry_body
-    ad_pick_clothing_floor
-    ad_turn_faucets_on_off
-    ad_get_in_out_car_bus_train_plane
-    ad_walk_two_miles
-    ad_recreational_activities_sports
-    ad_good_night_sleep
-    ad_daily_pain_scale
-    ad_how_well_doing_scale
-    ph_alcohol_weekly
-    ph_symptoms
-    ad_deal_anxiety_nervous
-    ad_deal_depression_blue
     insurance_primary_insured_person_dob
+    race_other
     createdAt
     updatedAt
     __typename
@@ -351,50 +506,9 @@ export const deleteNewPatient = /* GraphQL */ `mutation DeleteNewPatient(
     emergency_contact_relationship
     signature_page_1
     signature_page_1_date
-    ph_briefly_describe_present_symptoms
-    ph_previous_treatment_for_problem
-    ph_current_medicines
     emergency_contact_phone
-    ph_allergy_to_med
-    ph_allergy_to_med_list
-    ph_rh_history_osteoarthritis
-    ph_rh_history_gout
-    ph_rh_history_vasculitis
-    ph_rh_history_lupus
-    ph_rh_history_rheumatoid
-    ph_rh_history_spondyloarthropathy
-    ph_rh_history_osteoporosis
-    ph_past_medical_history
-    ph_past_surgery_history
-    ph_smoke
-    ph_alcohol
-    ph_rh_history_juvenile_arthritis
-    ph_sleep
-    ph_exercise
-    ph_travel
-    ph_pregnant
-    ph_live_births
-    ph_complications
-    ph_drugs
-    ad_people_in_household
-    ad_dress_yourself
-    ad_get_in_out_bed
-    ad_lift_full_cup_mouth
-    ad_walk_outdoor_flat
-    ad_wash_dry_body
-    ad_pick_clothing_floor
-    ad_turn_faucets_on_off
-    ad_get_in_out_car_bus_train_plane
-    ad_walk_two_miles
-    ad_recreational_activities_sports
-    ad_good_night_sleep
-    ad_daily_pain_scale
-    ad_how_well_doing_scale
-    ph_alcohol_weekly
-    ph_symptoms
-    ad_deal_anxiety_nervous
-    ad_deal_depression_blue
     insurance_primary_insured_person_dob
+    race_other
     createdAt
     updatedAt
     __typename

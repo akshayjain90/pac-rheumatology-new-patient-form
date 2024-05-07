@@ -8,182 +8,23 @@
 import * as React from "react";
 import {
   Autocomplete,
-  Badge,
   Button,
   Divider,
   Flex,
   Grid,
   Heading,
-  Icon,
-  ScrollView,
   SelectField,
   SliderField,
   SwitchField,
   Text,
   TextAreaField,
   TextField,
-  useTheme,
 } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { getNewPatient } from "../graphql/queries";
 import { updateNewPatient } from "../graphql/mutations";
 const client = generateClient();
-function ArrayField({
-  items = [],
-  onChange,
-  label,
-  inputFieldRef,
-  children,
-  hasError,
-  setFieldValue,
-  currentFieldValue,
-  defaultFieldValue,
-  lengthLimit,
-  getBadgeText,
-  runValidationTasks,
-  errorMessage,
-}) {
-  const labelElement = <Text>{label}</Text>;
-  const {
-    tokens: {
-      components: {
-        fieldmessages: { error: errorStyles },
-      },
-    },
-  } = useTheme();
-  const [selectedBadgeIndex, setSelectedBadgeIndex] = React.useState();
-  const [isEditing, setIsEditing] = React.useState();
-  React.useEffect(() => {
-    if (isEditing) {
-      inputFieldRef?.current?.focus();
-    }
-  }, [isEditing]);
-  const removeItem = async (removeIndex) => {
-    const newItems = items.filter((value, index) => index !== removeIndex);
-    await onChange(newItems);
-    setSelectedBadgeIndex(undefined);
-  };
-  const addItem = async () => {
-    const { hasError } = runValidationTasks();
-    if (
-      currentFieldValue !== undefined &&
-      currentFieldValue !== null &&
-      currentFieldValue !== "" &&
-      !hasError
-    ) {
-      const newItems = [...items];
-      if (selectedBadgeIndex !== undefined) {
-        newItems[selectedBadgeIndex] = currentFieldValue;
-        setSelectedBadgeIndex(undefined);
-      } else {
-        newItems.push(currentFieldValue);
-      }
-      await onChange(newItems);
-      setIsEditing(false);
-    }
-  };
-  const arraySection = (
-    <React.Fragment>
-      {!!items?.length && (
-        <ScrollView height="inherit" width="inherit" maxHeight={"7rem"}>
-          {items.map((value, index) => {
-            return (
-              <Badge
-                key={index}
-                style={{
-                  cursor: "pointer",
-                  alignItems: "center",
-                  marginRight: 3,
-                  marginTop: 3,
-                  backgroundColor:
-                    index === selectedBadgeIndex ? "#B8CEF9" : "",
-                }}
-                onClick={() => {
-                  setSelectedBadgeIndex(index);
-                  setFieldValue(items[index]);
-                  setIsEditing(true);
-                }}
-              >
-                {getBadgeText ? getBadgeText(value) : value.toString()}
-                <Icon
-                  style={{
-                    cursor: "pointer",
-                    paddingLeft: 3,
-                    width: 20,
-                    height: 20,
-                  }}
-                  viewBox={{ width: 20, height: 20 }}
-                  paths={[
-                    {
-                      d: "M10 10l5.09-5.09L10 10l5.09 5.09L10 10zm0 0L4.91 4.91 10 10l-5.09 5.09L10 10z",
-                      stroke: "black",
-                    },
-                  ]}
-                  ariaLabel="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    removeItem(index);
-                  }}
-                />
-              </Badge>
-            );
-          })}
-        </ScrollView>
-      )}
-      <Divider orientation="horizontal" marginTop={5} />
-    </React.Fragment>
-  );
-  if (lengthLimit !== undefined && items.length >= lengthLimit && !isEditing) {
-    return (
-      <React.Fragment>
-        {labelElement}
-        {arraySection}
-      </React.Fragment>
-    );
-  }
-  return (
-    <React.Fragment>
-      {labelElement}
-      {isEditing && children}
-      {!isEditing ? (
-        <>
-          <Button
-            onClick={() => {
-              setIsEditing(true);
-            }}
-          >
-            Add item
-          </Button>
-          {errorMessage && hasError && (
-            <Text color={errorStyles.color} fontSize={errorStyles.fontSize}>
-              {errorMessage}
-            </Text>
-          )}
-        </>
-      ) : (
-        <Flex justifyContent="flex-end">
-          {(currentFieldValue || isEditing) && (
-            <Button
-              children="Cancel"
-              type="button"
-              size="small"
-              onClick={() => {
-                setFieldValue(defaultFieldValue);
-                setIsEditing(false);
-                setSelectedBadgeIndex(undefined);
-              }}
-            ></Button>
-          )}
-          <Button size="small" variation="link" onClick={addItem}>
-            {selectedBadgeIndex !== undefined ? "Save" : "Add"}
-          </Button>
-        </Flex>
-      )}
-      {arraySection}
-    </React.Fragment>
-  );
-}
 export default function Page2PatientHistory(props) {
   const {
     id: idProp,
@@ -236,7 +77,7 @@ export default function Page2PatientHistory(props) {
     ph_pregnant: "",
     ph_live_births: "",
     ph_complications: "",
-    ph_symptoms: [],
+    ph_symptoms: "",
     ad_people_in_household: "",
     ad_who_shopping: "",
     ad_housework: "",
@@ -256,21 +97,8 @@ export default function Page2PatientHistory(props) {
     ad_daily_pain_scale: 0,
     ad_how_well_doing_scale: 0,
     occupation: "",
-    ph_current_medicines: "",
-    ad_dress_yourself: "",
-    ad_get_in_out_bed: "",
-    ad_lift_full_cup_mouth: "",
-    ad_walk_outdoor_flat: "",
-    ad_wash_dry_body: "",
-    ad_pick_clothing_floor: "",
-    ad_turn_faucets_on_off: "",
-    ad_get_in_out_car_bus_train_plane: "",
-    ad_walk_two_miles: "",
-    ad_recreational_activities_sports: "",
-    ad_good_night_sleep: "",
-    ad_deal_anxiety_nervous: "",
-    ad_deal_depression_blue: "",
     insurance_primary_insured_person_dob: "",
+    race_other: "",
   };
   const [
     ph_briefly_describe_present_symptoms,
@@ -431,54 +259,11 @@ export default function Page2PatientHistory(props) {
     initialValues.ad_how_well_doing_scale
   );
   const [occupation, setOccupation] = React.useState(initialValues.occupation);
-  const [ph_current_medicines, setPh_current_medicines] = React.useState(
-    initialValues.ph_current_medicines
-  );
-  const [ad_dress_yourself, setAd_dress_yourself] = React.useState(
-    initialValues.ad_dress_yourself
-  );
-  const [ad_get_in_out_bed, setAd_get_in_out_bed] = React.useState(
-    initialValues.ad_get_in_out_bed
-  );
-  const [ad_lift_full_cup_mouth, setAd_lift_full_cup_mouth] = React.useState(
-    initialValues.ad_lift_full_cup_mouth
-  );
-  const [ad_walk_outdoor_flat, setAd_walk_outdoor_flat] = React.useState(
-    initialValues.ad_walk_outdoor_flat
-  );
-  const [ad_wash_dry_body, setAd_wash_dry_body] = React.useState(
-    initialValues.ad_wash_dry_body
-  );
-  const [ad_pick_clothing_floor, setAd_pick_clothing_floor] = React.useState(
-    initialValues.ad_pick_clothing_floor
-  );
-  const [ad_turn_faucets_on_off, setAd_turn_faucets_on_off] = React.useState(
-    initialValues.ad_turn_faucets_on_off
-  );
-  const [
-    ad_get_in_out_car_bus_train_plane,
-    setAd_get_in_out_car_bus_train_plane,
-  ] = React.useState(initialValues.ad_get_in_out_car_bus_train_plane);
-  const [ad_walk_two_miles, setAd_walk_two_miles] = React.useState(
-    initialValues.ad_walk_two_miles
-  );
-  const [
-    ad_recreational_activities_sports,
-    setAd_recreational_activities_sports,
-  ] = React.useState(initialValues.ad_recreational_activities_sports);
-  const [ad_good_night_sleep, setAd_good_night_sleep] = React.useState(
-    initialValues.ad_good_night_sleep
-  );
-  const [ad_deal_anxiety_nervous, setAd_deal_anxiety_nervous] = React.useState(
-    initialValues.ad_deal_anxiety_nervous
-  );
-  const [ad_deal_depression_blue, setAd_deal_depression_blue] = React.useState(
-    initialValues.ad_deal_depression_blue
-  );
   const [
     insurance_primary_insured_person_dob,
     setInsurance_primary_insured_person_dob,
   ] = React.useState(initialValues.insurance_primary_insured_person_dob);
+  const [race_other, setRace_other] = React.useState(initialValues.race_other);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = newPatientRecord
@@ -531,8 +316,7 @@ export default function Page2PatientHistory(props) {
     setPh_pregnant(cleanValues.ph_pregnant);
     setPh_live_births(cleanValues.ph_live_births);
     setPh_complications(cleanValues.ph_complications);
-    setPh_symptoms(cleanValues.ph_symptoms ?? []);
-    setCurrentPh_symptomsValue("");
+    setPh_symptoms(cleanValues.ph_symptoms);
     setAd_people_in_household(cleanValues.ad_people_in_household);
     setAd_who_shopping(cleanValues.ad_who_shopping);
     setAd_housework(cleanValues.ad_housework);
@@ -552,27 +336,10 @@ export default function Page2PatientHistory(props) {
     setAd_daily_pain_scale(cleanValues.ad_daily_pain_scale);
     setAd_how_well_doing_scale(cleanValues.ad_how_well_doing_scale);
     setOccupation(cleanValues.occupation);
-    setPh_current_medicines(cleanValues.ph_current_medicines);
-    setAd_dress_yourself(cleanValues.ad_dress_yourself);
-    setAd_get_in_out_bed(cleanValues.ad_get_in_out_bed);
-    setAd_lift_full_cup_mouth(cleanValues.ad_lift_full_cup_mouth);
-    setAd_walk_outdoor_flat(cleanValues.ad_walk_outdoor_flat);
-    setAd_wash_dry_body(cleanValues.ad_wash_dry_body);
-    setAd_pick_clothing_floor(cleanValues.ad_pick_clothing_floor);
-    setAd_turn_faucets_on_off(cleanValues.ad_turn_faucets_on_off);
-    setAd_get_in_out_car_bus_train_plane(
-      cleanValues.ad_get_in_out_car_bus_train_plane
-    );
-    setAd_walk_two_miles(cleanValues.ad_walk_two_miles);
-    setAd_recreational_activities_sports(
-      cleanValues.ad_recreational_activities_sports
-    );
-    setAd_good_night_sleep(cleanValues.ad_good_night_sleep);
-    setAd_deal_anxiety_nervous(cleanValues.ad_deal_anxiety_nervous);
-    setAd_deal_depression_blue(cleanValues.ad_deal_depression_blue);
     setInsurance_primary_insured_person_dob(
       cleanValues.insurance_primary_insured_person_dob
     );
+    setRace_other(cleanValues.race_other);
     setErrors({});
   };
   const [newPatientRecord, setNewPatientRecord] =
@@ -592,11 +359,8 @@ export default function Page2PatientHistory(props) {
     queryData();
   }, [idProp, newPatientModelProp]);
   React.useEffect(resetStateValues, [newPatientRecord]);
-  const [currentPh_symptomsValue, setCurrentPh_symptomsValue] =
-    React.useState("");
-  const ph_symptomsRef = React.createRef();
   const validations = {
-    ph_briefly_describe_present_symptoms: [{ type: "Required" }],
+    ph_briefly_describe_present_symptoms: [],
     ph_previous_treatment_for_problem: [],
     ph_current_medicine_1: [],
     ph_current_medicine_2: [],
@@ -613,7 +377,7 @@ export default function Page2PatientHistory(props) {
     ph_current_medicine_13: [],
     ph_current_medicine_14: [],
     ph_current_medicine_15: [],
-    ph_allergy_to_med: [{ type: "Required" }],
+    ph_allergy_to_med: [],
     ph_allergy_to_med_list: [],
     ph_rh_history_osteoarthritis: [],
     ph_rh_history_gout: [],
@@ -625,9 +389,9 @@ export default function Page2PatientHistory(props) {
     ph_rh_history_osteoporosis: [],
     ph_past_medical_history: [],
     ph_past_surgery_history: [],
-    ph_smoke: [{ type: "Required" }],
-    ph_drugs: [{ type: "Required" }],
-    ph_alcohol: [{ type: "Required" }],
+    ph_smoke: [],
+    ph_drugs: [],
+    ph_alcohol: [],
     ph_alcohol_weekly: [],
     ph_sleep: [],
     ph_exercise: [],
@@ -635,7 +399,7 @@ export default function Page2PatientHistory(props) {
     ph_pregnant: [],
     ph_live_births: [],
     ph_complications: [],
-    ph_symptoms: [{ type: "Required" }, { type: "JSON" }],
+    ph_symptoms: [{ type: "JSON" }],
     ad_people_in_household: [],
     ad_who_shopping: [],
     ad_housework: [],
@@ -652,24 +416,11 @@ export default function Page2PatientHistory(props) {
     ad_ability_climb_2_flights: [],
     ad_aids_devices_activities: [],
     ad_categories_help: [],
-    ad_daily_pain_scale: [{ type: "Required" }],
-    ad_how_well_doing_scale: [{ type: "Required" }],
+    ad_daily_pain_scale: [],
+    ad_how_well_doing_scale: [],
     occupation: [{ type: "Required" }],
-    ph_current_medicines: [{ type: "Required" }],
-    ad_dress_yourself: [{ type: "Required" }],
-    ad_get_in_out_bed: [{ type: "Required" }],
-    ad_lift_full_cup_mouth: [{ type: "Required" }],
-    ad_walk_outdoor_flat: [{ type: "Required" }],
-    ad_wash_dry_body: [{ type: "Required" }],
-    ad_pick_clothing_floor: [{ type: "Required" }],
-    ad_turn_faucets_on_off: [{ type: "Required" }],
-    ad_get_in_out_car_bus_train_plane: [{ type: "Required" }],
-    ad_walk_two_miles: [{ type: "Required" }],
-    ad_recreational_activities_sports: [{ type: "Required" }],
-    ad_good_night_sleep: [{ type: "Required" }],
-    ad_deal_anxiety_nervous: [{ type: "Required" }],
-    ad_deal_depression_blue: [{ type: "Required" }],
     insurance_primary_insured_person_dob: [],
+    race_other: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -698,7 +449,8 @@ export default function Page2PatientHistory(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          ph_briefly_describe_present_symptoms,
+          ph_briefly_describe_present_symptoms:
+            ph_briefly_describe_present_symptoms ?? null,
           ph_previous_treatment_for_problem:
             ph_previous_treatment_for_problem ?? null,
           ph_current_medicine_1: ph_current_medicine_1 ?? null,
@@ -716,7 +468,7 @@ export default function Page2PatientHistory(props) {
           ph_current_medicine_13: ph_current_medicine_13 ?? null,
           ph_current_medicine_14: ph_current_medicine_14 ?? null,
           ph_current_medicine_15: ph_current_medicine_15 ?? null,
-          ph_allergy_to_med,
+          ph_allergy_to_med: ph_allergy_to_med ?? null,
           ph_allergy_to_med_list: ph_allergy_to_med_list ?? null,
           ph_rh_history_osteoarthritis: ph_rh_history_osteoarthritis ?? null,
           ph_rh_history_gout: ph_rh_history_gout ?? null,
@@ -730,9 +482,9 @@ export default function Page2PatientHistory(props) {
           ph_rh_history_osteoporosis: ph_rh_history_osteoporosis ?? null,
           ph_past_medical_history: ph_past_medical_history ?? null,
           ph_past_surgery_history: ph_past_surgery_history ?? null,
-          ph_smoke,
-          ph_drugs,
-          ph_alcohol,
+          ph_smoke: ph_smoke ?? null,
+          ph_drugs: ph_drugs ?? null,
+          ph_alcohol: ph_alcohol ?? null,
           ph_alcohol_weekly: ph_alcohol_weekly ?? null,
           ph_sleep: ph_sleep ?? null,
           ph_exercise: ph_exercise ?? null,
@@ -740,7 +492,7 @@ export default function Page2PatientHistory(props) {
           ph_pregnant: ph_pregnant ?? null,
           ph_live_births: ph_live_births ?? null,
           ph_complications: ph_complications ?? null,
-          ph_symptoms,
+          ph_symptoms: ph_symptoms ?? null,
           ad_people_in_household: ad_people_in_household ?? null,
           ad_who_shopping: ad_who_shopping ?? null,
           ad_housework: ad_housework ?? null,
@@ -757,25 +509,12 @@ export default function Page2PatientHistory(props) {
           ad_ability_climb_2_flights: ad_ability_climb_2_flights ?? null,
           ad_aids_devices_activities: ad_aids_devices_activities ?? null,
           ad_categories_help: ad_categories_help ?? null,
-          ad_daily_pain_scale,
-          ad_how_well_doing_scale,
+          ad_daily_pain_scale: ad_daily_pain_scale ?? null,
+          ad_how_well_doing_scale: ad_how_well_doing_scale ?? null,
           occupation,
-          ph_current_medicines,
-          ad_dress_yourself,
-          ad_get_in_out_bed,
-          ad_lift_full_cup_mouth,
-          ad_walk_outdoor_flat,
-          ad_wash_dry_body,
-          ad_pick_clothing_floor,
-          ad_turn_faucets_on_off,
-          ad_get_in_out_car_bus_train_plane,
-          ad_walk_two_miles,
-          ad_recreational_activities_sports,
-          ad_good_night_sleep,
-          ad_deal_anxiety_nervous,
-          ad_deal_depression_blue,
           insurance_primary_insured_person_dob:
             insurance_primary_insured_person_dob ?? null,
+          race_other: race_other ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -806,63 +545,10 @@ export default function Page2PatientHistory(props) {
             }
           });
           const modelFieldsToSave = {
-            ph_briefly_describe_present_symptoms:
-              modelFields.ph_briefly_describe_present_symptoms,
-            ph_previous_treatment_for_problem:
-              modelFields.ph_previous_treatment_for_problem ?? null,
-            ph_allergy_to_med: modelFields.ph_allergy_to_med,
-            ph_allergy_to_med_list: modelFields.ph_allergy_to_med_list ?? null,
-            ph_rh_history_osteoarthritis:
-              modelFields.ph_rh_history_osteoarthritis ?? null,
-            ph_rh_history_gout: modelFields.ph_rh_history_gout ?? null,
-            ph_rh_history_juvenile_arthritis:
-              modelFields.ph_rh_history_juvenile_arthritis ?? null,
-            ph_rh_history_vasculitis:
-              modelFields.ph_rh_history_vasculitis ?? null,
-            ph_rh_history_lupus: modelFields.ph_rh_history_lupus ?? null,
-            ph_rh_history_rheumatoid:
-              modelFields.ph_rh_history_rheumatoid ?? null,
-            ph_rh_history_spondyloarthropathy:
-              modelFields.ph_rh_history_spondyloarthropathy ?? null,
-            ph_rh_history_osteoporosis:
-              modelFields.ph_rh_history_osteoporosis ?? null,
-            ph_past_medical_history:
-              modelFields.ph_past_medical_history ?? null,
-            ph_past_surgery_history:
-              modelFields.ph_past_surgery_history ?? null,
-            ph_smoke: modelFields.ph_smoke,
-            ph_drugs: modelFields.ph_drugs,
-            ph_alcohol: modelFields.ph_alcohol,
-            ph_alcohol_weekly: modelFields.ph_alcohol_weekly ?? null,
-            ph_sleep: modelFields.ph_sleep ?? null,
-            ph_exercise: modelFields.ph_exercise ?? null,
-            ph_travel: modelFields.ph_travel ?? null,
-            ph_pregnant: modelFields.ph_pregnant ?? null,
-            ph_live_births: modelFields.ph_live_births ?? null,
-            ph_complications: modelFields.ph_complications ?? null,
-            ph_symptoms: modelFields.ph_symptoms,
-            ad_people_in_household: modelFields.ad_people_in_household ?? null,
-            ad_daily_pain_scale: modelFields.ad_daily_pain_scale,
-            ad_how_well_doing_scale: modelFields.ad_how_well_doing_scale,
             occupation: modelFields.occupation,
-            ph_current_medicines: modelFields.ph_current_medicines,
-            ad_dress_yourself: modelFields.ad_dress_yourself,
-            ad_get_in_out_bed: modelFields.ad_get_in_out_bed,
-            ad_lift_full_cup_mouth: modelFields.ad_lift_full_cup_mouth,
-            ad_walk_outdoor_flat: modelFields.ad_walk_outdoor_flat,
-            ad_wash_dry_body: modelFields.ad_wash_dry_body,
-            ad_pick_clothing_floor: modelFields.ad_pick_clothing_floor,
-            ad_turn_faucets_on_off: modelFields.ad_turn_faucets_on_off,
-            ad_get_in_out_car_bus_train_plane:
-              modelFields.ad_get_in_out_car_bus_train_plane,
-            ad_walk_two_miles: modelFields.ad_walk_two_miles,
-            ad_recreational_activities_sports:
-              modelFields.ad_recreational_activities_sports,
-            ad_good_night_sleep: modelFields.ad_good_night_sleep,
-            ad_deal_anxiety_nervous: modelFields.ad_deal_anxiety_nervous,
-            ad_deal_depression_blue: modelFields.ad_deal_depression_blue,
             insurance_primary_insured_person_dob:
               modelFields.insurance_primary_insured_person_dob ?? null,
+            race_other: modelFields.race_other ?? null,
           };
           await client.graphql({
             query: updateNewPatient.replaceAll("__typename", ""),
@@ -888,8 +574,6 @@ export default function Page2PatientHistory(props) {
     >
       <TextAreaField
         label="Briefly describe your presenting symptoms:"
-        isRequired={true}
-        isReadOnly={false}
         value={ph_briefly_describe_present_symptoms}
         onChange={(e) => {
           let { value } = e.target;
@@ -954,21 +638,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_briefly_describe_present_symptoms ?? value;
@@ -990,8 +661,6 @@ export default function Page2PatientHistory(props) {
       ></TextAreaField>
       <TextAreaField
         label="Previous treatment for this problem (i.e., Physical therapy, Medication, Surgery, Other):"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_previous_treatment_for_problem}
         onChange={(e) => {
           let { value } = e.target;
@@ -1056,21 +725,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_previous_treatment_for_problem ?? value;
@@ -1166,21 +822,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_1 ?? value;
@@ -1263,21 +906,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_2 ?? value;
@@ -1360,21 +990,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_3 ?? value;
@@ -1464,21 +1081,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_4 ?? value;
@@ -1561,21 +1165,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_5 ?? value;
@@ -1658,21 +1249,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_6 ?? value;
@@ -1762,21 +1340,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_7 ?? value;
@@ -1859,21 +1424,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_8 ?? value;
@@ -1956,21 +1508,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_9 ?? value;
@@ -2060,21 +1599,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_10 ?? value;
@@ -2157,21 +1683,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_11 ?? value;
@@ -2254,21 +1767,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_12 ?? value;
@@ -2358,21 +1858,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_13 ?? value;
@@ -2455,21 +1942,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_14 ?? value;
@@ -2552,21 +2026,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_current_medicine_15 ?? value;
@@ -2587,7 +2048,6 @@ export default function Page2PatientHistory(props) {
       <SwitchField
         label="ALLERGY to any medication?"
         defaultChecked={false}
-        isDisabled={false}
         isChecked={ph_allergy_to_med}
         onChange={(e) => {
           let value = e.target.checked;
@@ -2652,21 +2112,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_allergy_to_med ?? value;
@@ -2685,8 +2132,6 @@ export default function Page2PatientHistory(props) {
       ></SwitchField>
       <TextField
         label="If yes, please list:"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_allergy_to_med_list}
         onChange={(e) => {
           let { value } = e.target;
@@ -2751,21 +2196,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_allergy_to_med_list ?? value;
@@ -2798,8 +2230,6 @@ export default function Page2PatientHistory(props) {
       >
         <TextField
           label="Osteoarthritis"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_osteoarthritis}
           onChange={(e) => {
@@ -2865,21 +2295,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_osteoarthritis ?? value;
@@ -2901,8 +2318,6 @@ export default function Page2PatientHistory(props) {
         ></TextField>
         <TextField
           label="Gout"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_gout}
           onChange={(e) => {
@@ -2968,21 +2383,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_gout ?? value;
@@ -3008,8 +2410,6 @@ export default function Page2PatientHistory(props) {
       >
         <TextField
           label="Juvenile Arthritis"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_juvenile_arthritis}
           onChange={(e) => {
@@ -3075,21 +2475,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_juvenile_arthritis ?? value;
@@ -3111,8 +2498,6 @@ export default function Page2PatientHistory(props) {
         ></TextField>
         <TextField
           label="Vasculitis (Type)"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_vasculitis}
           onChange={(e) => {
@@ -3178,21 +2563,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_vasculitis ?? value;
@@ -3221,8 +2593,6 @@ export default function Page2PatientHistory(props) {
       >
         <TextField
           label="Lupus / SLE"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_lupus}
           onChange={(e) => {
@@ -3288,21 +2658,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_lupus ?? value;
@@ -3321,8 +2678,6 @@ export default function Page2PatientHistory(props) {
         ></TextField>
         <TextField
           label="Rheumatoid Arthiritis"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_rheumatoid}
           onChange={(e) => {
@@ -3388,21 +2743,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_rheumatoid ?? value;
@@ -3431,8 +2773,6 @@ export default function Page2PatientHistory(props) {
       >
         <TextField
           label="Spondyloarthropathy (i.e., A.S., Psoriatic Arthritis, etc.)"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_spondyloarthropathy}
           onChange={(e) => {
@@ -3498,21 +2838,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_spondyloarthropathy ?? value;
@@ -3534,8 +2861,6 @@ export default function Page2PatientHistory(props) {
         ></TextField>
         <TextField
           label="Osteoporosis"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_osteoporosis}
           onChange={(e) => {
@@ -3601,21 +2926,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_osteoporosis ?? value;
@@ -3638,8 +2950,6 @@ export default function Page2PatientHistory(props) {
       </Grid>
       <TextAreaField
         label="Past Medical History:"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_past_medical_history}
         onChange={(e) => {
           let { value } = e.target;
@@ -3704,21 +3014,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_past_medical_history ?? value;
@@ -3737,8 +3034,6 @@ export default function Page2PatientHistory(props) {
       ></TextAreaField>
       <TextAreaField
         label="Past Surgical History"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_past_surgery_history}
         onChange={(e) => {
           let { value } = e.target;
@@ -3803,21 +3098,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_past_surgery_history ?? value;
@@ -3843,7 +3125,6 @@ export default function Page2PatientHistory(props) {
         <SelectField
           label="Do you smoke?"
           placeholder="Please select an option"
-          isDisabled={false}
           value={ph_smoke}
           onChange={(e) => {
             let { value } = e.target;
@@ -3908,21 +3189,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_smoke ?? value;
@@ -3956,7 +3224,6 @@ export default function Page2PatientHistory(props) {
         <SelectField
           label="Do you use drugs (not prescribed)?"
           placeholder="Please select an option"
-          isDisabled={false}
           value={ph_drugs}
           onChange={(e) => {
             let { value } = e.target;
@@ -4021,21 +3288,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_drugs ?? value;
@@ -4076,7 +3330,6 @@ export default function Page2PatientHistory(props) {
         <SelectField
           label="Do you drink alcohol?"
           placeholder="Please select an option"
-          isDisabled={false}
           value={ph_alcohol}
           onChange={(e) => {
             let { value } = e.target;
@@ -4141,21 +3394,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_alcohol ?? value;
@@ -4188,8 +3428,6 @@ export default function Page2PatientHistory(props) {
         </SelectField>
         <TextField
           label="How much weekly?"
-          isRequired={false}
-          isReadOnly={false}
           value={ph_alcohol_weekly}
           onChange={(e) => {
             let { value } = e.target;
@@ -4254,21 +3492,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_alcohol_weekly ?? value;
@@ -4288,8 +3513,6 @@ export default function Page2PatientHistory(props) {
       </Grid>
       <TextField
         label="How much sleep do you get a day?"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_sleep}
         onChange={(e) => {
           let { value } = e.target;
@@ -4354,21 +3577,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_sleep ?? value;
@@ -4385,8 +3595,6 @@ export default function Page2PatientHistory(props) {
       ></TextField>
       <TextField
         label="Do you exercise regularly (type, frequency)?"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_exercise}
         onChange={(e) => {
           let { value } = e.target;
@@ -4451,21 +3659,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_exercise ?? value;
@@ -4482,8 +3677,6 @@ export default function Page2PatientHistory(props) {
       ></TextField>
       <TextField
         label="Have you traveled in the past year (where)?"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_travel}
         onChange={(e) => {
           let { value } = e.target;
@@ -4548,21 +3741,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_travel ?? value;
@@ -4586,7 +3766,6 @@ export default function Page2PatientHistory(props) {
         <SelectField
           label="Have you ever been pregnant?"
           placeholder="Please select an option"
-          isDisabled={false}
           value={ph_pregnant}
           onChange={(e) => {
             let { value } = e.target;
@@ -4651,21 +3830,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_pregnant ?? value;
@@ -4693,8 +3859,6 @@ export default function Page2PatientHistory(props) {
         </SelectField>
         <TextField
           label="How many live births have you had?"
-          isRequired={false}
-          isReadOnly={false}
           value={ph_live_births}
           onChange={(e) => {
             let { value } = e.target;
@@ -4759,21 +3923,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ph_live_births ?? value;
@@ -4791,8 +3942,6 @@ export default function Page2PatientHistory(props) {
       </Grid>
       <TextField
         label="Complications?"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_complications}
         onChange={(e) => {
           let { value } = e.target;
@@ -4857,21 +4006,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ph_complications ?? value;
@@ -4886,9 +4022,11 @@ export default function Page2PatientHistory(props) {
         hasError={errors.ph_complications?.hasError}
         {...getOverrideProps(overrides, "ph_complications")}
       ></TextField>
-      <ArrayField
-        onChange={async (items) => {
-          let values = items;
+      <TextAreaField
+        label="Review of Symptoms (Please write if you are currently or recently experiencing any of these symptoms): Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urine, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
+        value={ph_symptoms}
+        onChange={(e) => {
+          let { value } = e.target;
           if (onChange) {
             const modelFields = {
               ph_briefly_describe_present_symptoms,
@@ -4930,7 +4068,7 @@ export default function Page2PatientHistory(props) {
               ph_pregnant,
               ph_live_births,
               ph_complications,
-              ph_symptoms: values,
+              ph_symptoms: value,
               ad_people_in_household,
               ad_who_shopping,
               ad_housework,
@@ -4950,64 +4088,22 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
-            values = result?.ph_symptoms ?? values;
+            value = result?.ph_symptoms ?? value;
           }
-          setPh_symptoms(values);
-          setCurrentPh_symptomsValue("");
+          if (errors.ph_symptoms?.hasError) {
+            runValidationTasks("ph_symptoms", value);
+          }
+          setPh_symptoms(value);
         }}
-        currentFieldValue={currentPh_symptomsValue}
-        label={
-          "Review of Symptoms (Please write if you are currently or recently experiencing any of these symptoms): Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urine, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
-        }
-        items={ph_symptoms}
-        hasError={errors?.ph_symptoms?.hasError}
-        runValidationTasks={async () =>
-          await runValidationTasks("ph_symptoms", currentPh_symptomsValue)
-        }
-        errorMessage={errors?.ph_symptoms?.errorMessage}
-        setFieldValue={setCurrentPh_symptomsValue}
-        inputFieldRef={ph_symptomsRef}
-        defaultFieldValue={""}
-      >
-        <TextAreaField
-          label="Review of Symptoms (Please write if you are currently or recently experiencing any of these symptoms): Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urine, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
-          isRequired={true}
-          isReadOnly={false}
-          value={currentPh_symptomsValue}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (errors.ph_symptoms?.hasError) {
-              runValidationTasks("ph_symptoms", value);
-            }
-            setCurrentPh_symptomsValue(value);
-          }}
-          onBlur={() =>
-            runValidationTasks("ph_symptoms", currentPh_symptomsValue)
-          }
-          errorMessage={errors.ph_symptoms?.errorMessage}
-          hasError={errors.ph_symptoms?.hasError}
-          ref={ph_symptomsRef}
-          labelHidden={true}
-          {...getOverrideProps(overrides, "ph_symptoms")}
-        ></TextAreaField>
-      </ArrayField>
+        onBlur={() => runValidationTasks("ph_symptoms", ph_symptoms)}
+        errorMessage={errors.ph_symptoms?.errorMessage}
+        hasError={errors.ph_symptoms?.hasError}
+        {...getOverrideProps(overrides, "ph_symptoms")}
+      ></TextAreaField>
       <Divider
         orientation="horizontal"
         {...getOverrideProps(overrides, "SectionalElement3")}
@@ -5023,8 +4119,6 @@ export default function Page2PatientHistory(props) {
       ></Heading>
       <TextAreaField
         label="How many people in household? (List age & relationship):"
-        isRequired={false}
-        isReadOnly={false}
         value={ad_people_in_household}
         onChange={(e) => {
           let { value } = e.target;
@@ -5089,21 +4183,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_people_in_household ?? value;
@@ -5192,21 +4273,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ad_who_shopping ?? value;
@@ -5287,21 +4355,8 @@ export default function Page2PatientHistory(props) {
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
                 occupation,
-                ph_current_medicines,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
                 insurance_primary_insured_person_dob,
+                race_other,
               };
               const result = onChange(modelFields);
               value = result?.ad_housework ?? value;
@@ -5383,21 +4438,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_hardest_thing ?? value;
@@ -5483,21 +4525,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_stand_up_chair ?? value;
@@ -5605,21 +4634,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_walk_outdoors_flat ?? value;
@@ -5739,21 +4755,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_get_on_toilet ?? value;
@@ -5861,21 +4864,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_reach_5_pound ?? value;
@@ -5983,21 +4973,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_car_doors ?? value;
@@ -6102,21 +5079,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_outside_work ?? value;
@@ -6221,21 +5185,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_wait_in_line ?? value;
@@ -6340,21 +5291,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_lift_heavy ?? value;
@@ -6459,21 +5397,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_lift_heavier ?? value;
@@ -6578,21 +5503,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_ability_climb_2_flights ?? value;
@@ -6724,21 +5636,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_aids_devices_activities ?? value;
@@ -6850,21 +5749,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_categories_help ?? value;
@@ -6884,8 +5770,6 @@ export default function Page2PatientHistory(props) {
       ></Autocomplete>
       <SliderField
         label="On a scale of 0-100, how much pain do you have on a daily basis? (0 = no pain, 100 = severe pain)"
-        isDisabled={false}
-        isRequired={true}
         value={ad_daily_pain_scale}
         onChange={(e) => {
           let value = e;
@@ -6950,21 +5834,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale: value,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_daily_pain_scale ?? value;
@@ -6983,8 +5854,6 @@ export default function Page2PatientHistory(props) {
       ></SliderField>
       <SliderField
         label="Considering all the ways your arthritis affects you, rate how well you are doing on the following scale (0 = very well; 100 = very poorly)"
-        isDisabled={false}
-        isRequired={true}
         value={ad_how_well_doing_scale}
         onChange={(e) => {
           let value = e;
@@ -7049,21 +5918,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale: value,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.ad_how_well_doing_scale ?? value;
@@ -7148,21 +6004,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation: value,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.occupation ?? value;
@@ -7176,1396 +6019,6 @@ export default function Page2PatientHistory(props) {
         errorMessage={errors.occupation?.errorMessage}
         hasError={errors.occupation?.hasError}
         {...getOverrideProps(overrides, "occupation")}
-      ></TextField>
-      <TextField
-        label="Ph current medicines"
-        isRequired={true}
-        isReadOnly={false}
-        value={ph_current_medicines}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines: value,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ph_current_medicines ?? value;
-          }
-          if (errors.ph_current_medicines?.hasError) {
-            runValidationTasks("ph_current_medicines", value);
-          }
-          setPh_current_medicines(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ph_current_medicines", ph_current_medicines)
-        }
-        errorMessage={errors.ph_current_medicines?.errorMessage}
-        hasError={errors.ph_current_medicines?.hasError}
-        {...getOverrideProps(overrides, "ph_current_medicines")}
-      ></TextField>
-      <TextField
-        label="Ad dress yourself"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_dress_yourself}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself: value,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_dress_yourself ?? value;
-          }
-          if (errors.ad_dress_yourself?.hasError) {
-            runValidationTasks("ad_dress_yourself", value);
-          }
-          setAd_dress_yourself(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_dress_yourself", ad_dress_yourself)
-        }
-        errorMessage={errors.ad_dress_yourself?.errorMessage}
-        hasError={errors.ad_dress_yourself?.hasError}
-        {...getOverrideProps(overrides, "ad_dress_yourself")}
-      ></TextField>
-      <TextField
-        label="Ad get in out bed"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_get_in_out_bed}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed: value,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_get_in_out_bed ?? value;
-          }
-          if (errors.ad_get_in_out_bed?.hasError) {
-            runValidationTasks("ad_get_in_out_bed", value);
-          }
-          setAd_get_in_out_bed(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_get_in_out_bed", ad_get_in_out_bed)
-        }
-        errorMessage={errors.ad_get_in_out_bed?.errorMessage}
-        hasError={errors.ad_get_in_out_bed?.hasError}
-        {...getOverrideProps(overrides, "ad_get_in_out_bed")}
-      ></TextField>
-      <TextField
-        label="Ad lift full cup mouth"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_lift_full_cup_mouth}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth: value,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_lift_full_cup_mouth ?? value;
-          }
-          if (errors.ad_lift_full_cup_mouth?.hasError) {
-            runValidationTasks("ad_lift_full_cup_mouth", value);
-          }
-          setAd_lift_full_cup_mouth(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_lift_full_cup_mouth", ad_lift_full_cup_mouth)
-        }
-        errorMessage={errors.ad_lift_full_cup_mouth?.errorMessage}
-        hasError={errors.ad_lift_full_cup_mouth?.hasError}
-        {...getOverrideProps(overrides, "ad_lift_full_cup_mouth")}
-      ></TextField>
-      <TextField
-        label="Ad walk outdoor flat"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_walk_outdoor_flat}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat: value,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_walk_outdoor_flat ?? value;
-          }
-          if (errors.ad_walk_outdoor_flat?.hasError) {
-            runValidationTasks("ad_walk_outdoor_flat", value);
-          }
-          setAd_walk_outdoor_flat(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_walk_outdoor_flat", ad_walk_outdoor_flat)
-        }
-        errorMessage={errors.ad_walk_outdoor_flat?.errorMessage}
-        hasError={errors.ad_walk_outdoor_flat?.hasError}
-        {...getOverrideProps(overrides, "ad_walk_outdoor_flat")}
-      ></TextField>
-      <TextField
-        label="Ad wash dry body"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_wash_dry_body}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body: value,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_wash_dry_body ?? value;
-          }
-          if (errors.ad_wash_dry_body?.hasError) {
-            runValidationTasks("ad_wash_dry_body", value);
-          }
-          setAd_wash_dry_body(value);
-        }}
-        onBlur={() => runValidationTasks("ad_wash_dry_body", ad_wash_dry_body)}
-        errorMessage={errors.ad_wash_dry_body?.errorMessage}
-        hasError={errors.ad_wash_dry_body?.hasError}
-        {...getOverrideProps(overrides, "ad_wash_dry_body")}
-      ></TextField>
-      <TextField
-        label="Ad pick clothing floor"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_pick_clothing_floor}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor: value,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_pick_clothing_floor ?? value;
-          }
-          if (errors.ad_pick_clothing_floor?.hasError) {
-            runValidationTasks("ad_pick_clothing_floor", value);
-          }
-          setAd_pick_clothing_floor(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_pick_clothing_floor", ad_pick_clothing_floor)
-        }
-        errorMessage={errors.ad_pick_clothing_floor?.errorMessage}
-        hasError={errors.ad_pick_clothing_floor?.hasError}
-        {...getOverrideProps(overrides, "ad_pick_clothing_floor")}
-      ></TextField>
-      <TextField
-        label="Ad turn faucets on off"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_turn_faucets_on_off}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off: value,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_turn_faucets_on_off ?? value;
-          }
-          if (errors.ad_turn_faucets_on_off?.hasError) {
-            runValidationTasks("ad_turn_faucets_on_off", value);
-          }
-          setAd_turn_faucets_on_off(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_turn_faucets_on_off", ad_turn_faucets_on_off)
-        }
-        errorMessage={errors.ad_turn_faucets_on_off?.errorMessage}
-        hasError={errors.ad_turn_faucets_on_off?.hasError}
-        {...getOverrideProps(overrides, "ad_turn_faucets_on_off")}
-      ></TextField>
-      <TextField
-        label="Ad get in out car bus train plane"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_get_in_out_car_bus_train_plane}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane: value,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_get_in_out_car_bus_train_plane ?? value;
-          }
-          if (errors.ad_get_in_out_car_bus_train_plane?.hasError) {
-            runValidationTasks("ad_get_in_out_car_bus_train_plane", value);
-          }
-          setAd_get_in_out_car_bus_train_plane(value);
-        }}
-        onBlur={() =>
-          runValidationTasks(
-            "ad_get_in_out_car_bus_train_plane",
-            ad_get_in_out_car_bus_train_plane
-          )
-        }
-        errorMessage={errors.ad_get_in_out_car_bus_train_plane?.errorMessage}
-        hasError={errors.ad_get_in_out_car_bus_train_plane?.hasError}
-        {...getOverrideProps(overrides, "ad_get_in_out_car_bus_train_plane")}
-      ></TextField>
-      <TextField
-        label="Ad walk two miles"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_walk_two_miles}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles: value,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_walk_two_miles ?? value;
-          }
-          if (errors.ad_walk_two_miles?.hasError) {
-            runValidationTasks("ad_walk_two_miles", value);
-          }
-          setAd_walk_two_miles(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_walk_two_miles", ad_walk_two_miles)
-        }
-        errorMessage={errors.ad_walk_two_miles?.errorMessage}
-        hasError={errors.ad_walk_two_miles?.hasError}
-        {...getOverrideProps(overrides, "ad_walk_two_miles")}
-      ></TextField>
-      <TextField
-        label="Ad recreational activities sports"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_recreational_activities_sports}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports: value,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_recreational_activities_sports ?? value;
-          }
-          if (errors.ad_recreational_activities_sports?.hasError) {
-            runValidationTasks("ad_recreational_activities_sports", value);
-          }
-          setAd_recreational_activities_sports(value);
-        }}
-        onBlur={() =>
-          runValidationTasks(
-            "ad_recreational_activities_sports",
-            ad_recreational_activities_sports
-          )
-        }
-        errorMessage={errors.ad_recreational_activities_sports?.errorMessage}
-        hasError={errors.ad_recreational_activities_sports?.hasError}
-        {...getOverrideProps(overrides, "ad_recreational_activities_sports")}
-      ></TextField>
-      <TextField
-        label="Ad good night sleep"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_good_night_sleep}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep: value,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_good_night_sleep ?? value;
-          }
-          if (errors.ad_good_night_sleep?.hasError) {
-            runValidationTasks("ad_good_night_sleep", value);
-          }
-          setAd_good_night_sleep(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_good_night_sleep", ad_good_night_sleep)
-        }
-        errorMessage={errors.ad_good_night_sleep?.errorMessage}
-        hasError={errors.ad_good_night_sleep?.hasError}
-        {...getOverrideProps(overrides, "ad_good_night_sleep")}
-      ></TextField>
-      <TextField
-        label="Ad deal anxiety nervous"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_deal_anxiety_nervous}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous: value,
-              ad_deal_depression_blue,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_deal_anxiety_nervous ?? value;
-          }
-          if (errors.ad_deal_anxiety_nervous?.hasError) {
-            runValidationTasks("ad_deal_anxiety_nervous", value);
-          }
-          setAd_deal_anxiety_nervous(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_deal_anxiety_nervous", ad_deal_anxiety_nervous)
-        }
-        errorMessage={errors.ad_deal_anxiety_nervous?.errorMessage}
-        hasError={errors.ad_deal_anxiety_nervous?.hasError}
-        {...getOverrideProps(overrides, "ad_deal_anxiety_nervous")}
-      ></TextField>
-      <TextField
-        label="Ad deal depression blue"
-        isRequired={true}
-        isReadOnly={false}
-        value={ad_deal_depression_blue}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicine_1,
-              ph_current_medicine_2,
-              ph_current_medicine_3,
-              ph_current_medicine_4,
-              ph_current_medicine_5,
-              ph_current_medicine_6,
-              ph_current_medicine_7,
-              ph_current_medicine_8,
-              ph_current_medicine_9,
-              ph_current_medicine_10,
-              ph_current_medicine_11,
-              ph_current_medicine_12,
-              ph_current_medicine_13,
-              ph_current_medicine_14,
-              ph_current_medicine_15,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ph_symptoms,
-              ad_people_in_household,
-              ad_who_shopping,
-              ad_housework,
-              ad_hardest_thing,
-              ad_ability_stand_up_chair,
-              ad_ability_walk_outdoors_flat,
-              ad_ability_get_on_toilet,
-              ad_ability_reach_5_pound,
-              ad_ability_car_doors,
-              ad_ability_outside_work,
-              ad_ability_wait_in_line,
-              ad_ability_lift_heavy,
-              ad_ability_lift_heavier,
-              ad_ability_climb_2_flights,
-              ad_aids_devices_activities,
-              ad_categories_help,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-              occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue: value,
-              insurance_primary_insured_person_dob,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_deal_depression_blue ?? value;
-          }
-          if (errors.ad_deal_depression_blue?.hasError) {
-            runValidationTasks("ad_deal_depression_blue", value);
-          }
-          setAd_deal_depression_blue(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ad_deal_depression_blue", ad_deal_depression_blue)
-        }
-        errorMessage={errors.ad_deal_depression_blue?.errorMessage}
-        hasError={errors.ad_deal_depression_blue?.hasError}
-        {...getOverrideProps(overrides, "ad_deal_depression_blue")}
       ></TextField>
       <TextField
         label="Insurance primary insured person dob"
@@ -8636,21 +6089,8 @@ export default function Page2PatientHistory(props) {
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
               occupation,
-              ph_current_medicines,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
               insurance_primary_insured_person_dob: value,
+              race_other,
             };
             const result = onChange(modelFields);
             value = result?.insurance_primary_insured_person_dob ?? value;
@@ -8669,6 +6109,90 @@ export default function Page2PatientHistory(props) {
         errorMessage={errors.insurance_primary_insured_person_dob?.errorMessage}
         hasError={errors.insurance_primary_insured_person_dob?.hasError}
         {...getOverrideProps(overrides, "insurance_primary_insured_person_dob")}
+      ></TextField>
+      <TextField
+        label="Race other"
+        isRequired={false}
+        isReadOnly={false}
+        value={race_other}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_current_medicine_1,
+              ph_current_medicine_2,
+              ph_current_medicine_3,
+              ph_current_medicine_4,
+              ph_current_medicine_5,
+              ph_current_medicine_6,
+              ph_current_medicine_7,
+              ph_current_medicine_8,
+              ph_current_medicine_9,
+              ph_current_medicine_10,
+              ph_current_medicine_11,
+              ph_current_medicine_12,
+              ph_current_medicine_13,
+              ph_current_medicine_14,
+              ph_current_medicine_15,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ph_symptoms,
+              ad_people_in_household,
+              ad_who_shopping,
+              ad_housework,
+              ad_hardest_thing,
+              ad_ability_stand_up_chair,
+              ad_ability_walk_outdoors_flat,
+              ad_ability_get_on_toilet,
+              ad_ability_reach_5_pound,
+              ad_ability_car_doors,
+              ad_ability_outside_work,
+              ad_ability_wait_in_line,
+              ad_ability_lift_heavy,
+              ad_ability_lift_heavier,
+              ad_ability_climb_2_flights,
+              ad_aids_devices_activities,
+              ad_categories_help,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+              occupation,
+              insurance_primary_insured_person_dob,
+              race_other: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.race_other ?? value;
+          }
+          if (errors.race_other?.hasError) {
+            runValidationTasks("race_other", value);
+          }
+          setRace_other(value);
+        }}
+        onBlur={() => runValidationTasks("race_other", race_other)}
+        errorMessage={errors.race_other?.errorMessage}
+        hasError={errors.race_other?.hasError}
+        {...getOverrideProps(overrides, "race_other")}
       ></TextField>
       <Flex
         justifyContent="space-between"

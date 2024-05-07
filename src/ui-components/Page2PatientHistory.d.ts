@@ -62,7 +62,7 @@ export declare type Page2PatientHistoryInputValues = {
     ph_pregnant?: string;
     ph_live_births?: string;
     ph_complications?: string;
-    ph_symptoms?: string[];
+    ph_symptoms?: string;
     ad_people_in_household?: string;
     ad_who_shopping?: string;
     ad_housework?: string;
@@ -82,21 +82,8 @@ export declare type Page2PatientHistoryInputValues = {
     ad_daily_pain_scale?: number;
     ad_how_well_doing_scale?: number;
     occupation?: string;
-    ph_current_medicines?: string;
-    ad_dress_yourself?: string;
-    ad_get_in_out_bed?: string;
-    ad_lift_full_cup_mouth?: string;
-    ad_walk_outdoor_flat?: string;
-    ad_wash_dry_body?: string;
-    ad_pick_clothing_floor?: string;
-    ad_turn_faucets_on_off?: string;
-    ad_get_in_out_car_bus_train_plane?: string;
-    ad_walk_two_miles?: string;
-    ad_recreational_activities_sports?: string;
-    ad_good_night_sleep?: string;
-    ad_deal_anxiety_nervous?: string;
-    ad_deal_depression_blue?: string;
     insurance_primary_insured_person_dob?: string;
+    race_other?: string;
 };
 export declare type Page2PatientHistoryValidationValues = {
     ph_briefly_describe_present_symptoms?: ValidationFunction<string>;
@@ -158,21 +145,8 @@ export declare type Page2PatientHistoryValidationValues = {
     ad_daily_pain_scale?: ValidationFunction<number>;
     ad_how_well_doing_scale?: ValidationFunction<number>;
     occupation?: ValidationFunction<string>;
-    ph_current_medicines?: ValidationFunction<string>;
-    ad_dress_yourself?: ValidationFunction<string>;
-    ad_get_in_out_bed?: ValidationFunction<string>;
-    ad_lift_full_cup_mouth?: ValidationFunction<string>;
-    ad_walk_outdoor_flat?: ValidationFunction<string>;
-    ad_wash_dry_body?: ValidationFunction<string>;
-    ad_pick_clothing_floor?: ValidationFunction<string>;
-    ad_turn_faucets_on_off?: ValidationFunction<string>;
-    ad_get_in_out_car_bus_train_plane?: ValidationFunction<string>;
-    ad_walk_two_miles?: ValidationFunction<string>;
-    ad_recreational_activities_sports?: ValidationFunction<string>;
-    ad_good_night_sleep?: ValidationFunction<string>;
-    ad_deal_anxiety_nervous?: ValidationFunction<string>;
-    ad_deal_depression_blue?: ValidationFunction<string>;
     insurance_primary_insured_person_dob?: ValidationFunction<string>;
+    race_other?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type Page2PatientHistoryOverridesProps = {
@@ -256,21 +230,8 @@ export declare type Page2PatientHistoryOverridesProps = {
     ad_daily_pain_scale?: PrimitiveOverrideProps<SliderFieldProps>;
     ad_how_well_doing_scale?: PrimitiveOverrideProps<SliderFieldProps>;
     occupation?: PrimitiveOverrideProps<TextFieldProps>;
-    ph_current_medicines?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_dress_yourself?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_get_in_out_bed?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_lift_full_cup_mouth?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_walk_outdoor_flat?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_wash_dry_body?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_pick_clothing_floor?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_turn_faucets_on_off?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_get_in_out_car_bus_train_plane?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_walk_two_miles?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_recreational_activities_sports?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_good_night_sleep?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_deal_anxiety_nervous?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_deal_depression_blue?: PrimitiveOverrideProps<TextFieldProps>;
     insurance_primary_insured_person_dob?: PrimitiveOverrideProps<TextFieldProps>;
+    race_other?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type Page2PatientHistoryProps = React.PropsWithChildren<{
     overrides?: Page2PatientHistoryOverridesProps | undefined | null;

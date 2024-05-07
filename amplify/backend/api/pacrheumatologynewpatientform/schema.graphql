@@ -1,3 +1,59 @@
+type PatientHistory @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  first_name: String!
+  last_name: String!
+  date_of_birth: AWSDate!
+  ph_briefly_describe_present_symptoms: String!
+  ph_previous_treatment_for_problem: String
+  ph_current_medicines: String!
+  ph_allergy_to_med: Boolean!
+  ph_allergy_to_med_list: String
+  ph_rh_history_osteoarthritis: String
+  ph_rh_history_gout: String
+  ph_rh_history_juvenile_arthritis: String
+  ph_rh_history_vasculitis: String
+  ph_rh_history_lupus: String
+  ph_rh_history_rheumatoid: String
+  ph_rh_history_spondyloarthropathy: String
+  ph_rh_history_osteoporosis: String
+  ph_past_medical_history: String
+  ph_past_surgery_history: String
+  ph_smoke: String!
+  ph_drugs: String!
+  ph_alcohol: String!
+  ph_alcohol_weekly: String
+  ph_sleep: String
+  ph_exercise: String
+  ph_travel: String
+  ph_pregnant: String
+  ph_live_births: String
+  ph_complications: String
+  ad_people_in_household: String
+  ph_symptoms: [String!]!
+}
+
+type Rapid3 @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  first_name: String!
+  last_name: String!
+  date_of_birth: AWSDate!
+  ad_dress_yourself: String!
+  ad_get_in_out_bed: String!
+  ad_lift_full_cup_mouth: String!
+  ad_walk_outdoor_flat: String!
+  ad_wash_dry_body: String!
+  ad_pick_clothing_floor: String!
+  ad_turn_faucets_on_off: String!
+  ad_get_in_out_car_bus_train_plane: String!
+  ad_walk_two_miles: String!
+  ad_recreational_activities_sports: String!
+  ad_good_night_sleep: String!
+  ad_deal_anxiety_nervous: String!
+  ad_deal_depression_blue: String!
+  ad_daily_pain_scale: Float
+  ad_how_well_doing_scale: Float
+}
+
 type PrivacyNotice @model @auth(rules: [{allow: public}]) {
   id: ID!
   full_name: String
@@ -12,8 +68,9 @@ type PrivacyNotice @model @auth(rules: [{allow: public}]) {
   open_payment_signature: String!
   open_payment_date: AWSDate!
   signature: String!
-  first_name: String
-  last_name: String
+  first_name: String!
+  last_name: String!
+  date_of_birth: AWSDate!
 }
 
 type NewPatient @model @auth(rules: [{allow: public}]) {
@@ -38,7 +95,7 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   social_security: String
   employer: String
   education: String!
-  veteran: Boolean!
+  veteran: String!
   occupation: String!
   preferred_pharmacy: String
   insurance_primary_name: String!
@@ -62,49 +119,8 @@ type NewPatient @model @auth(rules: [{allow: public}]) {
   emergency_contact_relationship: String!
   signature_page_1: String!
   signature_page_1_date: AWSDate!
-  ph_briefly_describe_present_symptoms: String!
-  ph_previous_treatment_for_problem: String
-  ph_current_medicines: String!
   emergency_contact_phone: String!
-  ph_allergy_to_med: Boolean!
-  ph_allergy_to_med_list: String
-  ph_rh_history_osteoarthritis: String
-  ph_rh_history_gout: String
-  ph_rh_history_vasculitis: String
-  ph_rh_history_lupus: String
-  ph_rh_history_rheumatoid: String
-  ph_rh_history_spondyloarthropathy: String
-  ph_rh_history_osteoporosis: String
-  ph_past_medical_history: String
-  ph_past_surgery_history: String
-  ph_smoke: String!
-  ph_alcohol: String!
-  ph_rh_history_juvenile_arthritis: String
-  ph_sleep: String
-  ph_exercise: String
-  ph_travel: String
-  ph_pregnant: String
-  ph_live_births: String
-  ph_complications: String
-  ph_drugs: String!
-  ad_people_in_household: String
-  ad_dress_yourself: String!
-  ad_get_in_out_bed: String!
-  ad_lift_full_cup_mouth: String!
-  ad_walk_outdoor_flat: String!
-  ad_wash_dry_body: String!
-  ad_pick_clothing_floor: String!
-  ad_turn_faucets_on_off: String!
-  ad_get_in_out_car_bus_train_plane: String!
-  ad_walk_two_miles: String!
-  ad_recreational_activities_sports: String!
-  ad_good_night_sleep: String!
-  ad_daily_pain_scale: Float!
-  ad_how_well_doing_scale: Float!
-  ph_alcohol_weekly: String
-  ph_symptoms: [String!]!
-  ad_deal_anxiety_nervous: String!
-  ad_deal_depression_blue: String!
   insurance_primary_insured_person_dob: AWSDate
+  race_other: String
 }
  

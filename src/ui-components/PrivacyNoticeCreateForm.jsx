@@ -47,6 +47,7 @@ export default function PrivacyNoticeCreateForm(props) {
     last_name: "",
     open_payment_signature: "",
     open_payment_date: "",
+    date_of_birth: "",
   };
   const [authorized_1, setAuthorized_1] = React.useState(
     initialValues.authorized_1
@@ -77,6 +78,9 @@ export default function PrivacyNoticeCreateForm(props) {
   const [open_payment_date, setOpen_payment_date] = React.useState(
     initialValues.open_payment_date
   );
+  const [date_of_birth, setDate_of_birth] = React.useState(
+    initialValues.date_of_birth
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setAuthorized_1(initialValues.authorized_1);
@@ -92,6 +96,7 @@ export default function PrivacyNoticeCreateForm(props) {
     setLast_name(initialValues.last_name);
     setOpen_payment_signature(initialValues.open_payment_signature);
     setOpen_payment_date(initialValues.open_payment_date);
+    setDate_of_birth(initialValues.date_of_birth);
     setErrors({});
   };
   const validations = {
@@ -104,10 +109,11 @@ export default function PrivacyNoticeCreateForm(props) {
     decline: [],
     signature: [{ type: "Required" }],
     date: [{ type: "Required" }],
-    first_name: [],
-    last_name: [],
+    first_name: [{ type: "Required" }],
+    last_name: [{ type: "Required" }],
     open_payment_signature: [{ type: "Required" }],
     open_payment_date: [{ type: "Required" }],
+    date_of_birth: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -148,6 +154,7 @@ export default function PrivacyNoticeCreateForm(props) {
           last_name,
           open_payment_signature,
           open_payment_date,
+          date_of_birth,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -229,6 +236,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.authorized_1 ?? value;
@@ -265,6 +273,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.relationship_1 ?? value;
@@ -308,6 +317,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.authorized_2 ?? value;
@@ -344,6 +354,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.relationship_2 ?? value;
@@ -387,6 +398,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.authorized_3 ?? value;
@@ -423,6 +435,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.relationship_3 ?? value;
@@ -460,6 +473,7 @@ export default function PrivacyNoticeCreateForm(props) {
               last_name,
               open_payment_signature,
               open_payment_date,
+              date_of_birth,
             };
             const result = onChange(modelFields);
             value = result?.decline ?? value;
@@ -502,6 +516,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.signature ?? value;
@@ -539,6 +554,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.date ?? value;
@@ -578,7 +594,7 @@ export default function PrivacyNoticeCreateForm(props) {
       >
         <TextField
           label="First name"
-          isRequired={false}
+          isRequired={true}
           isReadOnly={false}
           value={first_name}
           onChange={(e) => {
@@ -598,6 +614,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.first_name ?? value;
@@ -614,7 +631,7 @@ export default function PrivacyNoticeCreateForm(props) {
         ></TextField>
         <TextField
           label="Last name"
-          isRequired={false}
+          isRequired={true}
           isReadOnly={false}
           value={last_name}
           onChange={(e) => {
@@ -634,6 +651,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name: value,
                 open_payment_signature,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.last_name ?? value;
@@ -685,6 +703,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature: value,
                 open_payment_date,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.open_payment_signature ?? value;
@@ -724,6 +743,7 @@ export default function PrivacyNoticeCreateForm(props) {
                 last_name,
                 open_payment_signature,
                 open_payment_date: value,
+                date_of_birth,
               };
               const result = onChange(modelFields);
               value = result?.open_payment_date ?? value;
@@ -741,6 +761,44 @@ export default function PrivacyNoticeCreateForm(props) {
           {...getOverrideProps(overrides, "open_payment_date")}
         ></TextField>
       </Grid>
+      <TextField
+        label="Date of birth"
+        isRequired={true}
+        isReadOnly={false}
+        type="date"
+        value={date_of_birth}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              authorized_1,
+              relationship_1,
+              authorized_2,
+              relationship_2,
+              authorized_3,
+              relationship_3,
+              decline,
+              signature,
+              date,
+              first_name,
+              last_name,
+              open_payment_signature,
+              open_payment_date,
+              date_of_birth: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.date_of_birth ?? value;
+          }
+          if (errors.date_of_birth?.hasError) {
+            runValidationTasks("date_of_birth", value);
+          }
+          setDate_of_birth(value);
+        }}
+        onBlur={() => runValidationTasks("date_of_birth", date_of_birth)}
+        errorMessage={errors.date_of_birth?.errorMessage}
+        hasError={errors.date_of_birth?.hasError}
+        {...getOverrideProps(overrides, "date_of_birth")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

@@ -8,14 +8,11 @@
 import * as React from "react";
 import {
   Autocomplete,
-  Badge,
   Button,
   Divider,
   Flex,
   Grid,
   Heading,
-  Icon,
-  ScrollView,
   SelectField,
   SliderField,
   SwitchField,
@@ -28,161 +25,6 @@ import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { generateClient } from "aws-amplify/api";
 import { createNewPatient } from "../graphql/mutations";
 const client = generateClient();
-function ArrayField({
-  items = [],
-  onChange,
-  label,
-  inputFieldRef,
-  children,
-  hasError,
-  setFieldValue,
-  currentFieldValue,
-  defaultFieldValue,
-  lengthLimit,
-  getBadgeText,
-  runValidationTasks,
-  errorMessage,
-}) {
-  const labelElement = <Text>{label}</Text>;
-  const {
-    tokens: {
-      components: {
-        fieldmessages: { error: errorStyles },
-      },
-    },
-  } = useTheme();
-  const [selectedBadgeIndex, setSelectedBadgeIndex] = React.useState();
-  const [isEditing, setIsEditing] = React.useState();
-  React.useEffect(() => {
-    if (isEditing) {
-      inputFieldRef?.current?.focus();
-    }
-  }, [isEditing]);
-  const removeItem = async (removeIndex) => {
-    const newItems = items.filter((value, index) => index !== removeIndex);
-    await onChange(newItems);
-    setSelectedBadgeIndex(undefined);
-  };
-  const addItem = async () => {
-    const { hasError } = runValidationTasks();
-    if (
-      currentFieldValue !== undefined &&
-      currentFieldValue !== null &&
-      currentFieldValue !== "" &&
-      !hasError
-    ) {
-      const newItems = [...items];
-      if (selectedBadgeIndex !== undefined) {
-        newItems[selectedBadgeIndex] = currentFieldValue;
-        setSelectedBadgeIndex(undefined);
-      } else {
-        newItems.push(currentFieldValue);
-      }
-      await onChange(newItems);
-      setIsEditing(false);
-    }
-  };
-  const arraySection = (
-    <React.Fragment>
-      {!!items?.length && (
-        <ScrollView height="inherit" width="inherit" maxHeight={"7rem"}>
-          {items.map((value, index) => {
-            return (
-              <Badge
-                key={index}
-                style={{
-                  cursor: "pointer",
-                  alignItems: "center",
-                  marginRight: 3,
-                  marginTop: 3,
-                  backgroundColor:
-                    index === selectedBadgeIndex ? "#B8CEF9" : "",
-                }}
-                onClick={() => {
-                  setSelectedBadgeIndex(index);
-                  setFieldValue(items[index]);
-                  setIsEditing(true);
-                }}
-              >
-                {getBadgeText ? getBadgeText(value) : value.toString()}
-                <Icon
-                  style={{
-                    cursor: "pointer",
-                    paddingLeft: 3,
-                    width: 20,
-                    height: 20,
-                  }}
-                  viewBox={{ width: 20, height: 20 }}
-                  paths={[
-                    {
-                      d: "M10 10l5.09-5.09L10 10l5.09 5.09L10 10zm0 0L4.91 4.91 10 10l-5.09 5.09L10 10z",
-                      stroke: "black",
-                    },
-                  ]}
-                  ariaLabel="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    removeItem(index);
-                  }}
-                />
-              </Badge>
-            );
-          })}
-        </ScrollView>
-      )}
-      <Divider orientation="horizontal" marginTop={5} />
-    </React.Fragment>
-  );
-  if (lengthLimit !== undefined && items.length >= lengthLimit && !isEditing) {
-    return (
-      <React.Fragment>
-        {labelElement}
-        {arraySection}
-      </React.Fragment>
-    );
-  }
-  return (
-    <React.Fragment>
-      {labelElement}
-      {isEditing && children}
-      {!isEditing ? (
-        <>
-          <Button
-            onClick={() => {
-              setIsEditing(true);
-            }}
-          >
-            Add item
-          </Button>
-          {errorMessage && hasError && (
-            <Text color={errorStyles.color} fontSize={errorStyles.fontSize}>
-              {errorMessage}
-            </Text>
-          )}
-        </>
-      ) : (
-        <Flex justifyContent="flex-end">
-          {(currentFieldValue || isEditing) && (
-            <Button
-              children="Cancel"
-              type="button"
-              size="small"
-              onClick={() => {
-                setFieldValue(defaultFieldValue);
-                setIsEditing(false);
-                setSelectedBadgeIndex(undefined);
-              }}
-            ></Button>
-          )}
-          <Button size="small" variation="link" onClick={addItem}>
-            {selectedBadgeIndex !== undefined ? "Save" : "Add"}
-          </Button>
-        </Flex>
-      )}
-      {arraySection}
-    </React.Fragment>
-  );
-}
 export default function NewPatientCreateForm(props) {
   const {
     clearOnSuccess = true,
@@ -204,20 +46,12 @@ export default function NewPatientCreateForm(props) {
     marital_status: "",
     ethnicity: "",
     race: "",
-    primary_language: "",
-    address: "",
+    race_other: "",
     city: "",
-    state: "",
-    zip: "",
-    home_phone: "",
-    work_phone: "",
-    mobile_phone: "",
-    email: "",
     social_security: "",
     employer: "",
     education: "",
-    veteran: false,
-    occupation: "",
+    primary_language: "",
     full_time: false,
     preferred_pharmacy: "",
     insurance_primary_name: "",
@@ -244,7 +78,6 @@ export default function NewPatientCreateForm(props) {
     signature_page_1_date: "",
     ph_briefly_describe_present_symptoms: "",
     ph_previous_treatment_for_problem: "",
-    ph_current_medicines: "",
     ph_allergy_to_med: false,
     ph_allergy_to_med_list: "",
     ph_rh_history_osteoarthritis: "",
@@ -268,7 +101,7 @@ export default function NewPatientCreateForm(props) {
     ph_live_births: "",
     ph_complications: "",
     ad_people_in_household: "",
-    ph_symptoms: [],
+    ph_symptoms: undefined,
     ad_dress_yourself: "",
     ad_get_in_out_bed: "",
     ad_lift_full_cup_mouth: "",
@@ -276,14 +109,24 @@ export default function NewPatientCreateForm(props) {
     ad_wash_dry_body: "",
     ad_pick_clothing_floor: "",
     ad_turn_faucets_on_off: "",
-    ad_get_in_out_car_bus_train_plane: "",
-    ad_walk_two_miles: "",
+    address: "",
+    veteran: false,
+    occupation: "",
     ad_recreational_activities_sports: "",
     ad_good_night_sleep: "",
     ad_deal_anxiety_nervous: "",
     ad_deal_depression_blue: "",
     ad_daily_pain_scale: 0,
     ad_how_well_doing_scale: 0,
+    ph_current_medicines: "",
+    ad_get_in_out_car_bus_train_plane: "",
+    ad_walk_two_miles: "",
+    state: "",
+    zip: "",
+    home_phone: "",
+    work_phone: "",
+    mobile_phone: "",
+    email: "",
   };
   const [date, setDate] = React.useState(initialValues.date);
   const [last_name, setLast_name] = React.useState(initialValues.last_name);
@@ -297,26 +140,16 @@ export default function NewPatientCreateForm(props) {
   );
   const [ethnicity, setEthnicity] = React.useState(initialValues.ethnicity);
   const [race, setRace] = React.useState(initialValues.race);
-  const [primary_language, setPrimary_language] = React.useState(
-    initialValues.primary_language
-  );
-  const [address, setAddress] = React.useState(initialValues.address);
+  const [race_other, setRace_other] = React.useState(initialValues.race_other);
   const [city, setCity] = React.useState(initialValues.city);
-  const [state, setState] = React.useState(initialValues.state);
-  const [zip, setZip] = React.useState(initialValues.zip);
-  const [home_phone, setHome_phone] = React.useState(initialValues.home_phone);
-  const [work_phone, setWork_phone] = React.useState(initialValues.work_phone);
-  const [mobile_phone, setMobile_phone] = React.useState(
-    initialValues.mobile_phone
-  );
-  const [email, setEmail] = React.useState(initialValues.email);
   const [social_security, setSocial_security] = React.useState(
     initialValues.social_security
   );
   const [employer, setEmployer] = React.useState(initialValues.employer);
   const [education, setEducation] = React.useState(initialValues.education);
-  const [veteran, setVeteran] = React.useState(initialValues.veteran);
-  const [occupation, setOccupation] = React.useState(initialValues.occupation);
+  const [primary_language, setPrimary_language] = React.useState(
+    initialValues.primary_language
+  );
   const [full_time, setFull_time] = React.useState(initialValues.full_time);
   const [preferred_pharmacy, setPreferred_pharmacy] = React.useState(
     initialValues.preferred_pharmacy
@@ -389,9 +222,6 @@ export default function NewPatientCreateForm(props) {
     ph_previous_treatment_for_problem,
     setPh_previous_treatment_for_problem,
   ] = React.useState(initialValues.ph_previous_treatment_for_problem);
-  const [ph_current_medicines, setPh_current_medicines] = React.useState(
-    initialValues.ph_current_medicines
-  );
   const [ph_allergy_to_med, setPh_allergy_to_med] = React.useState(
     initialValues.ph_allergy_to_med
   );
@@ -473,13 +303,9 @@ export default function NewPatientCreateForm(props) {
   const [ad_turn_faucets_on_off, setAd_turn_faucets_on_off] = React.useState(
     initialValues.ad_turn_faucets_on_off
   );
-  const [
-    ad_get_in_out_car_bus_train_plane,
-    setAd_get_in_out_car_bus_train_plane,
-  ] = React.useState(initialValues.ad_get_in_out_car_bus_train_plane);
-  const [ad_walk_two_miles, setAd_walk_two_miles] = React.useState(
-    initialValues.ad_walk_two_miles
-  );
+  const [address, setAddress] = React.useState(initialValues.address);
+  const [veteran, setVeteran] = React.useState(initialValues.veteran);
+  const [occupation, setOccupation] = React.useState(initialValues.occupation);
   const [
     ad_recreational_activities_sports,
     setAd_recreational_activities_sports,
@@ -499,6 +325,24 @@ export default function NewPatientCreateForm(props) {
   const [ad_how_well_doing_scale, setAd_how_well_doing_scale] = React.useState(
     initialValues.ad_how_well_doing_scale
   );
+  const [ph_current_medicines, setPh_current_medicines] = React.useState(
+    initialValues.ph_current_medicines
+  );
+  const [
+    ad_get_in_out_car_bus_train_plane,
+    setAd_get_in_out_car_bus_train_plane,
+  ] = React.useState(initialValues.ad_get_in_out_car_bus_train_plane);
+  const [ad_walk_two_miles, setAd_walk_two_miles] = React.useState(
+    initialValues.ad_walk_two_miles
+  );
+  const [state, setState] = React.useState(initialValues.state);
+  const [zip, setZip] = React.useState(initialValues.zip);
+  const [home_phone, setHome_phone] = React.useState(initialValues.home_phone);
+  const [work_phone, setWork_phone] = React.useState(initialValues.work_phone);
+  const [mobile_phone, setMobile_phone] = React.useState(
+    initialValues.mobile_phone
+  );
+  const [email, setEmail] = React.useState(initialValues.email);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setDate(initialValues.date);
@@ -509,20 +353,12 @@ export default function NewPatientCreateForm(props) {
     setMarital_status(initialValues.marital_status);
     setEthnicity(initialValues.ethnicity);
     setRace(initialValues.race);
-    setPrimary_language(initialValues.primary_language);
-    setAddress(initialValues.address);
+    setRace_other(initialValues.race_other);
     setCity(initialValues.city);
-    setState(initialValues.state);
-    setZip(initialValues.zip);
-    setHome_phone(initialValues.home_phone);
-    setWork_phone(initialValues.work_phone);
-    setMobile_phone(initialValues.mobile_phone);
-    setEmail(initialValues.email);
     setSocial_security(initialValues.social_security);
     setEmployer(initialValues.employer);
     setEducation(initialValues.education);
-    setVeteran(initialValues.veteran);
-    setOccupation(initialValues.occupation);
+    setPrimary_language(initialValues.primary_language);
     setFull_time(initialValues.full_time);
     setPreferred_pharmacy(initialValues.preferred_pharmacy);
     setInsurance_primary_name(initialValues.insurance_primary_name);
@@ -561,7 +397,6 @@ export default function NewPatientCreateForm(props) {
     setPh_previous_treatment_for_problem(
       initialValues.ph_previous_treatment_for_problem
     );
-    setPh_current_medicines(initialValues.ph_current_medicines);
     setPh_allergy_to_med(initialValues.ph_allergy_to_med);
     setPh_allergy_to_med_list(initialValues.ph_allergy_to_med_list);
     setPh_rh_history_osteoarthritis(initialValues.ph_rh_history_osteoarthritis);
@@ -590,7 +425,6 @@ export default function NewPatientCreateForm(props) {
     setPh_complications(initialValues.ph_complications);
     setAd_people_in_household(initialValues.ad_people_in_household);
     setPh_symptoms(initialValues.ph_symptoms);
-    setCurrentPh_symptomsValue(undefined);
     setAd_dress_yourself(initialValues.ad_dress_yourself);
     setAd_get_in_out_bed(initialValues.ad_get_in_out_bed);
     setAd_lift_full_cup_mouth(initialValues.ad_lift_full_cup_mouth);
@@ -598,10 +432,9 @@ export default function NewPatientCreateForm(props) {
     setAd_wash_dry_body(initialValues.ad_wash_dry_body);
     setAd_pick_clothing_floor(initialValues.ad_pick_clothing_floor);
     setAd_turn_faucets_on_off(initialValues.ad_turn_faucets_on_off);
-    setAd_get_in_out_car_bus_train_plane(
-      initialValues.ad_get_in_out_car_bus_train_plane
-    );
-    setAd_walk_two_miles(initialValues.ad_walk_two_miles);
+    setAddress(initialValues.address);
+    setVeteran(initialValues.veteran);
+    setOccupation(initialValues.occupation);
     setAd_recreational_activities_sports(
       initialValues.ad_recreational_activities_sports
     );
@@ -610,11 +443,19 @@ export default function NewPatientCreateForm(props) {
     setAd_deal_depression_blue(initialValues.ad_deal_depression_blue);
     setAd_daily_pain_scale(initialValues.ad_daily_pain_scale);
     setAd_how_well_doing_scale(initialValues.ad_how_well_doing_scale);
+    setPh_current_medicines(initialValues.ph_current_medicines);
+    setAd_get_in_out_car_bus_train_plane(
+      initialValues.ad_get_in_out_car_bus_train_plane
+    );
+    setAd_walk_two_miles(initialValues.ad_walk_two_miles);
+    setState(initialValues.state);
+    setZip(initialValues.zip);
+    setHome_phone(initialValues.home_phone);
+    setWork_phone(initialValues.work_phone);
+    setMobile_phone(initialValues.mobile_phone);
+    setEmail(initialValues.email);
     setErrors({});
   };
-  const [currentPh_symptomsValue, setCurrentPh_symptomsValue] =
-    React.useState(undefined);
-  const ph_symptomsRef = React.createRef();
   const validations = {
     date: [{ type: "Required" }],
     last_name: [{ type: "Required" }],
@@ -624,20 +465,12 @@ export default function NewPatientCreateForm(props) {
     marital_status: [{ type: "Required" }],
     ethnicity: [],
     race: [],
-    primary_language: [],
-    address: [{ type: "Required" }],
+    race_other: [],
     city: [{ type: "Required" }],
-    state: [{ type: "Required" }],
-    zip: [{ type: "Required" }],
-    home_phone: [{ type: "Required" }, { type: "Phone" }],
-    work_phone: [],
-    mobile_phone: [],
-    email: [{ type: "Required" }],
     social_security: [],
     employer: [],
     education: [{ type: "Required" }],
-    veteran: [{ type: "Required" }],
-    occupation: [{ type: "Required" }],
+    primary_language: [],
     full_time: [],
     preferred_pharmacy: [],
     insurance_primary_name: [{ type: "Required" }],
@@ -662,10 +495,9 @@ export default function NewPatientCreateForm(props) {
     emergency_contact_relationship: [{ type: "Required" }],
     signature_page_1: [{ type: "Required" }],
     signature_page_1_date: [{ type: "Required" }],
-    ph_briefly_describe_present_symptoms: [{ type: "Required" }],
+    ph_briefly_describe_present_symptoms: [],
     ph_previous_treatment_for_problem: [],
-    ph_current_medicines: [{ type: "Required" }],
-    ph_allergy_to_med: [{ type: "Required" }],
+    ph_allergy_to_med: [],
     ph_allergy_to_med_list: [],
     ph_rh_history_osteoarthritis: [],
     ph_rh_history_gout: [],
@@ -677,9 +509,9 @@ export default function NewPatientCreateForm(props) {
     ph_rh_history_osteoporosis: [],
     ph_past_medical_history: [],
     ph_past_surgery_history: [],
-    ph_smoke: [{ type: "Required" }],
-    ph_drugs: [{ type: "Required" }],
-    ph_alcohol: [{ type: "Required" }],
+    ph_smoke: [],
+    ph_drugs: [],
+    ph_alcohol: [],
     ph_alcohol_weekly: [],
     ph_sleep: [],
     ph_exercise: [],
@@ -688,22 +520,32 @@ export default function NewPatientCreateForm(props) {
     ph_live_births: [],
     ph_complications: [],
     ad_people_in_household: [],
-    ph_symptoms: [{ type: "Required" }],
-    ad_dress_yourself: [{ type: "Required" }],
-    ad_get_in_out_bed: [{ type: "Required" }],
-    ad_lift_full_cup_mouth: [{ type: "Required" }],
-    ad_walk_outdoor_flat: [{ type: "Required" }],
-    ad_wash_dry_body: [{ type: "Required" }],
-    ad_pick_clothing_floor: [{ type: "Required" }],
-    ad_turn_faucets_on_off: [{ type: "Required" }],
-    ad_get_in_out_car_bus_train_plane: [{ type: "Required" }],
-    ad_walk_two_miles: [{ type: "Required" }],
-    ad_recreational_activities_sports: [{ type: "Required" }],
-    ad_good_night_sleep: [{ type: "Required" }],
-    ad_deal_anxiety_nervous: [{ type: "Required" }],
-    ad_deal_depression_blue: [{ type: "Required" }],
-    ad_daily_pain_scale: [{ type: "Required" }],
-    ad_how_well_doing_scale: [{ type: "Required" }],
+    ph_symptoms: [],
+    ad_dress_yourself: [],
+    ad_get_in_out_bed: [],
+    ad_lift_full_cup_mouth: [],
+    ad_walk_outdoor_flat: [],
+    ad_wash_dry_body: [],
+    ad_pick_clothing_floor: [],
+    ad_turn_faucets_on_off: [],
+    address: [{ type: "Required" }],
+    veteran: [{ type: "Required" }],
+    occupation: [{ type: "Required" }],
+    ad_recreational_activities_sports: [],
+    ad_good_night_sleep: [],
+    ad_deal_anxiety_nervous: [],
+    ad_deal_depression_blue: [],
+    ad_daily_pain_scale: [],
+    ad_how_well_doing_scale: [],
+    ph_current_medicines: [],
+    ad_get_in_out_car_bus_train_plane: [],
+    ad_walk_two_miles: [],
+    state: [{ type: "Required" }],
+    zip: [{ type: "Required" }],
+    home_phone: [{ type: "Required" }, { type: "Phone" }],
+    work_phone: [],
+    mobile_phone: [],
+    email: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -740,20 +582,12 @@ export default function NewPatientCreateForm(props) {
           marital_status,
           ethnicity,
           race,
-          primary_language,
-          address,
+          race_other,
           city,
-          state,
-          zip,
-          home_phone,
-          work_phone,
-          mobile_phone,
-          email,
           social_security,
           employer,
           education,
-          veteran,
-          occupation,
+          primary_language,
           full_time,
           preferred_pharmacy,
           insurance_primary_name,
@@ -780,7 +614,6 @@ export default function NewPatientCreateForm(props) {
           signature_page_1_date,
           ph_briefly_describe_present_symptoms,
           ph_previous_treatment_for_problem,
-          ph_current_medicines,
           ph_allergy_to_med,
           ph_allergy_to_med_list,
           ph_rh_history_osteoarthritis,
@@ -812,14 +645,24 @@ export default function NewPatientCreateForm(props) {
           ad_wash_dry_body,
           ad_pick_clothing_floor,
           ad_turn_faucets_on_off,
-          ad_get_in_out_car_bus_train_plane,
-          ad_walk_two_miles,
+          address,
+          veteran,
+          occupation,
           ad_recreational_activities_sports,
           ad_good_night_sleep,
           ad_deal_anxiety_nervous,
           ad_deal_depression_blue,
           ad_daily_pain_scale,
           ad_how_well_doing_scale,
+          ph_current_medicines,
+          ad_get_in_out_car_bus_train_plane,
+          ad_walk_two_miles,
+          state,
+          zip,
+          home_phone,
+          work_phone,
+          mobile_phone,
+          email,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -849,11 +692,67 @@ export default function NewPatientCreateForm(props) {
               modelFields[key] = null;
             }
           });
+          const modelFieldsToSave = {
+            date: modelFields.date,
+            last_name: modelFields.last_name,
+            first_name: modelFields.first_name,
+            date_of_birth: modelFields.date_of_birth,
+            gender: modelFields.gender,
+            marital_status: modelFields.marital_status,
+            ethnicity: modelFields.ethnicity,
+            race: modelFields.race,
+            race_other: modelFields.race_other,
+            city: modelFields.city,
+            social_security: modelFields.social_security,
+            employer: modelFields.employer,
+            education: modelFields.education,
+            primary_language: modelFields.primary_language,
+            full_time: modelFields.full_time,
+            preferred_pharmacy: modelFields.preferred_pharmacy,
+            insurance_primary_name: modelFields.insurance_primary_name,
+            insurance_primary_id: modelFields.insurance_primary_id,
+            insurance_primary_group: modelFields.insurance_primary_group,
+            insurance_primary_address: modelFields.insurance_primary_address,
+            insurance_primary_phone: modelFields.insurance_primary_phone,
+            insurance_primary_insured_person:
+              modelFields.insurance_primary_insured_person,
+            insurance_primary_insured_person_relation:
+              modelFields.insurance_primary_insured_person_relation,
+            insurance_primary_insured_person_dob:
+              modelFields.insurance_primary_insured_person_dob,
+            insurance_secondary: modelFields.insurance_secondary,
+            insurance_secondary_id: modelFields.insurance_secondary_id,
+            insurance_secondary_group: modelFields.insurance_secondary_group,
+            insurance_secondary_address:
+              modelFields.insurance_secondary_address,
+            insurance_secondary_phone: modelFields.insurance_secondary_phone,
+            primary_care_physician_name:
+              modelFields.primary_care_physician_name,
+            primary_care_physician_phone:
+              modelFields.primary_care_physician_phone,
+            referring_physician_name: modelFields.referring_physician_name,
+            referring_physician_phone: modelFields.referring_physician_phone,
+            emergency_contact_name: modelFields.emergency_contact_name,
+            emergency_contact_phone: modelFields.emergency_contact_phone,
+            emergency_contact_relationship:
+              modelFields.emergency_contact_relationship,
+            signature_page_1: modelFields.signature_page_1,
+            signature_page_1_date: modelFields.signature_page_1_date,
+            address: modelFields.address,
+            veteran: modelFields.veteran,
+            occupation: modelFields.occupation,
+            state: modelFields.state,
+            zip: modelFields.zip,
+            home_phone: modelFields.home_phone,
+            work_phone: modelFields.work_phone,
+            mobile_phone: modelFields.mobile_phone,
+            email: modelFields.email,
+          };
           await client.graphql({
             query: createNewPatient.replaceAll("__typename", ""),
             variables: {
               input: {
-                ...modelFields,
+                ...modelFieldsToSave,
               },
             },
           });
@@ -896,20 +795,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -936,7 +827,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -968,14 +858,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.date ?? value;
@@ -1013,20 +913,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1053,7 +945,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1085,14 +976,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.last_name ?? value;
@@ -1124,20 +1025,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1164,7 +1057,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1196,14 +1088,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.first_name ?? value;
@@ -1236,20 +1138,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1276,7 +1170,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1308,14 +1201,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.date_of_birth ?? value;
@@ -1354,20 +1257,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1394,7 +1289,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1426,14 +1320,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.gender ?? value;
@@ -1465,20 +1369,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status: value,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1505,7 +1401,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1537,14 +1432,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.marital_status ?? value;
@@ -1584,7 +1489,7 @@ export default function NewPatientCreateForm(props) {
       <Grid
         columnGap="inherit"
         rowGap="inherit"
-        templateColumns="repeat(3, auto)"
+        templateColumns="repeat(2, auto)"
         {...getOverrideProps(overrides, "RowGrid4")}
       >
         <TextField
@@ -1604,20 +1509,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity: value,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1644,7 +1541,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1676,14 +1572,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ethnicity ?? value;
@@ -1698,10 +1604,10 @@ export default function NewPatientCreateForm(props) {
           hasError={errors.ethnicity?.hasError}
           {...getOverrideProps(overrides, "ethnicity")}
         ></TextField>
-        <TextField
+        <SelectField
           label="Race"
-          isRequired={false}
-          isReadOnly={false}
+          placeholder="Please select an option"
+          isDisabled={false}
           value={race}
           onChange={(e) => {
             let { value } = e.target;
@@ -1715,20 +1621,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race: value,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -1755,7 +1653,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -1787,14 +1684,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.race ?? value;
@@ -1808,925 +1715,129 @@ export default function NewPatientCreateForm(props) {
           errorMessage={errors.race?.errorMessage}
           hasError={errors.race?.hasError}
           {...getOverrideProps(overrides, "race")}
-        ></TextField>
-        <TextField
-          label="Primary language"
-          isRequired={false}
-          isReadOnly={false}
-          value={primary_language}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language: value,
-                address,
-                city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupation,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_primary_insured_person_dob,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicines,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ad_people_in_household,
-                ph_symptoms,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.primary_language ?? value;
-            }
-            if (errors.primary_language?.hasError) {
-              runValidationTasks("primary_language", value);
-            }
-            setPrimary_language(value);
-          }}
-          onBlur={() =>
-            runValidationTasks("primary_language", primary_language)
-          }
-          errorMessage={errors.primary_language?.errorMessage}
-          hasError={errors.primary_language?.hasError}
-          {...getOverrideProps(overrides, "primary_language")}
-        ></TextField>
-      </Grid>
-      <Grid
-        columnGap="inherit"
-        rowGap="inherit"
-        templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid5")}
-      >
-        <TextField
-          label="Address *"
-          isRequired={true}
-          isReadOnly={false}
-          value={address}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language,
-                address: value,
-                city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupation,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_primary_insured_person_dob,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicines,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ad_people_in_household,
-                ph_symptoms,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.address ?? value;
-            }
-            if (errors.address?.hasError) {
-              runValidationTasks("address", value);
-            }
-            setAddress(value);
-          }}
-          onBlur={() => runValidationTasks("address", address)}
-          errorMessage={errors.address?.errorMessage}
-          hasError={errors.address?.hasError}
-          {...getOverrideProps(overrides, "address")}
-        ></TextField>
-        <TextField
-          label="City *"
-          isRequired={true}
-          isReadOnly={false}
-          value={city}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language,
-                address,
-                city: value,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupation,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_primary_insured_person_dob,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicines,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ad_people_in_household,
-                ph_symptoms,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.city ?? value;
-            }
-            if (errors.city?.hasError) {
-              runValidationTasks("city", value);
-            }
-            setCity(value);
-          }}
-          onBlur={() => runValidationTasks("city", city)}
-          errorMessage={errors.city?.errorMessage}
-          hasError={errors.city?.hasError}
-          {...getOverrideProps(overrides, "city")}
-        ></TextField>
-      </Grid>
-      <Grid
-        columnGap="inherit"
-        rowGap="inherit"
-        templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid6")}
-      >
-        <TextField
-          label="State *"
-          isRequired={true}
-          isReadOnly={false}
-          value={state}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language,
-                address,
-                city,
-                state: value,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupation,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_primary_insured_person_dob,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicines,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ad_people_in_household,
-                ph_symptoms,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.state ?? value;
-            }
-            if (errors.state?.hasError) {
-              runValidationTasks("state", value);
-            }
-            setState(value);
-          }}
-          onBlur={() => runValidationTasks("state", state)}
-          errorMessage={errors.state?.errorMessage}
-          hasError={errors.state?.hasError}
-          {...getOverrideProps(overrides, "state")}
-        ></TextField>
-        <TextField
-          label="Zip *"
-          isRequired={true}
-          isReadOnly={false}
-          value={zip}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language,
-                address,
-                city,
-                state,
-                zip: value,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupation,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_primary_insured_person_dob,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicines,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ad_people_in_household,
-                ph_symptoms,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.zip ?? value;
-            }
-            if (errors.zip?.hasError) {
-              runValidationTasks("zip", value);
-            }
-            setZip(value);
-          }}
-          onBlur={() => runValidationTasks("zip", zip)}
-          errorMessage={errors.zip?.errorMessage}
-          hasError={errors.zip?.hasError}
-          {...getOverrideProps(overrides, "zip")}
-        ></TextField>
-      </Grid>
-      <Grid
-        columnGap="inherit"
-        rowGap="inherit"
-        templateColumns="repeat(3, auto)"
-        {...getOverrideProps(overrides, "RowGrid7")}
-      >
-        <TextField
-          label="Home phone *"
-          isRequired={true}
-          isReadOnly={false}
-          type="tel"
-          value={home_phone}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language,
-                address,
-                city,
-                state,
-                zip,
-                home_phone: value,
-                work_phone,
-                mobile_phone,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupation,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_primary_insured_person_dob,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicines,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ad_people_in_household,
-                ph_symptoms,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.home_phone ?? value;
-            }
-            if (errors.home_phone?.hasError) {
-              runValidationTasks("home_phone", value);
-            }
-            setHome_phone(value);
-          }}
-          onBlur={() => runValidationTasks("home_phone", home_phone)}
-          errorMessage={errors.home_phone?.errorMessage}
-          hasError={errors.home_phone?.hasError}
-          {...getOverrideProps(overrides, "home_phone")}
-        ></TextField>
-        <TextField
-          label="Work phone"
-          isRequired={false}
-          isReadOnly={false}
-          value={work_phone}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language,
-                address,
-                city,
-                state,
-                zip,
-                home_phone,
-                work_phone: value,
-                mobile_phone,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupation,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_primary_insured_person_dob,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicines,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ad_people_in_household,
-                ph_symptoms,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.work_phone ?? value;
-            }
-            if (errors.work_phone?.hasError) {
-              runValidationTasks("work_phone", value);
-            }
-            setWork_phone(value);
-          }}
-          onBlur={() => runValidationTasks("work_phone", work_phone)}
-          errorMessage={errors.work_phone?.errorMessage}
-          hasError={errors.work_phone?.hasError}
-          {...getOverrideProps(overrides, "work_phone")}
-        ></TextField>
-        <TextField
-          label="Mobile phone"
-          isRequired={false}
-          isReadOnly={false}
-          value={mobile_phone}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (onChange) {
-              const modelFields = {
-                date,
-                last_name,
-                first_name,
-                date_of_birth,
-                gender,
-                marital_status,
-                ethnicity,
-                race,
-                primary_language,
-                address,
-                city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone: value,
-                email,
-                social_security,
-                employer,
-                education,
-                veteran,
-                occupation,
-                full_time,
-                preferred_pharmacy,
-                insurance_primary_name,
-                insurance_primary_id,
-                insurance_primary_group,
-                insurance_primary_address,
-                insurance_primary_phone,
-                insurance_primary_insured_person,
-                insurance_primary_insured_person_relation,
-                insurance_primary_insured_person_dob,
-                insurance_secondary,
-                insurance_secondary_id,
-                insurance_secondary_group,
-                insurance_secondary_address,
-                insurance_secondary_phone,
-                primary_care_physician_name,
-                primary_care_physician_phone,
-                referring_physician_name,
-                referring_physician_phone,
-                emergency_contact_name,
-                emergency_contact_phone,
-                emergency_contact_relationship,
-                signature_page_1,
-                signature_page_1_date,
-                ph_briefly_describe_present_symptoms,
-                ph_previous_treatment_for_problem,
-                ph_current_medicines,
-                ph_allergy_to_med,
-                ph_allergy_to_med_list,
-                ph_rh_history_osteoarthritis,
-                ph_rh_history_gout,
-                ph_rh_history_juvenile_arthritis,
-                ph_rh_history_vasculitis,
-                ph_rh_history_lupus,
-                ph_rh_history_rheumatoid,
-                ph_rh_history_spondyloarthropathy,
-                ph_rh_history_osteoporosis,
-                ph_past_medical_history,
-                ph_past_surgery_history,
-                ph_smoke,
-                ph_drugs,
-                ph_alcohol,
-                ph_alcohol_weekly,
-                ph_sleep,
-                ph_exercise,
-                ph_travel,
-                ph_pregnant,
-                ph_live_births,
-                ph_complications,
-                ad_people_in_household,
-                ph_symptoms,
-                ad_dress_yourself,
-                ad_get_in_out_bed,
-                ad_lift_full_cup_mouth,
-                ad_walk_outdoor_flat,
-                ad_wash_dry_body,
-                ad_pick_clothing_floor,
-                ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
-                ad_recreational_activities_sports,
-                ad_good_night_sleep,
-                ad_deal_anxiety_nervous,
-                ad_deal_depression_blue,
-                ad_daily_pain_scale,
-                ad_how_well_doing_scale,
-              };
-              const result = onChange(modelFields);
-              value = result?.mobile_phone ?? value;
-            }
-            if (errors.mobile_phone?.hasError) {
-              runValidationTasks("mobile_phone", value);
-            }
-            setMobile_phone(value);
-          }}
-          onBlur={() => runValidationTasks("mobile_phone", mobile_phone)}
-          errorMessage={errors.mobile_phone?.errorMessage}
-          hasError={errors.mobile_phone?.hasError}
-          {...getOverrideProps(overrides, "mobile_phone")}
-        ></TextField>
+        >
+          <option
+            children="American Indian or Alaska Native"
+            value="American Indian or Alaska Native"
+            {...getOverrideProps(overrides, "raceoption0")}
+          ></option>
+          <option
+            children="Asian"
+            value="Asian"
+            {...getOverrideProps(overrides, "raceoption1")}
+          ></option>
+          <option
+            children="Asian Indian"
+            value="Asian Indian"
+            {...getOverrideProps(overrides, "raceoption2")}
+          ></option>
+          <option
+            children="Black or African American"
+            value="Black or African American"
+            {...getOverrideProps(overrides, "raceoption3")}
+          ></option>
+          <option
+            children="Chinese"
+            value="Chinese"
+            {...getOverrideProps(overrides, "raceoption4")}
+          ></option>
+          <option
+            children="Chinese American"
+            value="Chinese American"
+            {...getOverrideProps(overrides, "raceoption5")}
+          ></option>
+          <option
+            children="Decline to Answer"
+            value="Decline to Answer"
+            {...getOverrideProps(overrides, "raceoption6")}
+          ></option>
+          <option
+            children="Filipino"
+            value="Filipino"
+            {...getOverrideProps(overrides, "raceoption7")}
+          ></option>
+          <option
+            children="Filipino American"
+            value="Filipino American"
+            {...getOverrideProps(overrides, "raceoption8")}
+          ></option>
+          <option
+            children="Guamanian or Chamorro"
+            value="Guamanian or Chamorro"
+            {...getOverrideProps(overrides, "raceoption9")}
+          ></option>
+          <option
+            children="Hispanic"
+            value="Hispanic"
+            {...getOverrideProps(overrides, "raceoption10")}
+          ></option>
+          <option
+            children="Japanese"
+            value="Japanese"
+            {...getOverrideProps(overrides, "raceoption11")}
+          ></option>
+          <option
+            children="Japanese American"
+            value="Japanese American"
+            {...getOverrideProps(overrides, "raceoption12")}
+          ></option>
+          <option
+            children="Korean"
+            value="Korean"
+            {...getOverrideProps(overrides, "raceoption13")}
+          ></option>
+          <option
+            children="Native Hawaiian"
+            value="Native Hawaiian"
+            {...getOverrideProps(overrides, "raceoption14")}
+          ></option>
+          <option
+            children="Other"
+            value="Other"
+            {...getOverrideProps(overrides, "raceoption15")}
+          ></option>
+          <option
+            children="Other Asian"
+            value="Other Asian"
+            {...getOverrideProps(overrides, "raceoption16")}
+          ></option>
+          <option
+            children="Other Asian American"
+            value="Other Asian American"
+            {...getOverrideProps(overrides, "raceoption17")}
+          ></option>
+          <option
+            children="Other Pacific Islander"
+            value="Other Pacific Islander"
+            {...getOverrideProps(overrides, "raceoption18")}
+          ></option>
+          <option
+            children="Samoan"
+            value="Samoan"
+            {...getOverrideProps(overrides, "raceoption19")}
+          ></option>
+          <option
+            children="Unknown"
+            value="Unknown"
+            {...getOverrideProps(overrides, "raceoption20")}
+          ></option>
+          <option
+            children="Vietnamese"
+            value="Vietnamese"
+            {...getOverrideProps(overrides, "raceoption21")}
+          ></option>
+          <option
+            children="White"
+            value="White"
+            {...getOverrideProps(overrides, "raceoption22")}
+          ></option>
+        </SelectField>
       </Grid>
       <TextField
-        label="Email * (A copy of responses to this form will be sent here)"
-        isRequired={true}
+        label='If "Other" Race, please specify:'
+        isRequired={false}
         isReadOnly={false}
-        value={email}
+        value={race_other}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -2739,20 +1850,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other: value,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email: value,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -2779,7 +1882,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -2811,33 +1913,155 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
-            value = result?.email ?? value;
+            value = result?.race_other ?? value;
           }
-          if (errors.email?.hasError) {
-            runValidationTasks("email", value);
+          if (errors.race_other?.hasError) {
+            runValidationTasks("race_other", value);
           }
-          setEmail(value);
+          setRace_other(value);
         }}
-        onBlur={() => runValidationTasks("email", email)}
-        errorMessage={errors.email?.errorMessage}
-        hasError={errors.email?.hasError}
-        {...getOverrideProps(overrides, "email")}
+        onBlur={() => runValidationTasks("race_other", race_other)}
+        errorMessage={errors.race_other?.errorMessage}
+        hasError={errors.race_other?.hasError}
+        {...getOverrideProps(overrides, "race_other")}
+      ></TextField>
+      <TextField
+        label="City *"
+        isRequired={true}
+        isReadOnly={false}
+        value={city}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              race_other,
+              city: value,
+              social_security,
+              employer,
+              education,
+              primary_language,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ad_people_in_household,
+              ph_symptoms,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              address,
+              veteran,
+              occupation,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+            };
+            const result = onChange(modelFields);
+            value = result?.city ?? value;
+          }
+          if (errors.city?.hasError) {
+            runValidationTasks("city", value);
+          }
+          setCity(value);
+        }}
+        onBlur={() => runValidationTasks("city", city)}
+        errorMessage={errors.city?.errorMessage}
+        hasError={errors.city?.hasError}
+        {...getOverrideProps(overrides, "city")}
       ></TextField>
       <Grid
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid9")}
+        {...getOverrideProps(overrides, "RowGrid7")}
       >
         <TextField
           label="Social security #"
@@ -2856,20 +2080,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security: value,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -2896,7 +2112,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -2928,14 +2143,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.social_security ?? value;
@@ -2967,20 +2192,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer: value,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -3007,7 +2224,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -3039,14 +2255,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.employer ?? value;
@@ -3079,20 +2305,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education: value,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -3119,7 +2337,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3151,14 +2368,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.education ?? value;
@@ -3194,122 +2421,11 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "educationoption3")}
         ></option>
       </SelectField>
-      <SwitchField
-        label="Are you a veteran? * "
-        defaultChecked={false}
-        isDisabled={false}
-        isChecked={veteran}
-        onChange={(e) => {
-          let value = e.target.checked;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran: value,
-              occupation,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_primary_insured_person_dob,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicines,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ad_people_in_household,
-              ph_symptoms,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            value = result?.veteran ?? value;
-          }
-          if (errors.veteran?.hasError) {
-            runValidationTasks("veteran", value);
-          }
-          setVeteran(value);
-        }}
-        onBlur={() => runValidationTasks("veteran", veteran)}
-        errorMessage={errors.veteran?.errorMessage}
-        hasError={errors.veteran?.hasError}
-        {...getOverrideProps(overrides, "veteran")}
-      ></SwitchField>
       <TextField
-        label="Occupation *"
-        isRequired={true}
+        label="Primary language"
+        isRequired={false}
         isReadOnly={false}
-        value={occupation}
+        value={primary_language}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -3322,20 +2438,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation: value,
+              primary_language: value,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -3362,7 +2470,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3394,27 +2501,37 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
-            value = result?.occupation ?? value;
+            value = result?.primary_language ?? value;
           }
-          if (errors.occupation?.hasError) {
-            runValidationTasks("occupation", value);
+          if (errors.primary_language?.hasError) {
+            runValidationTasks("primary_language", value);
           }
-          setOccupation(value);
+          setPrimary_language(value);
         }}
-        onBlur={() => runValidationTasks("occupation", occupation)}
-        errorMessage={errors.occupation?.errorMessage}
-        hasError={errors.occupation?.hasError}
-        {...getOverrideProps(overrides, "occupation")}
+        onBlur={() => runValidationTasks("primary_language", primary_language)}
+        errorMessage={errors.primary_language?.errorMessage}
+        hasError={errors.primary_language?.hasError}
+        {...getOverrideProps(overrides, "primary_language")}
       ></TextField>
       <SwitchField
         label="Full time"
@@ -3433,20 +2550,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time: value,
               preferred_pharmacy,
               insurance_primary_name,
@@ -3473,7 +2582,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3505,14 +2613,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.full_time ?? value;
@@ -3544,20 +2662,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy: value,
               insurance_primary_name,
@@ -3584,7 +2694,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3616,14 +2725,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.preferred_pharmacy ?? value;
@@ -3666,20 +2785,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name: value,
@@ -3706,7 +2817,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -3738,14 +2848,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.insurance_primary_name ?? value;
@@ -3766,7 +2886,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid18")}
+        {...getOverrideProps(overrides, "RowGrid15")}
       >
         <TextField
           label="ID # *"
@@ -3785,20 +2905,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -3825,7 +2937,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -3857,14 +2968,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.insurance_primary_id ?? value;
@@ -3898,20 +3019,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -3938,7 +3051,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -3970,14 +3082,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.insurance_primary_group ?? value;
@@ -4002,7 +3124,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid19")}
+        {...getOverrideProps(overrides, "RowGrid16")}
       >
         <TextField
           label="Insurance Address"
@@ -4021,20 +3143,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4061,7 +3175,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4093,14 +3206,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.insurance_primary_address ?? value;
@@ -4138,20 +3261,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4178,7 +3293,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4210,14 +3324,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.insurance_primary_phone ?? value;
@@ -4255,20 +3379,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -4295,7 +3411,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -4327,14 +3442,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.insurance_primary_insured_person ?? value;
@@ -4358,7 +3483,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid21")}
+        {...getOverrideProps(overrides, "RowGrid18")}
       >
         <TextField
           label="Relation to Insured Person"
@@ -4377,20 +3502,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4417,7 +3534,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4449,14 +3565,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value =
@@ -4503,20 +3629,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4543,7 +3661,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4575,14 +3692,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.insurance_primary_insured_person_dob ?? value;
@@ -4625,20 +3752,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -4665,7 +3784,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -4697,14 +3815,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.insurance_secondary ?? value;
@@ -4725,7 +3853,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid23")}
+        {...getOverrideProps(overrides, "RowGrid20")}
       >
         <TextField
           label="ID #"
@@ -4744,20 +3872,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4784,7 +3904,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4816,14 +3935,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.insurance_secondary_id ?? value;
@@ -4857,20 +3986,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -4897,7 +4018,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -4929,14 +4049,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.insurance_secondary_group ?? value;
@@ -4961,7 +4091,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid24")}
+        {...getOverrideProps(overrides, "RowGrid21")}
       >
         <TextField
           label="Insurance Address"
@@ -4980,20 +4110,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5020,7 +4142,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5052,14 +4173,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.insurance_secondary_address ?? value;
@@ -5097,20 +4228,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5137,7 +4260,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5169,14 +4291,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.insurance_secondary_phone ?? value;
@@ -5210,7 +4342,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid27")}
+        {...getOverrideProps(overrides, "RowGrid24")}
       >
         <TextField
           label="Name of Primary Care Physician"
@@ -5229,20 +4361,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5269,7 +4393,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5301,14 +4424,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.primary_care_physician_name ?? value;
@@ -5346,20 +4479,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5386,7 +4511,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5418,14 +4542,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.primary_care_physician_phone ?? value;
@@ -5450,7 +4584,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid28")}
+        {...getOverrideProps(overrides, "RowGrid25")}
       >
         <TextField
           label="Name of Referring Physician *"
@@ -5469,20 +4603,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5509,7 +4635,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5541,14 +4666,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.referring_physician_name ?? value;
@@ -5586,20 +4721,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5626,7 +4753,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5658,14 +4784,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.referring_physician_phone ?? value;
@@ -5699,7 +4835,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid31")}
+        {...getOverrideProps(overrides, "RowGrid28")}
       >
         <TextField
           label="Name *"
@@ -5718,20 +4854,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5758,7 +4886,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5790,14 +4917,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.emergency_contact_name ?? value;
@@ -5832,20 +4969,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -5872,7 +5001,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -5904,14 +5032,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.emergency_contact_phone ?? value;
@@ -5949,20 +5087,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -5989,7 +5119,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -6021,14 +5150,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.emergency_contact_relationship ?? value;
@@ -6064,7 +5203,7 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid36")}
+        {...getOverrideProps(overrides, "RowGrid33")}
       >
         <TextField
           label="Signature *"
@@ -6083,20 +5222,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -6123,7 +5254,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -6155,14 +5285,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.signature_page_1 ?? value;
@@ -6197,20 +5337,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -6237,7 +5369,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date: value,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -6269,14 +5400,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.signature_page_1_date ?? value;
@@ -6313,8 +5454,6 @@ export default function NewPatientCreateForm(props) {
       ></Heading>
       <TextAreaField
         label="Briefly describe your presenting symptoms *"
-        isRequired={true}
-        isReadOnly={false}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -6327,20 +5466,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -6367,7 +5498,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms: value,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -6399,14 +5529,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_briefly_describe_present_symptoms ?? value;
@@ -6428,8 +5568,6 @@ export default function NewPatientCreateForm(props) {
       ></TextAreaField>
       <TextAreaField
         label="Previous treatment for this problem (i.e., Physical therapy, Medication, Surgery, Other)"
-        isRequired={false}
-        isReadOnly={false}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -6442,20 +5580,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -6482,7 +5612,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem: value,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -6514,14 +5643,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_previous_treatment_for_problem ?? value;
@@ -6541,122 +5680,9 @@ export default function NewPatientCreateForm(props) {
         hasError={errors.ph_previous_treatment_for_problem?.hasError}
         {...getOverrideProps(overrides, "ph_previous_treatment_for_problem")}
       ></TextAreaField>
-      <TextAreaField
-        label="Current Medications: (Name and Dose) *"
-        isRequired={true}
-        isReadOnly={false}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupation,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_primary_insured_person_dob,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
-              ph_current_medicines: value,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ad_people_in_household,
-              ph_symptoms,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
-              ad_recreational_activities_sports,
-              ad_good_night_sleep,
-              ad_deal_anxiety_nervous,
-              ad_deal_depression_blue,
-              ad_daily_pain_scale,
-              ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            value = result?.ph_current_medicines ?? value;
-          }
-          if (errors.ph_current_medicines?.hasError) {
-            runValidationTasks("ph_current_medicines", value);
-          }
-          setPh_current_medicines(value);
-        }}
-        onBlur={() =>
-          runValidationTasks("ph_current_medicines", ph_current_medicines)
-        }
-        errorMessage={errors.ph_current_medicines?.errorMessage}
-        hasError={errors.ph_current_medicines?.hasError}
-        {...getOverrideProps(overrides, "ph_current_medicines")}
-      ></TextAreaField>
       <SwitchField
         label="ALLERGY to any medication? *"
         defaultChecked={false}
-        isDisabled={false}
         isChecked={ph_allergy_to_med}
         onChange={(e) => {
           let value = e.target.checked;
@@ -6670,20 +5696,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -6710,7 +5728,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med: value,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -6742,14 +5759,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_allergy_to_med ?? value;
@@ -6768,8 +5795,6 @@ export default function NewPatientCreateForm(props) {
       ></SwitchField>
       <TextField
         label="If yes, please list:"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_allergy_to_med_list}
         onChange={(e) => {
           let { value } = e.target;
@@ -6783,20 +5808,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -6823,7 +5840,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list: value,
               ph_rh_history_osteoarthritis,
@@ -6855,14 +5871,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_allergy_to_med_list ?? value;
@@ -6891,12 +5917,10 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid48")}
+        {...getOverrideProps(overrides, "RowGrid44")}
       >
         <TextField
           label="Osteoarthritis"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_osteoarthritis}
           onChange={(e) => {
@@ -6911,20 +5935,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -6951,7 +5967,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis: value,
@@ -6983,14 +5998,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_osteoarthritis ?? value;
@@ -7012,8 +6037,6 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
         <TextField
           label="Gout"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_gout}
           onChange={(e) => {
@@ -7028,20 +6051,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7068,7 +6083,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7100,14 +6114,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_gout ?? value;
@@ -7129,12 +6153,10 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid49")}
+        {...getOverrideProps(overrides, "RowGrid45")}
       >
         <TextField
           label="Juvenile Arthritis"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_juvenile_arthritis}
           onChange={(e) => {
@@ -7149,20 +6171,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7189,7 +6203,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7221,14 +6234,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_juvenile_arthritis ?? value;
@@ -7250,8 +6273,6 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
         <TextField
           label="Vasculitis (Type)"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_vasculitis}
           onChange={(e) => {
@@ -7266,20 +6287,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7306,7 +6319,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7338,14 +6350,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_vasculitis ?? value;
@@ -7370,12 +6392,10 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid50")}
+        {...getOverrideProps(overrides, "RowGrid46")}
       >
         <TextField
           label="Lupus / SLE"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_lupus}
           onChange={(e) => {
@@ -7390,20 +6410,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7430,7 +6442,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7462,14 +6473,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_lupus ?? value;
@@ -7488,8 +6509,6 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
         <TextField
           label="Rheumatoid Arthritis"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_rheumatoid}
           onChange={(e) => {
@@ -7504,20 +6523,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7544,7 +6555,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7576,14 +6586,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_rheumatoid ?? value;
@@ -7608,12 +6628,10 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid51")}
+        {...getOverrideProps(overrides, "RowGrid47")}
       >
         <TextField
           label="Spondyloarthropathy (i.e., A.S., Psoriatic Arthritis, etc.)"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_spondyloarthropathy}
           onChange={(e) => {
@@ -7628,20 +6646,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7668,7 +6678,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7700,14 +6709,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_spondyloarthropathy ?? value;
@@ -7729,8 +6748,6 @@ export default function NewPatientCreateForm(props) {
         ></TextField>
         <TextField
           label="Osteoporosis"
-          isRequired={false}
-          isReadOnly={false}
           placeholder="Self / Family Member (State Relationship)"
           value={ph_rh_history_osteoporosis}
           onChange={(e) => {
@@ -7745,20 +6762,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -7785,7 +6794,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -7817,14 +6825,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_rh_history_osteoporosis ?? value;
@@ -7847,8 +6865,6 @@ export default function NewPatientCreateForm(props) {
       </Grid>
       <TextAreaField
         label="Past Medical History"
-        isRequired={false}
-        isReadOnly={false}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -7861,20 +6877,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -7901,7 +6909,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -7933,14 +6940,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_past_medical_history ?? value;
@@ -7959,8 +6976,6 @@ export default function NewPatientCreateForm(props) {
       ></TextAreaField>
       <TextAreaField
         label="Past Surgical History"
-        isRequired={false}
-        isReadOnly={false}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -7973,20 +6988,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -8013,7 +7020,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -8045,14 +7051,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_past_surgery_history ?? value;
@@ -8073,12 +7089,11 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid54")}
+        {...getOverrideProps(overrides, "RowGrid50")}
       >
         <SelectField
           label="Do you smoke? *"
           placeholder="Please select an option"
-          isDisabled={false}
           value={ph_smoke}
           onChange={(e) => {
             let { value } = e.target;
@@ -8092,20 +7107,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8132,7 +7139,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -8164,14 +7170,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_smoke ?? value;
@@ -8205,7 +7221,6 @@ export default function NewPatientCreateForm(props) {
         <SelectField
           label="Do you use drugs (not prescribed)? *"
           placeholder="Please select an option"
-          isDisabled={false}
           value={ph_drugs}
           onChange={(e) => {
             let { value } = e.target;
@@ -8219,20 +7234,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8259,7 +7266,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -8291,14 +7297,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_drugs ?? value;
@@ -8334,12 +7350,11 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid55")}
+        {...getOverrideProps(overrides, "RowGrid51")}
       >
         <SelectField
           label="Do you drink alcohol? *"
           placeholder="Please select an option"
-          isDisabled={false}
           value={ph_alcohol}
           onChange={(e) => {
             let { value } = e.target;
@@ -8353,20 +7368,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8393,7 +7400,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -8425,14 +7431,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_alcohol ?? value;
@@ -8465,8 +7481,6 @@ export default function NewPatientCreateForm(props) {
         </SelectField>
         <TextField
           label="How much weekly?"
-          isRequired={false}
-          isReadOnly={false}
           value={ph_alcohol_weekly}
           onChange={(e) => {
             let { value } = e.target;
@@ -8480,20 +7494,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8520,7 +7526,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -8552,14 +7557,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_alcohol_weekly ?? value;
@@ -8579,8 +7594,6 @@ export default function NewPatientCreateForm(props) {
       </Grid>
       <TextField
         label="How much sleep do you get a day?"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_sleep}
         onChange={(e) => {
           let { value } = e.target;
@@ -8594,20 +7607,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -8634,7 +7639,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -8666,14 +7670,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_sleep ?? value;
@@ -8690,8 +7704,6 @@ export default function NewPatientCreateForm(props) {
       ></TextField>
       <TextField
         label="Do you exercise regularly (type, frequency)?"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_exercise}
         onChange={(e) => {
           let { value } = e.target;
@@ -8705,20 +7717,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -8745,7 +7749,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -8777,14 +7780,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_exercise ?? value;
@@ -8801,8 +7814,6 @@ export default function NewPatientCreateForm(props) {
       ></TextField>
       <TextField
         label="Have you traveled in the past year (where)?"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_travel}
         onChange={(e) => {
           let { value } = e.target;
@@ -8816,20 +7827,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -8856,7 +7859,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -8888,14 +7890,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_travel ?? value;
@@ -8914,12 +7926,11 @@ export default function NewPatientCreateForm(props) {
         columnGap="inherit"
         rowGap="inherit"
         templateColumns="repeat(2, auto)"
-        {...getOverrideProps(overrides, "RowGrid59")}
+        {...getOverrideProps(overrides, "RowGrid55")}
       >
         <SelectField
           label="Have you ever been pregnant?"
           placeholder="Please select an option"
-          isDisabled={false}
           value={ph_pregnant}
           onChange={(e) => {
             let { value } = e.target;
@@ -8933,20 +7944,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -8973,7 +7976,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -9005,14 +8007,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_pregnant ?? value;
@@ -9040,8 +8052,6 @@ export default function NewPatientCreateForm(props) {
         </SelectField>
         <TextField
           label="How many live births have you had?"
-          isRequired={false}
-          isReadOnly={false}
           value={ph_live_births}
           onChange={(e) => {
             let { value } = e.target;
@@ -9055,20 +8065,12 @@ export default function NewPatientCreateForm(props) {
                 marital_status,
                 ethnicity,
                 race,
-                primary_language,
-                address,
+                race_other,
                 city,
-                state,
-                zip,
-                home_phone,
-                work_phone,
-                mobile_phone,
-                email,
                 social_security,
                 employer,
                 education,
-                veteran,
-                occupation,
+                primary_language,
                 full_time,
                 preferred_pharmacy,
                 insurance_primary_name,
@@ -9095,7 +8097,6 @@ export default function NewPatientCreateForm(props) {
                 signature_page_1_date,
                 ph_briefly_describe_present_symptoms,
                 ph_previous_treatment_for_problem,
-                ph_current_medicines,
                 ph_allergy_to_med,
                 ph_allergy_to_med_list,
                 ph_rh_history_osteoarthritis,
@@ -9127,14 +8128,24 @@ export default function NewPatientCreateForm(props) {
                 ad_wash_dry_body,
                 ad_pick_clothing_floor,
                 ad_turn_faucets_on_off,
-                ad_get_in_out_car_bus_train_plane,
-                ad_walk_two_miles,
+                address,
+                veteran,
+                occupation,
                 ad_recreational_activities_sports,
                 ad_good_night_sleep,
                 ad_deal_anxiety_nervous,
                 ad_deal_depression_blue,
                 ad_daily_pain_scale,
                 ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
               };
               const result = onChange(modelFields);
               value = result?.ph_live_births ?? value;
@@ -9152,8 +8163,6 @@ export default function NewPatientCreateForm(props) {
       </Grid>
       <TextField
         label="Complications?"
-        isRequired={false}
-        isReadOnly={false}
         value={ph_complications}
         onChange={(e) => {
           let { value } = e.target;
@@ -9167,20 +8176,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -9207,7 +8208,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -9239,14 +8239,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ph_complications ?? value;
@@ -9263,8 +8273,6 @@ export default function NewPatientCreateForm(props) {
       ></TextField>
       <TextAreaField
         label="How many people in household? (List age & relationship):"
-        isRequired={false}
-        isReadOnly={false}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -9277,20 +8285,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -9317,7 +8317,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -9349,14 +8348,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_people_in_household ?? value;
@@ -9377,9 +8386,287 @@ export default function NewPatientCreateForm(props) {
         children='Please write if you are currently or recently experiencing any of these symptoms (Write "No Symptoms" if not experiencing any of them): *'
         {...getOverrideProps(overrides, "SectionalElement5")}
       ></Heading>
-      <ArrayField
-        onChange={async (items) => {
-          let values = items;
+      <Autocomplete
+        label="Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urinating, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
+        options={[
+          {
+            id: "No Symptoms",
+            label: "No Symptoms",
+          },
+          {
+            id: "Fatigue",
+            label: "Fatigue",
+          },
+          {
+            id: "Weight Loss",
+            label: "Weight Loss",
+          },
+          {
+            id: "Weight Gain",
+            label: "Weight Gain",
+          },
+          {
+            id: "Fever",
+            label: "Fever",
+          },
+          {
+            id: "Night Sweats",
+            label: "Night Sweats",
+          },
+          {
+            id: "Dry Eye",
+            label: "Dry Eye",
+          },
+          {
+            id: "Eye Pain",
+            label: "Eye Pain",
+          },
+          {
+            id: "Loss of Vision",
+            label: "Loss of Vision",
+          },
+          {
+            id: "Tinnitus",
+            label: "Tinnitus",
+          },
+          {
+            id: "Hearing Loss",
+            label: "Hearing Loss",
+          },
+          {
+            id: "Nosebleed",
+            label: "Nosebleed",
+          },
+          {
+            id: "Sneezing",
+            label: "Sneezing",
+          },
+          {
+            id: "Dry Mouth",
+            label: "Dry Mouth",
+          },
+          {
+            id: "Canker Sores",
+            label: "Canker Sores",
+          },
+          {
+            id: "Cold Sores",
+            label: "Cold Sores",
+          },
+          {
+            id: "Loss of Smell or Taste",
+            label: "Loss of Smell or Taste",
+          },
+          {
+            id: "Difficulty Swallowing",
+            label: "Difficulty Swallowing",
+          },
+          {
+            id: "Sore Throat",
+            label: "Sore Throat",
+          },
+          {
+            id: "Bleeding Gums",
+            label: "Bleeding Gums",
+          },
+          {
+            id: "Hoarse Voice",
+            label: "Hoarse Voice",
+          },
+          {
+            id: "Chest Pain",
+            label: "Chest Pain",
+          },
+          {
+            id: "Shortness of Breath",
+            label: "Shortness of Breath",
+          },
+          {
+            id: "High Blood Pressure",
+            label: "High Blood Pressure",
+          },
+          {
+            id: "Low Blood Pressure",
+            label: "Low Blood Pressure",
+          },
+          {
+            id: "Heart Murmurs",
+            label: "Heart Murmurs",
+          },
+          {
+            id: "Cough, Nausea",
+            label: "Cough, Nausea",
+          },
+          {
+            id: "Vomiting",
+            label: "Vomiting",
+          },
+          {
+            id: "Diarrhea",
+            label: "Diarrhea",
+          },
+          {
+            id: "Abdominal Pain",
+            label: "Abdominal Pain",
+          },
+          {
+            id: "Constipation",
+            label: "Constipation",
+          },
+          {
+            id: "Blood in Stool",
+            label: "Blood in Stool",
+          },
+          {
+            id: "Heartburn",
+            label: "Heartburn",
+          },
+          {
+            id: "Difficulty Urinating",
+            label: "Difficulty Urinating",
+          },
+          {
+            id: "Urine Infection",
+            label: "Urine Infection",
+          },
+          {
+            id: "Vaginal Ulcers",
+            label: "Vaginal Ulcers",
+          },
+          {
+            id: "STDs",
+            label: "STDs",
+          },
+          {
+            id: "Nighttime Urination",
+            label: "Nighttime Urination",
+          },
+          {
+            id: "Incontinence",
+            label: "Incontinence",
+          },
+          {
+            id: "Stiffness",
+            label: "Stiffness",
+          },
+          {
+            id: "Joint Pain",
+            label: "Joint Pain",
+          },
+          {
+            id: "Joint Swelling",
+            label: "Joint Swelling",
+          },
+          {
+            id: "Muscle Pain",
+            label: "Muscle Pain",
+          },
+          {
+            id: "Weakness",
+            label: "Weakness",
+          },
+          {
+            id: "Numbness/Tingling",
+            label: "Numbness/Tingling",
+          },
+          {
+            id: "Rash",
+            label: "Rash",
+          },
+          {
+            id: "Psoriasis",
+            label: "Psoriasis",
+          },
+          {
+            id: "Bruising",
+            label: "Bruising",
+          },
+          {
+            id: "Skin Nodule",
+            label: "Skin Nodule",
+          },
+          {
+            id: "Skin Ulcer",
+            label: "Skin Ulcer",
+          },
+          {
+            id: "Color changes in Hands/Feet when Cold",
+            label: "Color changes in Hands/Feet when Cold",
+          },
+          {
+            id: "Headaches",
+            label: "Headaches",
+          },
+          {
+            id: "Dizziness",
+            label: "Dizziness",
+          },
+          {
+            id: "Loss of Consciousness",
+            label: "Loss of Consciousness",
+          },
+          {
+            id: "Falling",
+            label: "Falling",
+          },
+          {
+            id: "Memory Loss",
+            label: "Memory Loss",
+          },
+          {
+            id: "Anxiety",
+            label: "Anxiety",
+          },
+          {
+            id: "Depression",
+            label: "Depression",
+          },
+          {
+            id: "Anger",
+            label: "Anger",
+          },
+          {
+            id: "PTSD",
+            label: "PTSD",
+          },
+          {
+            id: "Difficulty Falling Asleep",
+            label: "Difficulty Falling Asleep",
+          },
+          {
+            id: "Difficulty Staying Asleep",
+            label: "Difficulty Staying Asleep",
+          },
+          {
+            id: "Swollen Glands",
+            label: "Swollen Glands",
+          },
+          {
+            id: "Tender Glands",
+            label: "Tender Glands",
+          },
+          {
+            id: "Anemia",
+            label: "Anemia",
+          },
+          {
+            id: "Transfusions",
+            label: "Transfusions",
+          },
+          {
+            id: "Cancer",
+            label: "Cancer",
+          },
+        ]}
+        onSelect={({ id, label }) => {
+          setPh_symptoms(id);
+          runValidationTasks("ph_symptoms", id);
+        }}
+        onClear={() => {
+          setPh_symptoms("");
+        }}
+        onChange={(e) => {
+          let { value } = e.target;
           if (onChange) {
             const modelFields = {
               date,
@@ -9390,20 +8677,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -9430,7 +8709,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -9454,7 +8732,7 @@ export default function NewPatientCreateForm(props) {
               ph_live_births,
               ph_complications,
               ad_people_in_household,
-              ph_symptoms: values,
+              ph_symptoms: value,
               ad_dress_yourself,
               ad_get_in_out_bed,
               ad_lift_full_cup_mouth,
@@ -9462,334 +8740,39 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
-            values = result?.ph_symptoms ?? values;
+            value = result?.ph_symptoms ?? value;
           }
-          setPh_symptoms(values);
-          setCurrentPh_symptomsValue(undefined);
+          if (errors.ph_symptoms?.hasError) {
+            runValidationTasks("ph_symptoms", value);
+          }
+          setPh_symptoms(value);
         }}
-        currentFieldValue={currentPh_symptomsValue}
-        label={
-          "Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urinating, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
-        }
-        items={ph_symptoms}
-        hasError={errors?.ph_symptoms?.hasError}
-        runValidationTasks={async () =>
-          await runValidationTasks("ph_symptoms", currentPh_symptomsValue)
-        }
-        errorMessage={errors?.ph_symptoms?.errorMessage}
-        setFieldValue={setCurrentPh_symptomsValue}
-        inputFieldRef={ph_symptomsRef}
-        defaultFieldValue={""}
-      >
-        <Autocomplete
-          label="Fatigue, Weight Loss, Weight Gain, Fever, Night Sweats, Dry Eye, Eye Pain, Loss of Vision, Tinnitus, Hearing Loss, Nosebleed, Sneezing, Dry Mouth, Canker Sores, Cold Sores, Loss of Smell or Taste, Difficulty Swallowing, Sore Throat, Bleeding Gums, Hoarse Voice, Chest Pain, Shortness of Breath, High Blood Pressure, Low Blood Pressure, Heart Murmurs, Cough, Nausea, Vomiting, Diarrhea, Abdominal Pain, Constipation, Blood in Stool, Heartburn, Difficulty Urinating, Urine Infection, Vaginal Ulcers, STDs, Nighttime Urination, Incontinence, Stiffness, Joint Pain, Joint Swelling, Muscle Pain, Weakness, Numbness/Tingling, Rash, Psoriasis, Bruising, Skin Nodule, Skin Ulcer, Color changes in Hands/Feet when Cold, Headaches, Dizziness, Loss of Consciousness, Falling, Memory Loss, Anxiety, Depression, Anger, PTSD, Difficulty Falling Asleep, Difficulty Staying Asleep, Swollen Glands, Tender Glands, Anemia, Transfusions, Cancer"
-          isRequired={true}
-          isReadOnly={false}
-          value={currentPh_symptomsValue}
-          options={[
-            {
-              id: "No Symptoms",
-              label: "No Symptoms",
-            },
-            {
-              id: "Fatigue",
-              label: "Fatigue",
-            },
-            {
-              id: "Weight Loss",
-              label: "Weight Loss",
-            },
-            {
-              id: "Weight Gain",
-              label: "Weight Gain",
-            },
-            {
-              id: "Fever",
-              label: "Fever",
-            },
-            {
-              id: "Night Sweats",
-              label: "Night Sweats",
-            },
-            {
-              id: "Dry Eye",
-              label: "Dry Eye",
-            },
-            {
-              id: "Eye Pain",
-              label: "Eye Pain",
-            },
-            {
-              id: "Loss of Vision",
-              label: "Loss of Vision",
-            },
-            {
-              id: "Tinnitus",
-              label: "Tinnitus",
-            },
-            {
-              id: "Hearing Loss",
-              label: "Hearing Loss",
-            },
-            {
-              id: "Nosebleed",
-              label: "Nosebleed",
-            },
-            {
-              id: "Sneezing",
-              label: "Sneezing",
-            },
-            {
-              id: "Dry Mouth",
-              label: "Dry Mouth",
-            },
-            {
-              id: "Canker Sores",
-              label: "Canker Sores",
-            },
-            {
-              id: "Cold Sores",
-              label: "Cold Sores",
-            },
-            {
-              id: "Loss of Smell or Taste",
-              label: "Loss of Smell or Taste",
-            },
-            {
-              id: "Difficulty Swallowing",
-              label: "Difficulty Swallowing",
-            },
-            {
-              id: "Sore Throat",
-              label: "Sore Throat",
-            },
-            {
-              id: "Bleeding Gums",
-              label: "Bleeding Gums",
-            },
-            {
-              id: "Hoarse Voice",
-              label: "Hoarse Voice",
-            },
-            {
-              id: "Chest Pain",
-              label: "Chest Pain",
-            },
-            {
-              id: "Shortness of Breath",
-              label: "Shortness of Breath",
-            },
-            {
-              id: "High Blood Pressure",
-              label: "High Blood Pressure",
-            },
-            {
-              id: "Low Blood Pressure",
-              label: "Low Blood Pressure",
-            },
-            {
-              id: "Heart Murmurs",
-              label: "Heart Murmurs",
-            },
-            {
-              id: "Cough, Nausea",
-              label: "Cough, Nausea",
-            },
-            {
-              id: "Vomiting",
-              label: "Vomiting",
-            },
-            {
-              id: "Diarrhea",
-              label: "Diarrhea",
-            },
-            {
-              id: "Abdominal Pain",
-              label: "Abdominal Pain",
-            },
-            {
-              id: "Constipation",
-              label: "Constipation",
-            },
-            {
-              id: "Blood in Stool",
-              label: "Blood in Stool",
-            },
-            {
-              id: "Heartburn",
-              label: "Heartburn",
-            },
-            {
-              id: "Difficulty Urinating",
-              label: "Difficulty Urinating",
-            },
-            {
-              id: "Urine Infection",
-              label: "Urine Infection",
-            },
-            {
-              id: "Vaginal Ulcers",
-              label: "Vaginal Ulcers",
-            },
-            {
-              id: "STDs",
-              label: "STDs",
-            },
-            {
-              id: "Nighttime Urination",
-              label: "Nighttime Urination",
-            },
-            {
-              id: "Incontinence",
-              label: "Incontinence",
-            },
-            {
-              id: "Stiffness",
-              label: "Stiffness",
-            },
-            {
-              id: "Joint Pain",
-              label: "Joint Pain",
-            },
-            {
-              id: "Joint Swelling",
-              label: "Joint Swelling",
-            },
-            {
-              id: "Muscle Pain",
-              label: "Muscle Pain",
-            },
-            {
-              id: "Weakness",
-              label: "Weakness",
-            },
-            {
-              id: "Numbness/Tingling",
-              label: "Numbness/Tingling",
-            },
-            {
-              id: "Rash",
-              label: "Rash",
-            },
-            {
-              id: "Psoriasis",
-              label: "Psoriasis",
-            },
-            {
-              id: "Bruising",
-              label: "Bruising",
-            },
-            {
-              id: "Skin Nodule",
-              label: "Skin Nodule",
-            },
-            {
-              id: "Skin Ulcer",
-              label: "Skin Ulcer",
-            },
-            {
-              id: "Color changes in Hands/Feet when Cold",
-              label: "Color changes in Hands/Feet when Cold",
-            },
-            {
-              id: "Headaches",
-              label: "Headaches",
-            },
-            {
-              id: "Dizziness",
-              label: "Dizziness",
-            },
-            {
-              id: "Loss of Consciousness",
-              label: "Loss of Consciousness",
-            },
-            {
-              id: "Falling",
-              label: "Falling",
-            },
-            {
-              id: "Memory Loss",
-              label: "Memory Loss",
-            },
-            {
-              id: "Anxiety",
-              label: "Anxiety",
-            },
-            {
-              id: "Depression",
-              label: "Depression",
-            },
-            {
-              id: "Anger",
-              label: "Anger",
-            },
-            {
-              id: "PTSD",
-              label: "PTSD",
-            },
-            {
-              id: "Difficulty Falling Asleep",
-              label: "Difficulty Falling Asleep",
-            },
-            {
-              id: "Difficulty Staying Asleep",
-              label: "Difficulty Staying Asleep",
-            },
-            {
-              id: "Swollen Glands",
-              label: "Swollen Glands",
-            },
-            {
-              id: "Tender Glands",
-              label: "Tender Glands",
-            },
-            {
-              id: "Anemia",
-              label: "Anemia",
-            },
-            {
-              id: "Transfusions",
-              label: "Transfusions",
-            },
-            {
-              id: "Cancer",
-              label: "Cancer",
-            },
-          ]}
-          onSelect={({ id, label }) => {
-            setCurrentPh_symptomsValue(id);
-            runValidationTasks("ph_symptoms", id);
-          }}
-          onClear={() => {
-            setCurrentPh_symptomsDisplayValue("");
-          }}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (errors.ph_symptoms?.hasError) {
-              runValidationTasks("ph_symptoms", value);
-            }
-            setCurrentPh_symptomsValue(value);
-          }}
-          onBlur={() =>
-            runValidationTasks("ph_symptoms", currentPh_symptomsValue)
-          }
-          errorMessage={errors.ph_symptoms?.errorMessage}
-          hasError={errors.ph_symptoms?.hasError}
-          ref={ph_symptomsRef}
-          labelHidden={true}
-          {...getOverrideProps(overrides, "ph_symptoms")}
-        ></Autocomplete>
-      </ArrayField>
+        onBlur={() => runValidationTasks("ph_symptoms", ph_symptoms)}
+        errorMessage={errors.ph_symptoms?.errorMessage}
+        hasError={errors.ph_symptoms?.hasError}
+        labelHidden={false}
+        {...getOverrideProps(overrides, "ph_symptoms")}
+      ></Autocomplete>
       <Divider
         orientation="horizontal"
         {...getOverrideProps(overrides, "SectionalElement20")}
@@ -9818,7 +8801,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Dress yourself, including tying shoelaces and doing buttons? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_dress_yourself}
         onChange={(e) => {
           let { value } = e.target;
@@ -9832,20 +8814,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -9872,7 +8846,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -9904,14 +8877,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_dress_yourself ?? value;
@@ -9952,7 +8935,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Get in and out of bed? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_get_in_out_bed}
         onChange={(e) => {
           let { value } = e.target;
@@ -9966,20 +8948,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10006,7 +8980,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10038,14 +9011,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_get_in_out_bed ?? value;
@@ -10086,7 +9069,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Lift a full cup or glass to your mouth? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_lift_full_cup_mouth}
         onChange={(e) => {
           let { value } = e.target;
@@ -10100,20 +9082,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10140,7 +9114,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10172,14 +9145,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_lift_full_cup_mouth ?? value;
@@ -10220,7 +9203,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Walk outdoors on flat ground? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_walk_outdoor_flat}
         onChange={(e) => {
           let { value } = e.target;
@@ -10234,20 +9216,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10274,7 +9248,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10306,14 +9279,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_walk_outdoor_flat ?? value;
@@ -10354,7 +9337,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Wash and dry your entire body? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_wash_dry_body}
         onChange={(e) => {
           let { value } = e.target;
@@ -10368,20 +9350,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10408,7 +9382,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10440,14 +9413,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body: value,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_wash_dry_body ?? value;
@@ -10486,7 +9469,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Bend down to pick up clothing from the floor? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_pick_clothing_floor}
         onChange={(e) => {
           let { value } = e.target;
@@ -10500,20 +9482,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10540,7 +9514,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10572,14 +9545,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor: value,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_pick_clothing_floor ?? value;
@@ -10620,7 +9603,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Turn regular faucets on and off? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_turn_faucets_on_off}
         onChange={(e) => {
           let { value } = e.target;
@@ -10634,20 +9616,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10674,7 +9648,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10706,14 +9679,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off: value,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_turn_faucets_on_off ?? value;
@@ -10751,11 +9734,11 @@ export default function NewPatientCreateForm(props) {
           {...getOverrideProps(overrides, "ad_turn_faucets_on_offoption3")}
         ></option>
       </SelectField>
-      <SelectField
-        label="Get in and out of a car, bus, train, or airplane? *"
-        placeholder="Please select an option"
-        isDisabled={false}
-        value={ad_get_in_out_car_bus_train_plane}
+      <TextField
+        label="Address *"
+        isRequired={true}
+        isReadOnly={false}
+        value={address}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -10768,20 +9751,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -10808,7 +9783,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -10840,204 +9814,265 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane: value,
-              ad_walk_two_miles,
+              address: value,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
-            };
-            const result = onChange(modelFields);
-            value = result?.ad_get_in_out_car_bus_train_plane ?? value;
-          }
-          if (errors.ad_get_in_out_car_bus_train_plane?.hasError) {
-            runValidationTasks("ad_get_in_out_car_bus_train_plane", value);
-          }
-          setAd_get_in_out_car_bus_train_plane(value);
-        }}
-        onBlur={() =>
-          runValidationTasks(
-            "ad_get_in_out_car_bus_train_plane",
-            ad_get_in_out_car_bus_train_plane
-          )
-        }
-        errorMessage={errors.ad_get_in_out_car_bus_train_plane?.errorMessage}
-        hasError={errors.ad_get_in_out_car_bus_train_plane?.hasError}
-        {...getOverrideProps(overrides, "ad_get_in_out_car_bus_train_plane")}
-      >
-        <option
-          children="0: Without ANY Difficulty"
-          value="0: Without ANY Difficulty"
-          {...getOverrideProps(
-            overrides,
-            "ad_get_in_out_car_bus_train_planeoption0"
-          )}
-        ></option>
-        <option
-          children="1: With SOME Difficulty"
-          value="1: With SOME Difficulty"
-          {...getOverrideProps(
-            overrides,
-            "ad_get_in_out_car_bus_train_planeoption1"
-          )}
-        ></option>
-        <option
-          children="2: With MUCH Difficulty"
-          value="2: With MUCH Difficulty"
-          {...getOverrideProps(
-            overrides,
-            "ad_get_in_out_car_bus_train_planeoption2"
-          )}
-        ></option>
-        <option
-          children="3: UNABLE to do"
-          value="3: UNABLE to do"
-          {...getOverrideProps(
-            overrides,
-            "ad_get_in_out_car_bus_train_planeoption3"
-          )}
-        ></option>
-      </SelectField>
-      <SelectField
-        label="Walk two miles or three kilometers, if you wish? *"
-        placeholder="Please select an option"
-        isDisabled={false}
-        value={ad_walk_two_miles}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              date,
-              last_name,
-              first_name,
-              date_of_birth,
-              gender,
-              marital_status,
-              ethnicity,
-              race,
-              primary_language,
-              address,
-              city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
-              social_security,
-              employer,
-              education,
-              veteran,
-              occupation,
-              full_time,
-              preferred_pharmacy,
-              insurance_primary_name,
-              insurance_primary_id,
-              insurance_primary_group,
-              insurance_primary_address,
-              insurance_primary_phone,
-              insurance_primary_insured_person,
-              insurance_primary_insured_person_relation,
-              insurance_primary_insured_person_dob,
-              insurance_secondary,
-              insurance_secondary_id,
-              insurance_secondary_group,
-              insurance_secondary_address,
-              insurance_secondary_phone,
-              primary_care_physician_name,
-              primary_care_physician_phone,
-              referring_physician_name,
-              referring_physician_phone,
-              emergency_contact_name,
-              emergency_contact_phone,
-              emergency_contact_relationship,
-              signature_page_1,
-              signature_page_1_date,
-              ph_briefly_describe_present_symptoms,
-              ph_previous_treatment_for_problem,
               ph_current_medicines,
-              ph_allergy_to_med,
-              ph_allergy_to_med_list,
-              ph_rh_history_osteoarthritis,
-              ph_rh_history_gout,
-              ph_rh_history_juvenile_arthritis,
-              ph_rh_history_vasculitis,
-              ph_rh_history_lupus,
-              ph_rh_history_rheumatoid,
-              ph_rh_history_spondyloarthropathy,
-              ph_rh_history_osteoporosis,
-              ph_past_medical_history,
-              ph_past_surgery_history,
-              ph_smoke,
-              ph_drugs,
-              ph_alcohol,
-              ph_alcohol_weekly,
-              ph_sleep,
-              ph_exercise,
-              ph_travel,
-              ph_pregnant,
-              ph_live_births,
-              ph_complications,
-              ad_people_in_household,
-              ph_symptoms,
-              ad_dress_yourself,
-              ad_get_in_out_bed,
-              ad_lift_full_cup_mouth,
-              ad_walk_outdoor_flat,
-              ad_wash_dry_body,
-              ad_pick_clothing_floor,
-              ad_turn_faucets_on_off,
               ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles: value,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+            };
+            const result = onChange(modelFields);
+            value = result?.address ?? value;
+          }
+          if (errors.address?.hasError) {
+            runValidationTasks("address", value);
+          }
+          setAddress(value);
+        }}
+        onBlur={() => runValidationTasks("address", address)}
+        errorMessage={errors.address?.errorMessage}
+        hasError={errors.address?.hasError}
+        {...getOverrideProps(overrides, "address")}
+      ></TextField>
+      <SwitchField
+        label="Are you a veteran? * "
+        defaultChecked={false}
+        isDisabled={false}
+        isChecked={veteran}
+        onChange={(e) => {
+          let value = e.target.checked;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              race_other,
+              city,
+              social_security,
+              employer,
+              education,
+              primary_language,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ad_people_in_household,
+              ph_symptoms,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              address,
+              veteran: value,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
-            value = result?.ad_walk_two_miles ?? value;
+            value = result?.veteran ?? value;
           }
-          if (errors.ad_walk_two_miles?.hasError) {
-            runValidationTasks("ad_walk_two_miles", value);
+          if (errors.veteran?.hasError) {
+            runValidationTasks("veteran", value);
           }
-          setAd_walk_two_miles(value);
+          setVeteran(value);
         }}
-        onBlur={() =>
-          runValidationTasks("ad_walk_two_miles", ad_walk_two_miles)
-        }
-        errorMessage={errors.ad_walk_two_miles?.errorMessage}
-        hasError={errors.ad_walk_two_miles?.hasError}
-        {...getOverrideProps(overrides, "ad_walk_two_miles")}
-      >
-        <option
-          children="0: Without ANY Difficulty"
-          value="0: Without ANY Difficulty"
-          {...getOverrideProps(overrides, "ad_walk_two_milesoption0")}
-        ></option>
-        <option
-          children="1: With SOME Difficulty"
-          value="1: With SOME Difficulty"
-          {...getOverrideProps(overrides, "ad_walk_two_milesoption1")}
-        ></option>
-        <option
-          children="2: With MUCH Difficulty"
-          value="2: With MUCH Difficulty"
-          {...getOverrideProps(overrides, "ad_walk_two_milesoption2")}
-        ></option>
-        <option
-          children="3: UNABLE to do"
-          value="3: UNABLE to do"
-          {...getOverrideProps(overrides, "ad_walk_two_milesoption3")}
-        ></option>
-      </SelectField>
+        onBlur={() => runValidationTasks("veteran", veteran)}
+        errorMessage={errors.veteran?.errorMessage}
+        hasError={errors.veteran?.hasError}
+        {...getOverrideProps(overrides, "veteran")}
+      ></SwitchField>
+      <TextField
+        label="Occupation *"
+        isRequired={true}
+        isReadOnly={false}
+        value={occupation}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              race_other,
+              city,
+              social_security,
+              employer,
+              education,
+              primary_language,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ad_people_in_household,
+              ph_symptoms,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              address,
+              veteran,
+              occupation: value,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+            };
+            const result = onChange(modelFields);
+            value = result?.occupation ?? value;
+          }
+          if (errors.occupation?.hasError) {
+            runValidationTasks("occupation", value);
+          }
+          setOccupation(value);
+        }}
+        onBlur={() => runValidationTasks("occupation", occupation)}
+        errorMessage={errors.occupation?.errorMessage}
+        hasError={errors.occupation?.hasError}
+        {...getOverrideProps(overrides, "occupation")}
+      ></TextField>
       <SelectField
         label="Participate in recreational activities and sports as you would like, if you wish? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_recreational_activities_sports}
         onChange={(e) => {
           let { value } = e.target;
@@ -11051,20 +10086,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -11091,7 +10118,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -11123,14 +10149,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports: value,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_recreational_activities_sports ?? value;
@@ -11186,7 +10222,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Get a good night's sleep? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_good_night_sleep}
         onChange={(e) => {
           let { value } = e.target;
@@ -11200,20 +10235,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -11240,7 +10267,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -11272,14 +10298,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep: value,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_good_night_sleep ?? value;
@@ -11320,7 +10356,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Deal with feelings of anxiety or being nervous? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_deal_anxiety_nervous}
         onChange={(e) => {
           let { value } = e.target;
@@ -11334,20 +10369,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -11374,7 +10401,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -11406,14 +10432,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous: value,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_deal_anxiety_nervous ?? value;
@@ -11454,7 +10490,6 @@ export default function NewPatientCreateForm(props) {
       <SelectField
         label="Deal with feelings of depression or feeling blue? *"
         placeholder="Please select an option"
-        isDisabled={false}
         value={ad_deal_depression_blue}
         onChange={(e) => {
           let { value } = e.target;
@@ -11468,20 +10503,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -11508,7 +10535,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -11540,14 +10566,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue: value,
               ad_daily_pain_scale,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_deal_depression_blue ?? value;
@@ -11591,8 +10627,6 @@ export default function NewPatientCreateForm(props) {
       ></Heading>
       <SliderField
         label="(0 = NO PAIN, 10 = PAIN AS BAD AS IT COULD BE)"
-        isDisabled={false}
-        isRequired={true}
         value={ad_daily_pain_scale}
         onChange={(e) => {
           let value = e;
@@ -11606,20 +10640,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -11646,7 +10672,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -11678,14 +10703,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale: value,
               ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_daily_pain_scale ?? value;
@@ -11708,8 +10743,6 @@ export default function NewPatientCreateForm(props) {
       ></Heading>
       <SliderField
         label="(0 = NO PAIN, 10 = PAIN AS BAD AS IT COULD BE)"
-        isDisabled={false}
-        isRequired={true}
         value={ad_how_well_doing_scale}
         onChange={(e) => {
           let value = e;
@@ -11723,20 +10756,12 @@ export default function NewPatientCreateForm(props) {
               marital_status,
               ethnicity,
               race,
-              primary_language,
-              address,
+              race_other,
               city,
-              state,
-              zip,
-              home_phone,
-              work_phone,
-              mobile_phone,
-              email,
               social_security,
               employer,
               education,
-              veteran,
-              occupation,
+              primary_language,
               full_time,
               preferred_pharmacy,
               insurance_primary_name,
@@ -11763,7 +10788,6 @@ export default function NewPatientCreateForm(props) {
               signature_page_1_date,
               ph_briefly_describe_present_symptoms,
               ph_previous_treatment_for_problem,
-              ph_current_medicines,
               ph_allergy_to_med,
               ph_allergy_to_med_list,
               ph_rh_history_osteoarthritis,
@@ -11795,14 +10819,24 @@ export default function NewPatientCreateForm(props) {
               ad_wash_dry_body,
               ad_pick_clothing_floor,
               ad_turn_faucets_on_off,
-              ad_get_in_out_car_bus_train_plane,
-              ad_walk_two_miles,
+              address,
+              veteran,
+              occupation,
               ad_recreational_activities_sports,
               ad_good_night_sleep,
               ad_deal_anxiety_nervous,
               ad_deal_depression_blue,
               ad_daily_pain_scale,
               ad_how_well_doing_scale: value,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
             };
             const result = onChange(modelFields);
             value = result?.ad_how_well_doing_scale ?? value;
@@ -11819,6 +10853,1087 @@ export default function NewPatientCreateForm(props) {
         hasError={errors.ad_how_well_doing_scale?.hasError}
         {...getOverrideProps(overrides, "ad_how_well_doing_scale")}
       ></SliderField>
+      <TextAreaField
+        label="Current Medications: (Name and Dose) *"
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              race_other,
+              city,
+              social_security,
+              employer,
+              education,
+              primary_language,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ad_people_in_household,
+              ph_symptoms,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              address,
+              veteran,
+              occupation,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+              ph_current_medicines: value,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+            };
+            const result = onChange(modelFields);
+            value = result?.ph_current_medicines ?? value;
+          }
+          if (errors.ph_current_medicines?.hasError) {
+            runValidationTasks("ph_current_medicines", value);
+          }
+          setPh_current_medicines(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("ph_current_medicines", ph_current_medicines)
+        }
+        errorMessage={errors.ph_current_medicines?.errorMessage}
+        hasError={errors.ph_current_medicines?.hasError}
+        {...getOverrideProps(overrides, "ph_current_medicines")}
+      ></TextAreaField>
+      <SelectField
+        label="Get in and out of a car, bus, train, or airplane? *"
+        placeholder="Please select an option"
+        value={ad_get_in_out_car_bus_train_plane}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              race_other,
+              city,
+              social_security,
+              employer,
+              education,
+              primary_language,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ad_people_in_household,
+              ph_symptoms,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              address,
+              veteran,
+              occupation,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane: value,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+            };
+            const result = onChange(modelFields);
+            value = result?.ad_get_in_out_car_bus_train_plane ?? value;
+          }
+          if (errors.ad_get_in_out_car_bus_train_plane?.hasError) {
+            runValidationTasks("ad_get_in_out_car_bus_train_plane", value);
+          }
+          setAd_get_in_out_car_bus_train_plane(value);
+        }}
+        onBlur={() =>
+          runValidationTasks(
+            "ad_get_in_out_car_bus_train_plane",
+            ad_get_in_out_car_bus_train_plane
+          )
+        }
+        errorMessage={errors.ad_get_in_out_car_bus_train_plane?.errorMessage}
+        hasError={errors.ad_get_in_out_car_bus_train_plane?.hasError}
+        {...getOverrideProps(overrides, "ad_get_in_out_car_bus_train_plane")}
+      >
+        <option
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(
+            overrides,
+            "ad_get_in_out_car_bus_train_planeoption0"
+          )}
+        ></option>
+        <option
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(
+            overrides,
+            "ad_get_in_out_car_bus_train_planeoption1"
+          )}
+        ></option>
+        <option
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(
+            overrides,
+            "ad_get_in_out_car_bus_train_planeoption2"
+          )}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(
+            overrides,
+            "ad_get_in_out_car_bus_train_planeoption3"
+          )}
+        ></option>
+      </SelectField>
+      <SelectField
+        label="Walk two miles or three kilometers, if you wish? *"
+        placeholder="Please select an option"
+        value={ad_walk_two_miles}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              race_other,
+              city,
+              social_security,
+              employer,
+              education,
+              primary_language,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ad_people_in_household,
+              ph_symptoms,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              address,
+              veteran,
+              occupation,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles: value,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email,
+            };
+            const result = onChange(modelFields);
+            value = result?.ad_walk_two_miles ?? value;
+          }
+          if (errors.ad_walk_two_miles?.hasError) {
+            runValidationTasks("ad_walk_two_miles", value);
+          }
+          setAd_walk_two_miles(value);
+        }}
+        onBlur={() =>
+          runValidationTasks("ad_walk_two_miles", ad_walk_two_miles)
+        }
+        errorMessage={errors.ad_walk_two_miles?.errorMessage}
+        hasError={errors.ad_walk_two_miles?.hasError}
+        {...getOverrideProps(overrides, "ad_walk_two_miles")}
+      >
+        <option
+          children="0: Without ANY Difficulty"
+          value="0: Without ANY Difficulty"
+          {...getOverrideProps(overrides, "ad_walk_two_milesoption0")}
+        ></option>
+        <option
+          children="1: With SOME Difficulty"
+          value="1: With SOME Difficulty"
+          {...getOverrideProps(overrides, "ad_walk_two_milesoption1")}
+        ></option>
+        <option
+          children="2: With MUCH Difficulty"
+          value="2: With MUCH Difficulty"
+          {...getOverrideProps(overrides, "ad_walk_two_milesoption2")}
+        ></option>
+        <option
+          children="3: UNABLE to do"
+          value="3: UNABLE to do"
+          {...getOverrideProps(overrides, "ad_walk_two_milesoption3")}
+        ></option>
+      </SelectField>
+      <Grid
+        columnGap="inherit"
+        rowGap="inherit"
+        templateColumns="repeat(2, auto)"
+        {...getOverrideProps(overrides, "RowGrid87")}
+      >
+        <TextField
+          label="State *"
+          isRequired={true}
+          isReadOnly={false}
+          value={state}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (onChange) {
+              const modelFields = {
+                date,
+                last_name,
+                first_name,
+                date_of_birth,
+                gender,
+                marital_status,
+                ethnicity,
+                race,
+                race_other,
+                city,
+                social_security,
+                employer,
+                education,
+                primary_language,
+                full_time,
+                preferred_pharmacy,
+                insurance_primary_name,
+                insurance_primary_id,
+                insurance_primary_group,
+                insurance_primary_address,
+                insurance_primary_phone,
+                insurance_primary_insured_person,
+                insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
+                insurance_secondary,
+                insurance_secondary_id,
+                insurance_secondary_group,
+                insurance_secondary_address,
+                insurance_secondary_phone,
+                primary_care_physician_name,
+                primary_care_physician_phone,
+                referring_physician_name,
+                referring_physician_phone,
+                emergency_contact_name,
+                emergency_contact_phone,
+                emergency_contact_relationship,
+                signature_page_1,
+                signature_page_1_date,
+                ph_briefly_describe_present_symptoms,
+                ph_previous_treatment_for_problem,
+                ph_allergy_to_med,
+                ph_allergy_to_med_list,
+                ph_rh_history_osteoarthritis,
+                ph_rh_history_gout,
+                ph_rh_history_juvenile_arthritis,
+                ph_rh_history_vasculitis,
+                ph_rh_history_lupus,
+                ph_rh_history_rheumatoid,
+                ph_rh_history_spondyloarthropathy,
+                ph_rh_history_osteoporosis,
+                ph_past_medical_history,
+                ph_past_surgery_history,
+                ph_smoke,
+                ph_drugs,
+                ph_alcohol,
+                ph_alcohol_weekly,
+                ph_sleep,
+                ph_exercise,
+                ph_travel,
+                ph_pregnant,
+                ph_live_births,
+                ph_complications,
+                ad_people_in_household,
+                ph_symptoms,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                address,
+                veteran,
+                occupation,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
+                ad_daily_pain_scale,
+                ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state: value,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
+              };
+              const result = onChange(modelFields);
+              value = result?.state ?? value;
+            }
+            if (errors.state?.hasError) {
+              runValidationTasks("state", value);
+            }
+            setState(value);
+          }}
+          onBlur={() => runValidationTasks("state", state)}
+          errorMessage={errors.state?.errorMessage}
+          hasError={errors.state?.hasError}
+          {...getOverrideProps(overrides, "state")}
+        ></TextField>
+        <TextField
+          label="Zip *"
+          isRequired={true}
+          isReadOnly={false}
+          value={zip}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (onChange) {
+              const modelFields = {
+                date,
+                last_name,
+                first_name,
+                date_of_birth,
+                gender,
+                marital_status,
+                ethnicity,
+                race,
+                race_other,
+                city,
+                social_security,
+                employer,
+                education,
+                primary_language,
+                full_time,
+                preferred_pharmacy,
+                insurance_primary_name,
+                insurance_primary_id,
+                insurance_primary_group,
+                insurance_primary_address,
+                insurance_primary_phone,
+                insurance_primary_insured_person,
+                insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
+                insurance_secondary,
+                insurance_secondary_id,
+                insurance_secondary_group,
+                insurance_secondary_address,
+                insurance_secondary_phone,
+                primary_care_physician_name,
+                primary_care_physician_phone,
+                referring_physician_name,
+                referring_physician_phone,
+                emergency_contact_name,
+                emergency_contact_phone,
+                emergency_contact_relationship,
+                signature_page_1,
+                signature_page_1_date,
+                ph_briefly_describe_present_symptoms,
+                ph_previous_treatment_for_problem,
+                ph_allergy_to_med,
+                ph_allergy_to_med_list,
+                ph_rh_history_osteoarthritis,
+                ph_rh_history_gout,
+                ph_rh_history_juvenile_arthritis,
+                ph_rh_history_vasculitis,
+                ph_rh_history_lupus,
+                ph_rh_history_rheumatoid,
+                ph_rh_history_spondyloarthropathy,
+                ph_rh_history_osteoporosis,
+                ph_past_medical_history,
+                ph_past_surgery_history,
+                ph_smoke,
+                ph_drugs,
+                ph_alcohol,
+                ph_alcohol_weekly,
+                ph_sleep,
+                ph_exercise,
+                ph_travel,
+                ph_pregnant,
+                ph_live_births,
+                ph_complications,
+                ad_people_in_household,
+                ph_symptoms,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                address,
+                veteran,
+                occupation,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
+                ad_daily_pain_scale,
+                ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip: value,
+                home_phone,
+                work_phone,
+                mobile_phone,
+                email,
+              };
+              const result = onChange(modelFields);
+              value = result?.zip ?? value;
+            }
+            if (errors.zip?.hasError) {
+              runValidationTasks("zip", value);
+            }
+            setZip(value);
+          }}
+          onBlur={() => runValidationTasks("zip", zip)}
+          errorMessage={errors.zip?.errorMessage}
+          hasError={errors.zip?.hasError}
+          {...getOverrideProps(overrides, "zip")}
+        ></TextField>
+      </Grid>
+      <Grid
+        columnGap="inherit"
+        rowGap="inherit"
+        templateColumns="repeat(3, auto)"
+        {...getOverrideProps(overrides, "RowGrid88")}
+      >
+        <TextField
+          label="Home phone *"
+          isRequired={true}
+          isReadOnly={false}
+          type="tel"
+          value={home_phone}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (onChange) {
+              const modelFields = {
+                date,
+                last_name,
+                first_name,
+                date_of_birth,
+                gender,
+                marital_status,
+                ethnicity,
+                race,
+                race_other,
+                city,
+                social_security,
+                employer,
+                education,
+                primary_language,
+                full_time,
+                preferred_pharmacy,
+                insurance_primary_name,
+                insurance_primary_id,
+                insurance_primary_group,
+                insurance_primary_address,
+                insurance_primary_phone,
+                insurance_primary_insured_person,
+                insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
+                insurance_secondary,
+                insurance_secondary_id,
+                insurance_secondary_group,
+                insurance_secondary_address,
+                insurance_secondary_phone,
+                primary_care_physician_name,
+                primary_care_physician_phone,
+                referring_physician_name,
+                referring_physician_phone,
+                emergency_contact_name,
+                emergency_contact_phone,
+                emergency_contact_relationship,
+                signature_page_1,
+                signature_page_1_date,
+                ph_briefly_describe_present_symptoms,
+                ph_previous_treatment_for_problem,
+                ph_allergy_to_med,
+                ph_allergy_to_med_list,
+                ph_rh_history_osteoarthritis,
+                ph_rh_history_gout,
+                ph_rh_history_juvenile_arthritis,
+                ph_rh_history_vasculitis,
+                ph_rh_history_lupus,
+                ph_rh_history_rheumatoid,
+                ph_rh_history_spondyloarthropathy,
+                ph_rh_history_osteoporosis,
+                ph_past_medical_history,
+                ph_past_surgery_history,
+                ph_smoke,
+                ph_drugs,
+                ph_alcohol,
+                ph_alcohol_weekly,
+                ph_sleep,
+                ph_exercise,
+                ph_travel,
+                ph_pregnant,
+                ph_live_births,
+                ph_complications,
+                ad_people_in_household,
+                ph_symptoms,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                address,
+                veteran,
+                occupation,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
+                ad_daily_pain_scale,
+                ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone: value,
+                work_phone,
+                mobile_phone,
+                email,
+              };
+              const result = onChange(modelFields);
+              value = result?.home_phone ?? value;
+            }
+            if (errors.home_phone?.hasError) {
+              runValidationTasks("home_phone", value);
+            }
+            setHome_phone(value);
+          }}
+          onBlur={() => runValidationTasks("home_phone", home_phone)}
+          errorMessage={errors.home_phone?.errorMessage}
+          hasError={errors.home_phone?.hasError}
+          {...getOverrideProps(overrides, "home_phone")}
+        ></TextField>
+        <TextField
+          label="Work phone"
+          isRequired={false}
+          isReadOnly={false}
+          value={work_phone}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (onChange) {
+              const modelFields = {
+                date,
+                last_name,
+                first_name,
+                date_of_birth,
+                gender,
+                marital_status,
+                ethnicity,
+                race,
+                race_other,
+                city,
+                social_security,
+                employer,
+                education,
+                primary_language,
+                full_time,
+                preferred_pharmacy,
+                insurance_primary_name,
+                insurance_primary_id,
+                insurance_primary_group,
+                insurance_primary_address,
+                insurance_primary_phone,
+                insurance_primary_insured_person,
+                insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
+                insurance_secondary,
+                insurance_secondary_id,
+                insurance_secondary_group,
+                insurance_secondary_address,
+                insurance_secondary_phone,
+                primary_care_physician_name,
+                primary_care_physician_phone,
+                referring_physician_name,
+                referring_physician_phone,
+                emergency_contact_name,
+                emergency_contact_phone,
+                emergency_contact_relationship,
+                signature_page_1,
+                signature_page_1_date,
+                ph_briefly_describe_present_symptoms,
+                ph_previous_treatment_for_problem,
+                ph_allergy_to_med,
+                ph_allergy_to_med_list,
+                ph_rh_history_osteoarthritis,
+                ph_rh_history_gout,
+                ph_rh_history_juvenile_arthritis,
+                ph_rh_history_vasculitis,
+                ph_rh_history_lupus,
+                ph_rh_history_rheumatoid,
+                ph_rh_history_spondyloarthropathy,
+                ph_rh_history_osteoporosis,
+                ph_past_medical_history,
+                ph_past_surgery_history,
+                ph_smoke,
+                ph_drugs,
+                ph_alcohol,
+                ph_alcohol_weekly,
+                ph_sleep,
+                ph_exercise,
+                ph_travel,
+                ph_pregnant,
+                ph_live_births,
+                ph_complications,
+                ad_people_in_household,
+                ph_symptoms,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                address,
+                veteran,
+                occupation,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
+                ad_daily_pain_scale,
+                ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone: value,
+                mobile_phone,
+                email,
+              };
+              const result = onChange(modelFields);
+              value = result?.work_phone ?? value;
+            }
+            if (errors.work_phone?.hasError) {
+              runValidationTasks("work_phone", value);
+            }
+            setWork_phone(value);
+          }}
+          onBlur={() => runValidationTasks("work_phone", work_phone)}
+          errorMessage={errors.work_phone?.errorMessage}
+          hasError={errors.work_phone?.hasError}
+          {...getOverrideProps(overrides, "work_phone")}
+        ></TextField>
+        <TextField
+          label="Mobile phone"
+          isRequired={false}
+          isReadOnly={false}
+          value={mobile_phone}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (onChange) {
+              const modelFields = {
+                date,
+                last_name,
+                first_name,
+                date_of_birth,
+                gender,
+                marital_status,
+                ethnicity,
+                race,
+                race_other,
+                city,
+                social_security,
+                employer,
+                education,
+                primary_language,
+                full_time,
+                preferred_pharmacy,
+                insurance_primary_name,
+                insurance_primary_id,
+                insurance_primary_group,
+                insurance_primary_address,
+                insurance_primary_phone,
+                insurance_primary_insured_person,
+                insurance_primary_insured_person_relation,
+                insurance_primary_insured_person_dob,
+                insurance_secondary,
+                insurance_secondary_id,
+                insurance_secondary_group,
+                insurance_secondary_address,
+                insurance_secondary_phone,
+                primary_care_physician_name,
+                primary_care_physician_phone,
+                referring_physician_name,
+                referring_physician_phone,
+                emergency_contact_name,
+                emergency_contact_phone,
+                emergency_contact_relationship,
+                signature_page_1,
+                signature_page_1_date,
+                ph_briefly_describe_present_symptoms,
+                ph_previous_treatment_for_problem,
+                ph_allergy_to_med,
+                ph_allergy_to_med_list,
+                ph_rh_history_osteoarthritis,
+                ph_rh_history_gout,
+                ph_rh_history_juvenile_arthritis,
+                ph_rh_history_vasculitis,
+                ph_rh_history_lupus,
+                ph_rh_history_rheumatoid,
+                ph_rh_history_spondyloarthropathy,
+                ph_rh_history_osteoporosis,
+                ph_past_medical_history,
+                ph_past_surgery_history,
+                ph_smoke,
+                ph_drugs,
+                ph_alcohol,
+                ph_alcohol_weekly,
+                ph_sleep,
+                ph_exercise,
+                ph_travel,
+                ph_pregnant,
+                ph_live_births,
+                ph_complications,
+                ad_people_in_household,
+                ph_symptoms,
+                ad_dress_yourself,
+                ad_get_in_out_bed,
+                ad_lift_full_cup_mouth,
+                ad_walk_outdoor_flat,
+                ad_wash_dry_body,
+                ad_pick_clothing_floor,
+                ad_turn_faucets_on_off,
+                address,
+                veteran,
+                occupation,
+                ad_recreational_activities_sports,
+                ad_good_night_sleep,
+                ad_deal_anxiety_nervous,
+                ad_deal_depression_blue,
+                ad_daily_pain_scale,
+                ad_how_well_doing_scale,
+                ph_current_medicines,
+                ad_get_in_out_car_bus_train_plane,
+                ad_walk_two_miles,
+                state,
+                zip,
+                home_phone,
+                work_phone,
+                mobile_phone: value,
+                email,
+              };
+              const result = onChange(modelFields);
+              value = result?.mobile_phone ?? value;
+            }
+            if (errors.mobile_phone?.hasError) {
+              runValidationTasks("mobile_phone", value);
+            }
+            setMobile_phone(value);
+          }}
+          onBlur={() => runValidationTasks("mobile_phone", mobile_phone)}
+          errorMessage={errors.mobile_phone?.errorMessage}
+          hasError={errors.mobile_phone?.hasError}
+          {...getOverrideProps(overrides, "mobile_phone")}
+        ></TextField>
+      </Grid>
+      <TextField
+        label="Email * (A copy of responses to this form will be sent here)"
+        isRequired={true}
+        isReadOnly={false}
+        value={email}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              date,
+              last_name,
+              first_name,
+              date_of_birth,
+              gender,
+              marital_status,
+              ethnicity,
+              race,
+              race_other,
+              city,
+              social_security,
+              employer,
+              education,
+              primary_language,
+              full_time,
+              preferred_pharmacy,
+              insurance_primary_name,
+              insurance_primary_id,
+              insurance_primary_group,
+              insurance_primary_address,
+              insurance_primary_phone,
+              insurance_primary_insured_person,
+              insurance_primary_insured_person_relation,
+              insurance_primary_insured_person_dob,
+              insurance_secondary,
+              insurance_secondary_id,
+              insurance_secondary_group,
+              insurance_secondary_address,
+              insurance_secondary_phone,
+              primary_care_physician_name,
+              primary_care_physician_phone,
+              referring_physician_name,
+              referring_physician_phone,
+              emergency_contact_name,
+              emergency_contact_phone,
+              emergency_contact_relationship,
+              signature_page_1,
+              signature_page_1_date,
+              ph_briefly_describe_present_symptoms,
+              ph_previous_treatment_for_problem,
+              ph_allergy_to_med,
+              ph_allergy_to_med_list,
+              ph_rh_history_osteoarthritis,
+              ph_rh_history_gout,
+              ph_rh_history_juvenile_arthritis,
+              ph_rh_history_vasculitis,
+              ph_rh_history_lupus,
+              ph_rh_history_rheumatoid,
+              ph_rh_history_spondyloarthropathy,
+              ph_rh_history_osteoporosis,
+              ph_past_medical_history,
+              ph_past_surgery_history,
+              ph_smoke,
+              ph_drugs,
+              ph_alcohol,
+              ph_alcohol_weekly,
+              ph_sleep,
+              ph_exercise,
+              ph_travel,
+              ph_pregnant,
+              ph_live_births,
+              ph_complications,
+              ad_people_in_household,
+              ph_symptoms,
+              ad_dress_yourself,
+              ad_get_in_out_bed,
+              ad_lift_full_cup_mouth,
+              ad_walk_outdoor_flat,
+              ad_wash_dry_body,
+              ad_pick_clothing_floor,
+              ad_turn_faucets_on_off,
+              address,
+              veteran,
+              occupation,
+              ad_recreational_activities_sports,
+              ad_good_night_sleep,
+              ad_deal_anxiety_nervous,
+              ad_deal_depression_blue,
+              ad_daily_pain_scale,
+              ad_how_well_doing_scale,
+              ph_current_medicines,
+              ad_get_in_out_car_bus_train_plane,
+              ad_walk_two_miles,
+              state,
+              zip,
+              home_phone,
+              work_phone,
+              mobile_phone,
+              email: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.email ?? value;
+          }
+          if (errors.email?.hasError) {
+            runValidationTasks("email", value);
+          }
+          setEmail(value);
+        }}
+        onBlur={() => runValidationTasks("email", email)}
+        errorMessage={errors.email?.errorMessage}
+        hasError={errors.email?.hasError}
+        {...getOverrideProps(overrides, "email")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}
