@@ -947,38 +947,38 @@ export default function PatientCreateCustomForm(props) {
         {...getOverrideProps(overrides, "ethnicity")}
       >
         <option
-          children="Cuban"
-          value="Cuban"
+          children="American Indian or Alaska Native"
+          value="American Indian or Alaska Native"
           {...getOverrideProps(overrides, "ethnicityoption0")}
         ></option>
         <option
-          children="Decline to Answer"
-          value="Decline to Answer"
+          children="Asian"
+          value="Asian"
           {...getOverrideProps(overrides, "ethnicityoption1")}
         ></option>
         <option
-          children="Mexican, Mexican American, or Chinano/a"
-          value="Mexican, Mexican American, or Chinano/a"
+          children="Black or African American"
+          value="Black or African American"
           {...getOverrideProps(overrides, "ethnicityoption2")}
         ></option>
         <option
-          children="Not Hispanic, Latino/a, or Spanish origin"
-          value="Not Hispanic, Latino/a, or Spanish origin"
+          children="Hispanic"
+          value="Hispanic"
           {...getOverrideProps(overrides, "ethnicityoption3")}
         ></option>
         <option
-          children="Other Hispanic, Latino/a, or Spanish origin"
-          value="Other Hispanic, Latino/a, or Spanish origin"
+          children="Native Hawaiian or Other Pacific Islander"
+          value="Native Hawaiian or Other Pacific Islander"
           {...getOverrideProps(overrides, "ethnicityoption4")}
         ></option>
         <option
-          children="Puerto Rican"
-          value="Puerto Rican"
+          children="White"
+          value="White"
           {...getOverrideProps(overrides, "ethnicityoption5")}
         ></option>
         <option
-          children="Unknown"
-          value="Unknown"
+          children="Unkown"
+          value="Unkown"
           {...getOverrideProps(overrides, "ethnicityoption6")}
         ></option>
       </SelectField>
