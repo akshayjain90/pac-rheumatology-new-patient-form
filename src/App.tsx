@@ -222,19 +222,19 @@ function App() {
             }
             return validationResponse;
           },
-          first_name: (value, validationResponse) => {
+          first_name: (_value, _validationResponse) => {
               return {
                 hasError: false,
                 errorMessage: undefined
               };
           },
-          last_name: (value, validationResponse) => {
+          last_name: (_value, _validationResponse) => {
             return {
               hasError: false,
               errorMessage: undefined
             };
           },
-          date_of_birth: (value, validationResponse) => {
+          date_of_birth: (_value, _validationResponse) => {
             return {
               hasError: false,
               errorMessage: undefined
@@ -313,19 +313,19 @@ function App() {
             }
           }
           onValidate={{
-            first_name: (value, validationResponse) => {
+            first_name: (_value, _validationResponse) => {
                 return {
                   hasError: false,
                   errorMessage: undefined
                 };
             },
-            last_name: (value, validationResponse) => {
+            last_name: (_value, _validationResponse) => {
               return {
                 hasError: false,
                 errorMessage: undefined
               };
             },
-            date_of_birth: (value, validationResponse) => {
+            date_of_birth: (_value, _validationResponse) => {
               return {
                 hasError: false,
                 errorMessage: undefined
@@ -398,19 +398,19 @@ function App() {
               }
               return validationResponse;
             },
-            first_name: (value, validationResponse) => {
+            first_name: (_value, _validationResponse) => {
               return {
                 hasError: false,
                 errorMessage: undefined
               };
             },
-            last_name: (value, validationResponse) => {
+            last_name: (_value, _validationResponse) => {
               return {
                 hasError: false,
                 errorMessage: undefined
               };
             },
-            date_of_birth: (value, validationResponse) => {
+            date_of_birth: (_value, _validationResponse) => {
               return {
                 hasError: false,
                 errorMessage: undefined
