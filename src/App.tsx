@@ -149,7 +149,6 @@ function App() {
   var [privacyName, setPrivacyName] = useState<string|undefined>("");
   var [step, setStep] = useState(1)
 
-
   return (
     <>
       <Heading />
