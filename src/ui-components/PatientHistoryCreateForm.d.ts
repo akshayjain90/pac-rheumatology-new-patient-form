@@ -127,7 +127,7 @@ export declare type PatientHistoryCreateFormOverridesProps = {
     ph_pregnant?: PrimitiveOverrideProps<SelectFieldProps>;
     ph_live_births?: PrimitiveOverrideProps<TextFieldProps>;
     ph_complications?: PrimitiveOverrideProps<TextFieldProps>;
-    ad_people_in_household?: PrimitiveOverrideProps<TextFieldProps>;
+    ad_people_in_household?: PrimitiveOverrideProps<TextAreaFieldProps>;
     SectionalElement3?: PrimitiveOverrideProps<HeadingProps>;
     ph_symptoms?: PrimitiveOverrideProps<AutocompleteProps>;
 } & EscapeHatchProps;

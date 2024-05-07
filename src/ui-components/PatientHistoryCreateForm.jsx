@@ -2163,11 +2163,10 @@ export default function PatientHistoryCreateForm(props) {
         hasError={errors.ph_complications?.hasError}
         {...getOverrideProps(overrides, "ph_complications")}
       ></TextField>
-      <TextField
+      <TextAreaField
         label="How many people in household? (List age & relationship):"
         isRequired={false}
         isReadOnly={false}
-        value={ad_people_in_household}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
@@ -2217,7 +2216,7 @@ export default function PatientHistoryCreateForm(props) {
         errorMessage={errors.ad_people_in_household?.errorMessage}
         hasError={errors.ad_people_in_household?.hasError}
         {...getOverrideProps(overrides, "ad_people_in_household")}
-      ></TextField>
+      ></TextAreaField>
       <Heading
         children='Please write if you are currently or recently experiencing any of these symptoms (Write "No Symptoms" if not experiencing any of them): *'
         {...getOverrideProps(overrides, "SectionalElement3")}
