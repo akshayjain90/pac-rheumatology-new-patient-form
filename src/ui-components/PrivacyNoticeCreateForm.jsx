@@ -507,7 +507,7 @@ export default function PrivacyNoticeCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid4")}
       >
         <TextField
-          label="Patient's Signature *"
+          label="Type Full Name as Signature  *"
           isRequired={true}
           isReadOnly={false}
           value={signature}
@@ -698,7 +698,7 @@ export default function PrivacyNoticeCreateForm(props) {
         {...getOverrideProps(overrides, "RowGrid12")}
       >
         <TextField
-          label="Patient's Signature *"
+          label="Type Full Name as Signature *"
           isRequired={true}
           isReadOnly={false}
           value={open_payment_signature}

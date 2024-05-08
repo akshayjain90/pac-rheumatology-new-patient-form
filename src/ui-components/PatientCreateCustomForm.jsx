@@ -4049,7 +4049,7 @@ export default function PatientCreateCustomForm(props) {
         {...getOverrideProps(overrides, "RowGrid38")}
       >
         <TextField
-          label="Signature *"
+          label="Type Full Name as Signature  *"
           isRequired={true}
           isReadOnly={false}
           value={signature_page_1}
