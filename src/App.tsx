@@ -191,6 +191,13 @@ function App() {
             return validationResponse;
           }
         }}
+        overrides={
+          {
+            SubmitButton : {
+              children: "continue to page 2/4"
+            }
+          }
+        }
       /> 
       }
       {step == 2 &&
@@ -274,6 +281,9 @@ function App() {
               },
               labelHidden: true,
               value: email
+            },
+            SubmitButton : {
+              children: "continue to page 3/4"
             }
           }
         }
@@ -328,6 +338,9 @@ function App() {
                 },
                 labelHidden: true,
                 value: email
+              },
+              SubmitButton : {
+                children: "continue to page 4/4"
               }
             }
           }
